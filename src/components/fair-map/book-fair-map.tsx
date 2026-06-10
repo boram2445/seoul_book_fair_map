@@ -10,11 +10,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
+import { useFavorites } from "./use-favorites";
 import type { BoothShape, MapExhibitor } from "./types";
 
 const MAP_WIDTH = 3230;
 const MAP_HEIGHT = 3650;
-const FAVORITES_KEY = "sibf-map-favorites";
 const MIN_SCALE = 0.16;
 const MAX_SCALE = 2.4;
 
@@ -53,7 +53,7 @@ export function BookFairMap() {
   const [transform, setTransform] = useState({ scale: 0.28, x: 56, y: 18 });
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredBooth, setHoveredBooth] = useState("");
-  const [favorites, setFavorites] = useState<string[]>([]);
+  const { favorites, toggleFavorite } = useFavorites();
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({
     pointerId: 0,
@@ -118,19 +118,6 @@ export function BookFairMap() {
   });
 
   useEffect(() => {
-    try {
-      const parsed = JSON.parse(window.localStorage.getItem(FAVORITES_KEY) ?? "[]");
-      setFavorites(Array.isArray(parsed) ? parsed.filter((item) => typeof item === "string") : []);
-    } catch {
-      // ignore
-    }
-  }, []);
-
-  useEffect(() => {
-    window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
-  }, [favorites]);
-
-  useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
 
@@ -184,12 +171,6 @@ export function BookFairMap() {
   function selectExhibitor(exhibitor: MapExhibitor) {
     setSelectedNo(exhibitor.no);
     centerBooth(boothForMap(exhibitor));
-  }
-
-  function toggleFavorite(booth: string) {
-    setFavorites((current) =>
-      current.includes(booth) ? current.filter((item) => item !== booth) : [...current, booth]
-    );
   }
 
   function zoomBy(delta: number) {

@@ -14,14 +14,6 @@ Next.js 16 App Router + shadcn/ui + Tailwind v4 기반 **프로젝트 시작 템
 
 **task 1개씩 진행 후 정지.** 빌드 확인(`pnpm build`·`pnpm lint`)은 해당 task에 포함.
 
-### Learn by Doing (매우 엄격)
-
-Claude는 **구조·스캐폴드·가이드만 제공**하고, 핵심 자리에 `TODO(human)` 하나를 남긴다.
-
-**구현 코드 직접 작성 금지. 파일 생성·타입 정의·import 추가도 사용자에게 요청한다.**
-
-> 예외: 오타·한 줄 수정, 검증 명령 실행 등 학습 대상이 아닌 작업.
-
 ### 2단 ask — 침묵 = 동의 금지
 
 ① 완료 보고 → 검토 대기 → ② `"다음 스텝 시작할까요? — {요약}"` → 명시적 승인 대기.
@@ -52,14 +44,14 @@ Claude는 **구조·스캐폴드·가이드만 제공**하고, 핵심 자리에 
 
 패키지 매니저는 **pnpm** 고정.
 
-| 커맨드 | 설명 | 실행 시점 |
-|---|---|---|
-| `pnpm dev` | 개발 서버 (localhost:3000) | — |
-| `pnpm storybook` | Storybook (port 6006) | — |
-| `pnpm lint` / `lint:fix` | ESLint | UI·컴포넌트 변경 후 |
-| `npx tsc --noEmit` | 타입 검사 | 타입 영향 있을 때 |
-| `pnpm test` | Vitest — Storybook stories → Playwright | story 추가·수정 후 |
-| `pnpm build` | 프로덕션 빌드 | 배포 전·큰 변경 |
+| 커맨드                   | 설명                                    | 실행 시점           |
+| ------------------------ | --------------------------------------- | ------------------- |
+| `pnpm dev`               | 개발 서버 (localhost:3000)              | —                   |
+| `pnpm storybook`         | Storybook (port 6006)                   | —                   |
+| `pnpm lint` / `lint:fix` | ESLint                                  | UI·컴포넌트 변경 후 |
+| `npx tsc --noEmit`       | 타입 검사                               | 타입 영향 있을 때   |
+| `pnpm test`              | Vitest — Storybook stories → Playwright | story 추가·수정 후  |
+| `pnpm build`             | 프로덕션 빌드                           | 배포 전·큰 변경     |
 
 ---
 
@@ -123,11 +115,11 @@ src/
 
 ### 상태
 
-| 범위 | 방법 |
-|---|---|
-| 페이지 안 UI 상태 | 로컬 state |
+| 범위                                | 방법                                                     |
+| ----------------------------------- | -------------------------------------------------------- |
+| 페이지 안 UI 상태                   | 로컬 state                                               |
 | 여러 하위 컴포넌트 공유 + 화면 한정 | Zustand + Context 스토어 (`src/stores/<name>-store.tsx`) |
-| 서버 데이터 | React Query (로컬/전역 복제 금지) |
+| 서버 데이터                         | React Query (로컬/전역 복제 금지)                        |
 
 ---
 
@@ -163,4 +155,3 @@ src/
 - **색상**: `globals.css` 토큰 변수만. 하드코딩 HEX 금지.
 
 ---
-
