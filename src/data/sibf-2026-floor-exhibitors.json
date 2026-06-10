@@ -1,0 +1,4031 @@
+{
+  "source": "https://sibf.kr/theme/sibf/js/22_work.js",
+  "count": 436,
+  "exhibitors": [
+    {
+      "no": 1,
+      "booth": "A1001",
+      "nameKo": "주식회사 돌베개",
+      "nameEn": "dolbegae",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 2,
+      "booth": "A1001",
+      "nameKo": "평산책방",
+      "nameEn": "pyeongsanbooks",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 3,
+      "booth": "A1002",
+      "nameKo": "재단법인 아모레퍼시픽재단",
+      "nameEn": "Amorepacific Foundation",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 4,
+      "booth": "A101",
+      "nameKo": "고스트북스",
+      "nameEn": "Ghost Books",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 5,
+      "booth": "A102",
+      "nameKo": "별빛들",
+      "nameEn": "BYEOL BIT DEUL",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 6,
+      "booth": "A103",
+      "nameKo": "도서출판부카",
+      "nameEn": "bookaa",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 7,
+      "booth": "A104",
+      "nameKo": "봄봄출판사",
+      "nameEn": "Bombom Publishing Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 8,
+      "booth": "A105",
+      "nameKo": "단추 출판사",
+      "nameEn": "Danchu Press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 9,
+      "booth": "A106",
+      "nameKo": "밝은세상",
+      "nameEn": "Balgunsesang",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 10,
+      "booth": "A107",
+      "nameKo": "애플트리테일즈",
+      "nameEn": "appletreetales",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 11,
+      "booth": "A108",
+      "nameKo": "곰세마리",
+      "nameEn": "Gomsemari",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 12,
+      "booth": "A108",
+      "nameKo": "도서출판 달리",
+      "nameEn": "Dahli Children's Books",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 13,
+      "booth": "A109",
+      "nameKo": "핀드",
+      "nameEn": "Pinned",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 14,
+      "booth": "A110",
+      "nameKo": "소동출판사",
+      "nameEn": "Sodong Publishing House",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 15,
+      "booth": "A1101",
+      "nameKo": "민음사 출판그룹",
+      "nameEn": "Minumsa Publishing Group",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 16,
+      "booth": "A1102",
+      "nameKo": "인플루엔셜",
+      "nameEn": "Influential",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 17,
+      "booth": "A1102",
+      "nameKo": "윌라",
+      "nameEn": "Welaaa",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 18,
+      "booth": "A1102",
+      "nameKo": "윌라스토리",
+      "nameEn": "WelaaaStory",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 19,
+      "booth": "A1103",
+      "nameKo": "서울특별시 서울도서관",
+      "nameEn": "Seoul Metropolitan Library",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 20,
+      "booth": "A1103",
+      "nameKo": "신한은행",
+      "nameEn": "Shinhan Bank",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 21,
+      "booth": "A111",
+      "nameKo": "시사북스(빈페이지)",
+      "nameEn": "SISABOOKS(emptypage)",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 22,
+      "booth": "A112",
+      "nameKo": "한국출판마케팅연구소",
+      "nameEn": "KOREA PUBLISH MARKETING",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 23,
+      "booth": "A113",
+      "nameKo": "일러스트레이터스 월",
+      "nameEn": "Illustrators Wall",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 24,
+      "booth": "A1201",
+      "nameKo": "타이완콘텐츠진흥원",
+      "nameEn": "TAICCA",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": false
+    },
+    {
+      "no": 25,
+      "booth": "A1201",
+      "nameKo": "",
+      "nameEn": "CommonWealth Education Media and Publishing Co., Ltd.",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": false
+    },
+    {
+      "no": 26,
+      "booth": "A1201",
+      "nameKo": "",
+      "nameEn": "DUMPLING CAT FAMILY",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": false
+    },
+    {
+      "no": 27,
+      "booth": "A1201",
+      "nameKo": "",
+      "nameEn": "Hakka Affairs Council",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": false
+    },
+    {
+      "no": 28,
+      "booth": "A1201",
+      "nameKo": "",
+      "nameEn": "JS Agency Co., Ltd.",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": false
+    },
+    {
+      "no": 29,
+      "booth": "A1201",
+      "nameKo": "",
+      "nameEn": "KAWAII HYOKA / Caiji Art",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": false
+    },
+    {
+      "no": 30,
+      "booth": "A1201",
+      "nameKo": "",
+      "nameEn": "Kuroro space exploration team / memes creative partnership co., ltd.",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": false
+    },
+    {
+      "no": 31,
+      "booth": "A1201",
+      "nameKo": "",
+      "nameEn": "REVE BOOKS LTD., CO",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": false
+    },
+    {
+      "no": 32,
+      "booth": "A1201",
+      "nameKo": "",
+      "nameEn": "Rye Field Publications, a division of Cite Publishing Ltd.",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": false
+    },
+    {
+      "no": 33,
+      "booth": "A1201",
+      "nameKo": "",
+      "nameEn": "SpringHill Publishing",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": false
+    },
+    {
+      "no": 34,
+      "booth": "A1201",
+      "nameKo": "타코쿠마",
+      "nameEn": "TAKOKUMA / Sunthingood Co., Ltd.",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": false
+    },
+    {
+      "no": 35,
+      "booth": "A1201",
+      "nameKo": "",
+      "nameEn": "THE GRAYHAWK AGENCY",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": false
+    },
+    {
+      "no": 36,
+      "booth": "A1202",
+      "nameKo": "주한태국대사관 상무공사관실",
+      "nameEn": "OFFICE OF COMMERCIAL AFFAIRS, ROYAL THAI EMBASSY, DITP",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 37,
+      "booth": "A1202",
+      "nameKo": "",
+      "nameEn": "Amarin Corporations PCL",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 38,
+      "booth": "A1202",
+      "nameKo": "",
+      "nameEn": "BANLUE PUBLICATIONS COMPANY LIMITED",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 39,
+      "booth": "A1202",
+      "nameKo": "",
+      "nameEn": "Channasoot Publishing",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 40,
+      "booth": "A1202",
+      "nameKo": "",
+      "nameEn": "Combang Publishing House Limited Partnership",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 41,
+      "booth": "A1202",
+      "nameKo": "",
+      "nameEn": "DEXPRESS COMPANY LIMITED",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 42,
+      "booth": "A1202",
+      "nameKo": "",
+      "nameEn": "Avocado Books (Earlgrey co.,ltd)",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 43,
+      "booth": "A1202",
+      "nameKo": "",
+      "nameEn": "Glory Forever Public Company Limited",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 44,
+      "booth": "A1202",
+      "nameKo": "",
+      "nameEn": "Golden C Creative contentCo.,Ltd.",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 45,
+      "booth": "A1202",
+      "nameKo": "",
+      "nameEn": "HAPPYME-D CO., LTD.",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 46,
+      "booth": "A1202",
+      "nameKo": "",
+      "nameEn": "Liatris publishing",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 47,
+      "booth": "A1202",
+      "nameKo": "",
+      "nameEn": "MITMAKME Group",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 48,
+      "booth": "A1202",
+      "nameKo": "모카그룹",
+      "nameEn": "Mocca Group",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 49,
+      "booth": "A1202",
+      "nameKo": "유기적 링크",
+      "nameEn": "ORGANIC LINKS CO., LTD.",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 50,
+      "booth": "A1202",
+      "nameKo": "",
+      "nameEn": "Silkwormbooks",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 51,
+      "booth": "A1202",
+      "nameKo": "라이터 소울 태국",
+      "nameEn": "Writer Soul Thailand Corporation Ltd",
+      "countryKo": "태국",
+      "countryEn": "Thailand",
+      "special": false
+    },
+    {
+      "no": 52,
+      "booth": "A1203",
+      "nameKo": "",
+      "nameEn": "EC Publishing LLC",
+      "countryKo": "미국",
+      "countryEn": "USA",
+      "special": false
+    },
+    {
+      "no": 53,
+      "booth": "A1204",
+      "nameKo": "",
+      "nameEn": "Studio of Books LLC",
+      "countryKo": "미국",
+      "countryEn": "USA",
+      "special": false
+    },
+    {
+      "no": 54,
+      "booth": "A1205",
+      "nameKo": "퀴퍼 프린츠",
+      "nameEn": "Quipper Prints",
+      "countryKo": "미국",
+      "countryEn": "USA",
+      "special": false
+    },
+    {
+      "no": 55,
+      "booth": "A1206",
+      "nameKo": "프로칠레",
+      "nameEn": "PROCHILE",
+      "countryKo": "칠레",
+      "countryEn": "Chile",
+      "special": false
+    },
+    {
+      "no": 56,
+      "booth": "A1206",
+      "nameKo": "",
+      "nameEn": "Calcetines Animados",
+      "countryKo": "칠레",
+      "countryEn": "Chile",
+      "special": false
+    },
+    {
+      "no": 57,
+      "booth": "A1206",
+      "nameKo": "",
+      "nameEn": "VLP Agency",
+      "countryKo": "칠레",
+      "countryEn": "Chile",
+      "special": false
+    },
+    {
+      "no": 58,
+      "booth": "A1206",
+      "nameKo": "",
+      "nameEn": "Recrea Libros",
+      "countryKo": "칠레",
+      "countryEn": "Chile",
+      "special": false
+    },
+    {
+      "no": 59,
+      "booth": "A1207",
+      "nameKo": "연변교육출판사",
+      "nameEn": "Yanbian Education Press",
+      "countryKo": "중국",
+      "countryEn": "China",
+      "special": false
+    },
+    {
+      "no": 60,
+      "booth": "A1207",
+      "nameKo": "연변인민출판사",
+      "nameEn": "Yanbian People's Press",
+      "countryKo": "중국",
+      "countryEn": "China",
+      "special": false
+    },
+    {
+      "no": 61,
+      "booth": "A1207",
+      "nameKo": "연변대학출판사",
+      "nameEn": "Yanbian University Press",
+      "countryKo": "중국",
+      "countryEn": "China",
+      "special": false
+    },
+    {
+      "no": 62,
+      "booth": "A1301",
+      "nameKo": "엣눈북스",
+      "nameEn": "ATNOONBOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 63,
+      "booth": "A1302",
+      "nameKo": "서사원 주식회사",
+      "nameEn": "SEOSAWON",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 64,
+      "booth": "A1303",
+      "nameKo": "프란츠",
+      "nameEn": "Franz",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 65,
+      "booth": "A1304",
+      "nameKo": "귤프레스",
+      "nameEn": "guulpress",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 66,
+      "booth": "A1305",
+      "nameKo": "고요한소리",
+      "nameEn": "Calm Voice Society",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 67,
+      "booth": "A1306",
+      "nameKo": "쿵프레스",
+      "nameEn": "Koong Press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 68,
+      "booth": "A1307",
+      "nameKo": "한림출판사",
+      "nameEn": "HOLLYM CORP, PUBLISHERS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 69,
+      "booth": "A1308",
+      "nameKo": "소장각",
+      "nameEn": "Sojanggak",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 70,
+      "booth": "A1308",
+      "nameKo": "비플랫폼",
+      "nameEn": "B-PLATFORM",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 71,
+      "booth": "A1309",
+      "nameKo": "(주)불광미디어",
+      "nameEn": "BULKWANG MEDIA",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 72,
+      "booth": "A1310",
+      "nameKo": "라의눈주식회사",
+      "nameEn": "Eye of Ra",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 73,
+      "booth": "A1311",
+      "nameKo": "유어마인드",
+      "nameEn": "YOURMIND",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 74,
+      "booth": "A1401",
+      "nameKo": "이룸아이",
+      "nameEn": "ErumI Publishing Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 75,
+      "booth": "A1402",
+      "nameKo": "펜타클",
+      "nameEn": "pentacle",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 76,
+      "booth": "A1403",
+      "nameKo": "마음모자",
+      "nameEn": "Maummoja",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 77,
+      "booth": "A1404",
+      "nameKo": "스토리보울",
+      "nameEn": "STORYBOWL",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 78,
+      "booth": "A1405",
+      "nameKo": "몽당연필",
+      "nameEn": "mongdangpencil",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 79,
+      "booth": "A1405",
+      "nameKo": "구름이머무는동안",
+      "nameEn": "Cloud Stays Books",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 80,
+      "booth": "A1405",
+      "nameKo": "뜰힘",
+      "nameEn": "DDEULHIM",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 81,
+      "booth": "A1405",
+      "nameKo": "소유",
+      "nameEn": "SOYOU BOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 82,
+      "booth": "A1405",
+      "nameKo": "아르카",
+      "nameEn": "ARCA",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 83,
+      "booth": "A1405",
+      "nameKo": "지우",
+      "nameEn": "Jiwoo Publisher",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 84,
+      "booth": "A1406",
+      "nameKo": "(사)한국기독교출판협회",
+      "nameEn": "KCPA",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 85,
+      "booth": "A1406",
+      "nameKo": "도서출판 CUP",
+      "nameEn": "CUP (Christian University Press)",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 86,
+      "booth": "A1406",
+      "nameKo": "도서출판 동연",
+      "nameEn": "DongYeon press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 87,
+      "booth": "A1406",
+      "nameKo": "문광서원",
+      "nameEn": "Mungwangbooks",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 88,
+      "booth": "A1406",
+      "nameKo": "바이블네비게이션(주)",
+      "nameEn": "Biblenavigation Inc.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 89,
+      "booth": "A1406",
+      "nameKo": "블리스",
+      "nameEn": "BLISS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 90,
+      "booth": "A1406",
+      "nameKo": "쿰란출판사",
+      "nameEn": "Qumran Publishing House",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 91,
+      "booth": "A1406",
+      "nameKo": "템북",
+      "nameEn": "TEMBOOK",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 92,
+      "booth": "A1407",
+      "nameKo": "아작",
+      "nameEn": "ARZAK",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 93,
+      "booth": "A1408",
+      "nameKo": "(주)이퍼블릭 코리아",
+      "nameEn": "tiramisu the book, safari",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 94,
+      "booth": "A1409",
+      "nameKo": "도서출판 키다리",
+      "nameEn": "Kidari Publishing Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 95,
+      "booth": "A1410",
+      "nameKo": "에디토리얼",
+      "nameEn": "Editorial Publishing Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 96,
+      "booth": "A1410",
+      "nameKo": "가지출판사",
+      "nameEn": "Kindsbook Publishing Company",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 97,
+      "booth": "A1410",
+      "nameKo": "메멘토",
+      "nameEn": "Memento Publishing Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 98,
+      "booth": "A1410",
+      "nameKo": "목수책방",
+      "nameEn": "Moksu Publishing Company",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 99,
+      "booth": "A1410",
+      "nameKo": "혜화1117",
+      "nameEn": "Hyehwa1117 Publishing Company",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 100,
+      "booth": "A1501",
+      "nameKo": "시공사",
+      "nameEn": "SIGONGSA",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 101,
+      "booth": "A1502",
+      "nameKo": "전국동네책방네트워크",
+      "nameEn": "Korea Local bookshop network",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 102,
+      "booth": "A1503",
+      "nameKo": "엘르 코리아",
+      "nameEn": "ELLE Korea",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 103,
+      "booth": "A1601",
+      "nameKo": "(주)열린책들",
+      "nameEn": "The Open Books Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 104,
+      "booth": "A1602",
+      "nameKo": "(주)오팬하우스",
+      "nameEn": "OFANHOUSE",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 105,
+      "booth": "A1701",
+      "nameKo": "교보문고",
+      "nameEn": "KYOBO BOOK CENTRE",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 106,
+      "booth": "A1701",
+      "nameKo": "교보생명 서재",
+      "nameEn": "Kyobo Life",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 107,
+      "booth": "A1702",
+      "nameKo": "주식회사 케이티밀리의서재",
+      "nameEn": "kt millie seojae Co.,Ltd",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 108,
+      "booth": "A1703",
+      "nameKo": "예스24",
+      "nameEn": "YES24",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 109,
+      "booth": "A1801",
+      "nameKo": "",
+      "nameEn": "Livres Canada Books",
+      "countryKo": "캐나다",
+      "countryEn": "Canada",
+      "special": false
+    },
+    {
+      "no": 110,
+      "booth": "A1801",
+      "nameKo": "",
+      "nameEn": "Annick Press",
+      "countryKo": "캐나다",
+      "countryEn": "Canada",
+      "special": false
+    },
+    {
+      "no": 111,
+      "booth": "A1801",
+      "nameKo": "",
+      "nameEn": "BookLand Press",
+      "countryKo": "캐나다",
+      "countryEn": "Canada",
+      "special": false
+    },
+    {
+      "no": 112,
+      "booth": "A1801",
+      "nameKo": "",
+      "nameEn": "Drawn & Quarterly",
+      "countryKo": "캐나다",
+      "countryEn": "Canada",
+      "special": false
+    },
+    {
+      "no": 113,
+      "booth": "A1801",
+      "nameKo": "",
+      "nameEn": "Éditions Alto",
+      "countryKo": "캐나다",
+      "countryEn": "Canada",
+      "special": false
+    },
+    {
+      "no": 114,
+      "booth": "A1801",
+      "nameKo": "",
+      "nameEn": "Éditions Fonfon",
+      "countryKo": "캐나다",
+      "countryEn": "Canada",
+      "special": false
+    },
+    {
+      "no": 115,
+      "booth": "A1801",
+      "nameKo": "",
+      "nameEn": "Éditions Michel Quintin",
+      "countryKo": "캐나다",
+      "countryEn": "Canada",
+      "special": false
+    },
+    {
+      "no": 116,
+      "booth": "A1801",
+      "nameKo": "",
+      "nameEn": "Éditions Québec Amérique",
+      "countryKo": "캐나다",
+      "countryEn": "Canada",
+      "special": false
+    },
+    {
+      "no": 117,
+      "booth": "A1801",
+      "nameKo": "",
+      "nameEn": "Firefly Books",
+      "countryKo": "캐나다",
+      "countryEn": "Canada",
+      "special": false
+    },
+    {
+      "no": 118,
+      "booth": "A1801",
+      "nameKo": "",
+      "nameEn": "Les Éditions les Malins",
+      "countryKo": "캐나다",
+      "countryEn": "Canada",
+      "special": false
+    },
+    {
+      "no": 119,
+      "booth": "A1801",
+      "nameKo": "",
+      "nameEn": "McGill-Queen’s University Press",
+      "countryKo": "캐나다",
+      "countryEn": "Canada",
+      "special": false
+    },
+    {
+      "no": 120,
+      "booth": "A1801",
+      "nameKo": "",
+      "nameEn": "Orca Book Publishers",
+      "countryKo": "캐나다",
+      "countryEn": "Canada",
+      "special": false
+    },
+    {
+      "no": 121,
+      "booth": "A1801",
+      "nameKo": "",
+      "nameEn": "University of Toronto Press",
+      "countryKo": "캐나다",
+      "countryEn": "Canada",
+      "special": false
+    },
+    {
+      "no": 122,
+      "booth": "A1802",
+      "nameKo": "펭귄랜덤하우스 UK",
+      "nameEn": "Penguin Randomhouse UK",
+      "countryKo": "영국",
+      "countryEn": "UK",
+      "special": false
+    },
+    {
+      "no": 123,
+      "booth": "A1803",
+      "nameKo": "독일 프랑크푸르트도서전",
+      "nameEn": "Frankfurter Buchmesse",
+      "countryKo": "독일",
+      "countryEn": "Germany",
+      "special": false
+    },
+    {
+      "no": 124,
+      "booth": "A1803",
+      "nameKo": "",
+      "nameEn": "Arbeitsgemeinschaft von Jugendbuchverlagen e.V.",
+      "countryKo": "독일",
+      "countryEn": "Germany",
+      "special": false
+    },
+    {
+      "no": 125,
+      "booth": "A1803",
+      "nameKo": "",
+      "nameEn": "Droemer Knaur Publishing Group",
+      "countryKo": "독일",
+      "countryEn": "Germany",
+      "special": false
+    },
+    {
+      "no": 126,
+      "booth": "A1803",
+      "nameKo": "",
+      "nameEn": "Dunkcer & Humblot GmbH",
+      "countryKo": "독일",
+      "countryEn": "Germany",
+      "special": false
+    },
+    {
+      "no": 127,
+      "booth": "A1803",
+      "nameKo": "",
+      "nameEn": "German Pavilion",
+      "countryKo": "독일",
+      "countryEn": "Germany",
+      "special": false
+    },
+    {
+      "no": 128,
+      "booth": "A1803",
+      "nameKo": "주한독일문화원",
+      "nameEn": "Goethe-Institut Korea",
+      "countryKo": "독일",
+      "countryEn": "Germany",
+      "special": false
+    },
+    {
+      "no": 129,
+      "booth": "A1803",
+      "nameKo": "",
+      "nameEn": "Kiepenheuer & Witsch",
+      "countryKo": "독일",
+      "countryEn": "Germany",
+      "special": false
+    },
+    {
+      "no": 130,
+      "booth": "A1803",
+      "nameKo": "모어 지베크",
+      "nameEn": "Mohr Siebeck GmbH & Co. KG",
+      "countryKo": "독일",
+      "countryEn": "Germany",
+      "special": false
+    },
+    {
+      "no": 131,
+      "booth": "A1803",
+      "nameKo": "",
+      "nameEn": "MuseARTa GmbH",
+      "countryKo": "독일",
+      "countryEn": "Germany",
+      "special": false
+    },
+    {
+      "no": 132,
+      "booth": "A1803",
+      "nameKo": "",
+      "nameEn": "Palomaa Publishing",
+      "countryKo": "독일",
+      "countryEn": "Germany",
+      "special": false
+    },
+    {
+      "no": 133,
+      "booth": "A1803",
+      "nameKo": "",
+      "nameEn": "Rowohlt Verlag GmbH",
+      "countryKo": "독일",
+      "countryEn": "Germany",
+      "special": false
+    },
+    {
+      "no": 134,
+      "booth": "A1803",
+      "nameKo": "",
+      "nameEn": "Schweizerbart/Borntraeger Science Publishers",
+      "countryKo": "독일",
+      "countryEn": "Germany",
+      "special": false
+    },
+    {
+      "no": 135,
+      "booth": "A1803",
+      "nameKo": "",
+      "nameEn": "Ullstein Buchverlage GmbH",
+      "countryKo": "독일",
+      "countryEn": "Germany",
+      "special": false
+    },
+    {
+      "no": 136,
+      "booth": "A1804",
+      "nameKo": "",
+      "nameEn": "YUEWEN|WebNovel",
+      "countryKo": "중국",
+      "countryEn": "China",
+      "special": false
+    },
+    {
+      "no": 137,
+      "booth": "A1805",
+      "nameKo": "",
+      "nameEn": "Beijiao Children Joy Education & Technology (Beijing) Co., Ltd.",
+      "countryKo": "중국",
+      "countryEn": "China",
+      "special": false
+    },
+    {
+      "no": 138,
+      "booth": "A1806",
+      "nameKo": "",
+      "nameEn": "Wells Hamilton Literary Consultants",
+      "countryKo": "미국",
+      "countryEn": "USA",
+      "special": false
+    },
+    {
+      "no": 139,
+      "booth": "A1901",
+      "nameKo": "책만남홀2",
+      "nameEn": "Readers Hall 2",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 140,
+      "booth": "A1902",
+      "nameKo": "아트숍",
+      "nameEn": "Art Shop",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 141,
+      "booth": "A1904",
+      "nameKo": "갈라파고스",
+      "nameEn": "Galapagos",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 142,
+      "booth": "A1905",
+      "nameKo": "도서출판 들녘",
+      "nameEn": "Dulnyouk Publishing Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 143,
+      "booth": "A1906",
+      "nameKo": "원더박스",
+      "nameEn": "WONDERBOX",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 144,
+      "booth": "A1907",
+      "nameKo": "(주)크레용하우스",
+      "nameEn": "Crayonhouse. co. Ltd",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 145,
+      "booth": "A2001",
+      "nameKo": "생명의말씀사",
+      "nameEn": "WORD OF LIFE PRESS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 146,
+      "booth": "A2002",
+      "nameKo": "성서유니온",
+      "nameEn": "Scripture Union Korea",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 147,
+      "booth": "A2003",
+      "nameKo": "도서출판 폭스코너",
+      "nameEn": "Foxcorner Publishing House",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 148,
+      "booth": "A2003",
+      "nameKo": "도서출판 다독다독",
+      "nameEn": "Dadokdadok Publishing",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 149,
+      "booth": "A2004",
+      "nameKo": "안온북스",
+      "nameEn": "anonbooks",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 150,
+      "booth": "A2005",
+      "nameKo": "청미출판사",
+      "nameEn": "CHEONGMI PUBLISHING CO.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 151,
+      "booth": "A2006",
+      "nameKo": "(주)학지사",
+      "nameEn": "Hakjisa Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 152,
+      "booth": "A2007",
+      "nameKo": "잉글리시에그",
+      "nameEn": "ENGLISHEGG",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 153,
+      "booth": "A2008",
+      "nameKo": "우리나비",
+      "nameEn": "Woorinabi Publishing Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 154,
+      "booth": "A2009",
+      "nameKo": "한국출판문화산업진흥원",
+      "nameEn": "Publication Industry Promotion Agency of Korea",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 155,
+      "booth": "A2009",
+      "nameKo": "그리모어",
+      "nameEn": "Grimoire",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 156,
+      "booth": "A2009",
+      "nameKo": "나무의말",
+      "nameEn": "Words of Trees",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 157,
+      "booth": "A2009",
+      "nameKo": "다정한시민",
+      "nameEn": "Friendly Citizen",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 158,
+      "booth": "A2009",
+      "nameKo": "도서출판 11%",
+      "nameEn": "11% Publishing",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 159,
+      "booth": "A2009",
+      "nameKo": "도서출판 어웨이크",
+      "nameEn": "AWAKE PUBLISHING HOUSE",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 160,
+      "booth": "A2009",
+      "nameKo": "문학정원",
+      "nameEn": "Munhak Garden",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 161,
+      "booth": "A2009",
+      "nameKo": "빅퀘스천 출판사",
+      "nameEn": "Big Questions Publishing Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 162,
+      "booth": "A2009",
+      "nameKo": "스타라잇 출판사",
+      "nameEn": "Starlight books",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 163,
+      "booth": "A2009",
+      "nameKo": "아트레이크 출판사",
+      "nameEn": "ARTLAKE Inc",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 164,
+      "booth": "A2009",
+      "nameKo": "좋은습관연구소",
+      "nameEn": "Good Habits Lab",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 165,
+      "booth": "A2009",
+      "nameKo": "쥬쥬베북스",
+      "nameEn": "jujube books",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 166,
+      "booth": "A2009",
+      "nameKo": "책과바람",
+      "nameEn": "Book&Wish Publisher",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 167,
+      "booth": "A2009",
+      "nameKo": "한밤의빛",
+      "nameEn": "HANBAMBIT",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 168,
+      "booth": "A2009",
+      "nameKo": "허밍북스",
+      "nameEn": "HUMMINGBOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 169,
+      "booth": "A2009",
+      "nameKo": "호랑이꿈",
+      "nameEn": "Tigerdream Books",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 170,
+      "booth": "A2009",
+      "nameKo": "호손재",
+      "nameEn": "Hosonjae",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 171,
+      "booth": "A201",
+      "nameKo": "안그라픽스",
+      "nameEn": "Ahn Graphics",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 172,
+      "booth": "A2010",
+      "nameKo": "주식회사 난다",
+      "nameEn": "Nanda",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 173,
+      "booth": "A202",
+      "nameKo": "미디어버스",
+      "nameEn": "Mediabus",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 174,
+      "booth": "A202",
+      "nameKo": "사월의눈",
+      "nameEn": "Aprilsnow Press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 175,
+      "booth": "A202",
+      "nameKo": "프로파간다",
+      "nameEn": "propaganda",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 176,
+      "booth": "A203",
+      "nameKo": "인북",
+      "nameEn": "INBOOK",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 177,
+      "booth": "A204",
+      "nameKo": "안녕로빈",
+      "nameEn": "hellorobin",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 178,
+      "booth": "A205",
+      "nameKo": "킨더랜드+반달+여섯번째봄",
+      "nameEn": "KINDERLAND+BANDAL+THE SIXTH SPRING",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 179,
+      "booth": "A206",
+      "nameKo": "(주)학토재",
+      "nameEn": "HAKTOJAE",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 180,
+      "booth": "A207",
+      "nameKo": "노란상상",
+      "nameEn": "Noran Sangsang Books",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 181,
+      "booth": "A208",
+      "nameKo": "(주)도서출판보리",
+      "nameEn": "BORI",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 182,
+      "booth": "A209",
+      "nameKo": "니케북스",
+      "nameEn": "nikebooks",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 183,
+      "booth": "A209",
+      "nameKo": "목요일출판사",
+      "nameEn": "mokyoil",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 184,
+      "booth": "A209",
+      "nameKo": "페이퍼스토리",
+      "nameEn": "PAPERSTORY BOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 185,
+      "booth": "A210",
+      "nameKo": "거북이북스",
+      "nameEn": "GOBOOKY BOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 186,
+      "booth": "A2101",
+      "nameKo": "사회평론",
+      "nameEn": "sahoipyoungnon",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 187,
+      "booth": "A2102",
+      "nameKo": "오이뮤",
+      "nameEn": "OIMU",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 188,
+      "booth": "A2103",
+      "nameKo": "은행나무",
+      "nameEn": "EunHaengNaMu",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 189,
+      "booth": "A2103",
+      "nameKo": "(주)휴머니스트 출판그룹",
+      "nameEn": "Humanist Publishing Group",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 190,
+      "booth": "A2201",
+      "nameKo": "길벗어린이",
+      "nameEn": "Gilbut Children Publishing",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 191,
+      "booth": "A2202",
+      "nameKo": "문학과지성사",
+      "nameEn": "Moonji Publishing Co., Ltd",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 192,
+      "booth": "A2203",
+      "nameKo": "소전문화재단",
+      "nameEn": "Sojeon Foundation",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 193,
+      "booth": "A2301",
+      "nameKo": "서울특별시교육청",
+      "nameEn": "Seoul Metropolitan Office of Education",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 194,
+      "booth": "A2302",
+      "nameKo": "마음산책",
+      "nameEn": "MAUMSANCHAEK",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 195,
+      "booth": "A2302",
+      "nameKo": "사계절출판사",
+      "nameEn": "SAKYEJUL",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 196,
+      "booth": "A2303",
+      "nameKo": "디자인하우스",
+      "nameEn": "Designhouse",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 197,
+      "booth": "A2303",
+      "nameKo": "주식회사 오뚜기",
+      "nameEn": "OTOKI Corporation",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 198,
+      "booth": "A2401",
+      "nameKo": "타이베이도서전재단",
+      "nameEn": "Taipei Book Fair Foundation",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": false
+    },
+    {
+      "no": 199,
+      "booth": "A2402",
+      "nameKo": "책만남홀1",
+      "nameEn": "Readers Hall 1",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 200,
+      "booth": "A301",
+      "nameKo": "워크룸 프레스",
+      "nameEn": "Workroom Press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 201,
+      "booth": "A302",
+      "nameKo": "산지니",
+      "nameEn": "Sanzini",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 202,
+      "booth": "A303",
+      "nameKo": "(주)까치글방",
+      "nameEn": "Kachi Publishing Co., Ltd.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 203,
+      "booth": "A304",
+      "nameKo": "글항아리",
+      "nameEn": "GEULHANGARI",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 204,
+      "booth": "A305",
+      "nameKo": "청아출판사 / 봄마중",
+      "nameEn": "ChungA Publishing Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 205,
+      "booth": "A306",
+      "nameKo": "도서출판 풀빛",
+      "nameEn": "Pulbit",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 206,
+      "booth": "A307",
+      "nameKo": "도서출판 푸른숲",
+      "nameEn": "PRUNSOOP publisher",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 207,
+      "booth": "A308",
+      "nameKo": "(사)한국과학기술출판협회",
+      "nameEn": "Korean Science & Technology Publishers Association",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 208,
+      "booth": "A308",
+      "nameKo": "군자출판사",
+      "nameEn": "KOONJA Publishing Inc.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 209,
+      "booth": "A401",
+      "nameKo": "보림출판사",
+      "nameEn": "BORIMPRESS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 210,
+      "booth": "A402",
+      "nameKo": "네이버웹툰",
+      "nameEn": "NAVER WEBTOON",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 211,
+      "booth": "A403",
+      "nameKo": "(주)위즈덤하우스",
+      "nameEn": "WISDOMHOUSE",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 212,
+      "booth": "A501",
+      "nameKo": "이야기장수",
+      "nameEn": "STORYSELLER",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 213,
+      "booth": "A501",
+      "nameKo": "솔테라이브러리",
+      "nameEn": "Salté Library",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 214,
+      "booth": "A502",
+      "nameKo": "(주)김영사",
+      "nameEn": "Gimmyoung Publishers",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 215,
+      "booth": "A503",
+      "nameKo": "(주)문학수첩",
+      "nameEn": "MoonhakSoochup",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 216,
+      "booth": "A601",
+      "nameKo": "주한프랑스대사관 문화과",
+      "nameEn": "Embassy of France in the Republic of Korea",
+      "countryKo": "프랑스",
+      "countryEn": "France",
+      "special": true
+    },
+    {
+      "no": 217,
+      "booth": "A601",
+      "nameKo": "프랑스 출판네트워크 (구 : 프랑스국제출판사무국)",
+      "nameEn": "France Livre (formerly BIEF)",
+      "countryKo": "프랑스",
+      "countryEn": "France",
+      "special": true
+    },
+    {
+      "no": 218,
+      "booth": "A602",
+      "nameKo": "(주)쌤앤파커스",
+      "nameEn": "Sam & Parkers Co., Ltd.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 219,
+      "booth": "A701",
+      "nameKo": "봄알람",
+      "nameEn": "baumealame",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 220,
+      "booth": "A702",
+      "nameKo": "타이피스트",
+      "nameEn": "Typist Press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 221,
+      "booth": "A703",
+      "nameKo": "사단법인 한국대학출판협회",
+      "nameEn": "THE ASSOCIATION OF KOREAN UNIVERSITY PRESSES",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 222,
+      "booth": "A704",
+      "nameKo": "도서출판 북극곰",
+      "nameEn": "BOOKGOODCOME",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 223,
+      "booth": "A705",
+      "nameKo": "국민서관",
+      "nameEn": "KOOKMINBOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 224,
+      "booth": "A706",
+      "nameKo": "주식회사 성안당",
+      "nameEn": "SungAnDang Publishing Inc.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 225,
+      "booth": "A707",
+      "nameKo": "책읽는고양이",
+      "nameEn": "Reading Cat",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 226,
+      "booth": "A708",
+      "nameKo": "소미미디어",
+      "nameEn": "SOMYMEDIA Inc.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 227,
+      "booth": "A709",
+      "nameKo": "고래인",
+      "nameEn": "goraein",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 228,
+      "booth": "A709",
+      "nameKo": "키큰도토리",
+      "nameEn": "Kikeundotori Publishing Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 229,
+      "booth": "A801",
+      "nameKo": "부산출판문화산업협회",
+      "nameEn": "Busan Publishing and Culture Industry Association",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 230,
+      "booth": "A801",
+      "nameKo": "고양이함수",
+      "nameEn": "Cat Function",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 231,
+      "booth": "A801",
+      "nameKo": "공공북스",
+      "nameEn": "Gonggong books",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 232,
+      "booth": "A801",
+      "nameKo": "냥이의야옹",
+      "nameEn": "NYAONGBOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 233,
+      "booth": "A801",
+      "nameKo": "뮤트스튜디오",
+      "nameEn": "Muut Studio",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 234,
+      "booth": "A801",
+      "nameKo": "씨엘미디어",
+      "nameEn": "CLmedia",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 235,
+      "booth": "A801",
+      "nameKo": "해피북미디어",
+      "nameEn": "happybook media",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 236,
+      "booth": "A802",
+      "nameKo": "주식회사 소원나무",
+      "nameEn": "SOWONNAMU PUBLISHING CO,. LTD.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 237,
+      "booth": "A803",
+      "nameKo": "뜨인돌출판",
+      "nameEn": "Danielstone Publishing",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 238,
+      "booth": "A804",
+      "nameKo": "밝은미래",
+      "nameEn": "Balgeunmirae Publishing Co",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 239,
+      "booth": "A805",
+      "nameKo": "도서출판 동녘",
+      "nameEn": "Dongnyok publishers",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 240,
+      "booth": "A806",
+      "nameKo": "클레이하우스 주식회사",
+      "nameEn": "CLAYHOUSE",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 241,
+      "booth": "A807",
+      "nameKo": "보스토크 프레스",
+      "nameEn": "VOSTOK PRESS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 242,
+      "booth": "A807",
+      "nameKo": "프리즘오브",
+      "nameEn": "PRISM OF",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 243,
+      "booth": "A808",
+      "nameKo": "진선출판사",
+      "nameEn": "Jinsun Publishing",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 244,
+      "booth": "A901",
+      "nameKo": "윌북",
+      "nameEn": "Willbooks Publishing Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 245,
+      "booth": "A902",
+      "nameKo": "더중앙플러스",
+      "nameEn": "The JoongAng Plus",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 246,
+      "booth": "A903",
+      "nameKo": "동아시아·허블",
+      "nameEn": "EAST-ASIA·Hubble",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 247,
+      "booth": "B101",
+      "nameKo": "어크로스",
+      "nameEn": "Across Publishing Group, Inc",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 248,
+      "booth": "B102",
+      "nameKo": "움직씨 출판사",
+      "nameEn": "Oomzicc Publisher",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 249,
+      "booth": "B102",
+      "nameKo": "오리집",
+      "nameEn": "ORIZIP",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 250,
+      "booth": "B103",
+      "nameKo": "(주)책읽는곰",
+      "nameEn": "Bear Books Inc.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 251,
+      "booth": "B104",
+      "nameKo": "페이퍼독",
+      "nameEn": "PAPERDOG",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 252,
+      "booth": "B104",
+      "nameKo": "토끼섬",
+      "nameEn": "Tokkiseom",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 253,
+      "booth": "B105",
+      "nameKo": "송송책방",
+      "nameEn": "SONGSONG BOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 254,
+      "booth": "B106",
+      "nameKo": "꿈공장플러스",
+      "nameEn": "DREAMBOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 255,
+      "booth": "B107",
+      "nameKo": "아카넷",
+      "nameEn": "Acanet",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 256,
+      "booth": "B108",
+      "nameKo": "디자인이음",
+      "nameEn": "designEUM",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 257,
+      "booth": "B109",
+      "nameKo": "컬처룩",
+      "nameEn": "culturelook",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 258,
+      "booth": "B109",
+      "nameKo": "코쿤북스",
+      "nameEn": "cocoonbooks",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 259,
+      "booth": "B201",
+      "nameKo": "유유출판사",
+      "nameEn": "UU PRESS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 260,
+      "booth": "B202",
+      "nameKo": "바람북스",
+      "nameEn": "BARAMBOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 261,
+      "booth": "B203",
+      "nameKo": "레모 출판사",
+      "nameEn": "LES MOTS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 262,
+      "booth": "B203",
+      "nameKo": "스위밍꿀",
+      "nameEn": "SWIMMINGKUL",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 263,
+      "booth": "B204",
+      "nameKo": "주식회사 도서출판점자",
+      "nameEn": "Braille Publishing Company",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 264,
+      "booth": "B205",
+      "nameKo": "후즈갓마이테일",
+      "nameEn": "Whos Got My Tail",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 265,
+      "booth": "B206",
+      "nameKo": "흰토끼프레스(바캉스프로젝트)",
+      "nameEn": "Hintoki Press(Vacances)",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 266,
+      "booth": "B207",
+      "nameKo": "SIBF × 글월 〈페이지 사이의 우체국〉",
+      "nameEn": "SIBF × geulwoll 〈The Post Office Between the Pages〉",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 267,
+      "booth": "B301",
+      "nameKo": "도서출판 노란돼지",
+      "nameEn": "Yellowpig publisher",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 268,
+      "booth": "B302",
+      "nameKo": "늘보의 섬",
+      "nameEn": "SLOTH ISLAND",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 269,
+      "booth": "B303",
+      "nameKo": "(주)창비교육",
+      "nameEn": "CHANGBIEDU",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 270,
+      "booth": "B304",
+      "nameKo": "서해문집",
+      "nameEn": "Booksea Publishing Co.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 271,
+      "booth": "B305",
+      "nameKo": "한림사",
+      "nameEn": "HANLIMSA",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 272,
+      "booth": "B306",
+      "nameKo": "나비클럽",
+      "nameEn": "NABICLUB",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 273,
+      "booth": "B307",
+      "nameKo": "국립생태원",
+      "nameEn": "NIE PRESS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 274,
+      "booth": "B308",
+      "nameKo": "퍼머넌트북스",
+      "nameEn": "Permanent Books",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 275,
+      "booth": "B309",
+      "nameKo": "주식회사 한겨레엔",
+      "nameEn": "Hankyoreh En Co., Ltd.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 276,
+      "booth": "B400",
+      "origBooth": "B400",
+      "nameKo": "책마을",
+      "nameEn": "Book Village",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 277,
+      "booth": "B400",
+      "origBooth": "B401",
+      "nameKo": "누땡스",
+      "nameEn": "nu thanks",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 278,
+      "booth": "B400",
+      "origBooth": "B402",
+      "nameKo": "텍스트 프레스",
+      "nameEn": "textpress.kr",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 279,
+      "booth": "B400",
+      "origBooth": "B403",
+      "nameKo": "프레스탁!",
+      "nameEn": "press tac!",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 280,
+      "booth": "B400",
+      "origBooth": "B404",
+      "nameKo": "225호",
+      "nameEn": "Room Number 225",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 281,
+      "booth": "B400",
+      "origBooth": "B405",
+      "nameKo": "라마북스",
+      "nameEn": "LLAMA BOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 282,
+      "booth": "B400",
+      "origBooth": "B406",
+      "nameKo": "비바 헤리티지 시리즈",
+      "nameEn": "Viva Heritage Series",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 283,
+      "booth": "B400",
+      "origBooth": "B407",
+      "nameKo": "라우더북스",
+      "nameEn": "Louder Books",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 284,
+      "booth": "B400",
+      "origBooth": "B408",
+      "nameKo": "",
+      "nameEn": "Fidèle éditions",
+      "countryKo": "프랑스",
+      "countryEn": "France",
+      "special": true
+    },
+    {
+      "no": 285,
+      "booth": "B400",
+      "origBooth": "B409",
+      "nameKo": "",
+      "nameEn": "Owl & Dog Playbooks",
+      "countryKo": "영국",
+      "countryEn": "UK",
+      "special": true
+    },
+    {
+      "no": 286,
+      "booth": "B400",
+      "origBooth": "B410",
+      "nameKo": "프레스룸",
+      "nameEn": "PRESS ROOM",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 287,
+      "booth": "B400",
+      "origBooth": "B411",
+      "nameKo": "히스테리안",
+      "nameEn": "Hysterian",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 288,
+      "booth": "B400",
+      "origBooth": "B412",
+      "nameKo": "행복한 재수가 있는",
+      "nameEn": "Happy Jaesu Press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 289,
+      "booth": "B400",
+      "origBooth": "B413",
+      "nameKo": "두낫프레스?프레스!",
+      "nameEn": "donotpress?press!",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 290,
+      "booth": "B400",
+      "origBooth": "B414",
+      "nameKo": "자인운트",
+      "nameEn": "Seinund",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 291,
+      "booth": "B400",
+      "origBooth": "B415",
+      "nameKo": "유연성클럽",
+      "nameEn": "THE FLEXIBILITY CLUB",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 292,
+      "booth": "B400",
+      "origBooth": "B416",
+      "nameKo": "메이커메이커",
+      "nameEn": "MAKERMAKER",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 293,
+      "booth": "B400",
+      "origBooth": "B417",
+      "nameKo": "0.1",
+      "nameEn": "0.1",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 294,
+      "booth": "B400",
+      "origBooth": "B418",
+      "nameKo": "검정프레스",
+      "nameEn": "geomjung press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 295,
+      "booth": "B400",
+      "origBooth": "B419",
+      "nameKo": "써니라운드",
+      "nameEn": "SUNNYROUND",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 296,
+      "booth": "B400",
+      "origBooth": "B420",
+      "nameKo": "픽션들",
+      "nameEn": "fictiondle",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 297,
+      "booth": "B400",
+      "origBooth": "B421",
+      "nameKo": "남섬책방",
+      "nameEn": "Namseom Books",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 298,
+      "booth": "B400",
+      "origBooth": "B422",
+      "nameKo": "시네필 책방 코프키노",
+      "nameEn": "KopfKino",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 299,
+      "booth": "B400",
+      "origBooth": "B423",
+      "nameKo": "요호이",
+      "nameEn": "yohoi",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 300,
+      "booth": "B400",
+      "origBooth": "B424",
+      "nameKo": "스튜디오604",
+      "nameEn": "STUDIO604",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 301,
+      "booth": "B400",
+      "origBooth": "B425",
+      "nameKo": "돛과닻",
+      "nameEn": "Sail and Anchor",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 302,
+      "booth": "B400",
+      "origBooth": "B426",
+      "nameKo": "스크립토",
+      "nameEn": "Scripto",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 303,
+      "booth": "B400",
+      "origBooth": "B427",
+      "nameKo": "타바코북스",
+      "nameEn": "TABACOBOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 304,
+      "booth": "B400",
+      "origBooth": "B428",
+      "nameKo": "머쉬룸",
+      "nameEn": "mushRoom",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 305,
+      "booth": "B400",
+      "origBooth": "B429",
+      "nameKo": "소환사",
+      "nameEn": "Sohwansa",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 306,
+      "booth": "B400",
+      "origBooth": "B430",
+      "nameKo": "마그네틱 파이브",
+      "nameEn": "MAGNETIC 5",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 307,
+      "booth": "B400",
+      "origBooth": "B431",
+      "nameKo": "하호하호",
+      "nameEn": "hahahaha",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 308,
+      "booth": "B400",
+      "origBooth": "B432",
+      "nameKo": "1도씨와 온도들",
+      "nameEn": "1docci",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 309,
+      "booth": "B400",
+      "origBooth": "B433",
+      "nameKo": "후루룩",
+      "nameEn": "Hooloolook",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 310,
+      "booth": "B400",
+      "origBooth": "B434",
+      "nameKo": "유일무이(누구나)",
+      "nameEn": "NUGUNA",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 311,
+      "booth": "B400",
+      "origBooth": "B435",
+      "nameKo": "코스모 프레스",
+      "nameEn": "kosmo press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 312,
+      "booth": "B400",
+      "origBooth": "B436",
+      "nameKo": "아뜰리에아쉬",
+      "nameEn": "AtelierH",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 313,
+      "booth": "B400",
+      "origBooth": "B437",
+      "nameKo": "라우트 프레스",
+      "nameEn": "Route Press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 314,
+      "booth": "B400",
+      "origBooth": "B438",
+      "nameKo": "오큐파이 더 시티",
+      "nameEn": "Occupy the City",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 315,
+      "booth": "B400",
+      "origBooth": "B439",
+      "nameKo": "길고도 짧은 이야기",
+      "nameEn": "longshortstory",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 316,
+      "booth": "B400",
+      "origBooth": "B440",
+      "nameKo": "무주산골영화제",
+      "nameEn": "MJFF",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 317,
+      "booth": "B400",
+      "origBooth": "B441",
+      "nameKo": "미스테리어스플랜트",
+      "nameEn": "mysterious plant",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 318,
+      "booth": "B400",
+      "origBooth": "B442",
+      "nameKo": "소화당",
+      "nameEn": "SoHwaDang",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 319,
+      "booth": "B400",
+      "origBooth": "B443",
+      "nameKo": "김주영",
+      "nameEn": "Joo Young Kim",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 320,
+      "booth": "B400",
+      "origBooth": "B444",
+      "nameKo": "삐약삐약북스",
+      "nameEn": "PPIYACKPPIYACK BOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 321,
+      "booth": "B400",
+      "origBooth": "B445",
+      "nameKo": "카인드오브썸머",
+      "nameEn": "KIND OF SUMMER",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 322,
+      "booth": "B400",
+      "origBooth": "B446",
+      "nameKo": "마블로켓",
+      "nameEn": "MARBLEROCKET",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 323,
+      "booth": "B400",
+      "origBooth": "B447",
+      "nameKo": "블루토마토즈",
+      "nameEn": "bluetomatoes",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 324,
+      "booth": "B400",
+      "origBooth": "B448",
+      "nameKo": "노말에이",
+      "nameEn": "NOrmal A",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 325,
+      "booth": "B400",
+      "origBooth": "B449",
+      "nameKo": "연필과머그",
+      "nameEn": "Pencil and Mug",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 326,
+      "booth": "B400",
+      "origBooth": "B450",
+      "nameKo": "까막북",
+      "nameEn": "KKAMAKBOOK",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 327,
+      "booth": "B400",
+      "origBooth": "B451",
+      "nameKo": "에트르",
+      "nameEn": "ETRE",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 328,
+      "booth": "B400",
+      "origBooth": "B452",
+      "nameKo": "책덕",
+      "nameEn": "Bookduck",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 329,
+      "booth": "B400",
+      "origBooth": "B453",
+      "nameKo": "디 오브젝트",
+      "nameEn": "the object",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 330,
+      "booth": "B400",
+      "origBooth": "B454",
+      "nameKo": "TEMPORARY BOOKSHOP | C시지G",
+      "nameEn": "TEMPORARY BOOKSHOP | CsijiG",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 331,
+      "booth": "B400",
+      "origBooth": "B455",
+      "nameKo": "파도",
+      "nameEn": "SEEYOURSEA",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 332,
+      "booth": "B400",
+      "origBooth": "B456",
+      "nameKo": "선과 결",
+      "nameEn": "LineGrain",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 333,
+      "booth": "B400",
+      "origBooth": "B457",
+      "nameKo": "탱크 프레스",
+      "nameEn": "TANK Press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 334,
+      "booth": "B400",
+      "origBooth": "B458",
+      "nameKo": "바이블랭크",
+      "nameEn": "by_[blank]",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 335,
+      "booth": "B400",
+      "origBooth": "B459",
+      "nameKo": "",
+      "nameEn": "te editions",
+      "countryKo": "미국",
+      "countryEn": "USA",
+      "special": true
+    },
+    {
+      "no": 336,
+      "booth": "B400",
+      "origBooth": "B460",
+      "nameKo": "",
+      "nameEn": "One Stroke",
+      "countryKo": "일본",
+      "countryEn": "Japan",
+      "special": true
+    },
+    {
+      "no": 337,
+      "booth": "B400",
+      "origBooth": "B461",
+      "nameKo": "마테리알",
+      "nameEn": "ma-te-ri-al",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 338,
+      "booth": "B400",
+      "origBooth": "B462",
+      "nameKo": "소시민워크",
+      "nameEn": "sosiminwork",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 339,
+      "booth": "B400",
+      "origBooth": "B463",
+      "nameKo": "그래픽하",
+      "nameEn": "GRAPHICHA",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 340,
+      "booth": "B400",
+      "origBooth": "B464",
+      "nameKo": "인공위성+82",
+      "nameEn": "Satellite+82",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 341,
+      "booth": "B400",
+      "origBooth": "B465",
+      "nameKo": "수목요일(모눈지)",
+      "nameEn": "sumokyoil(monunji)",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 342,
+      "booth": "B400",
+      "origBooth": "B466",
+      "nameKo": "하이오 웍스",
+      "nameEn": "Haio works",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 343,
+      "booth": "B400",
+      "origBooth": "B467",
+      "nameKo": "미씽아카이브",
+      "nameEn": "missing_archive",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 344,
+      "booth": "B400",
+      "origBooth": "B468",
+      "nameKo": "",
+      "nameEn": "Image 3",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 345,
+      "booth": "B400",
+      "origBooth": "B469",
+      "nameKo": "",
+      "nameEn": "Homeward",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 346,
+      "booth": "B400",
+      "origBooth": "B470",
+      "nameKo": "",
+      "nameEn": "Rusuban Studio",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 347,
+      "booth": "B400",
+      "origBooth": "B471",
+      "nameKo": "",
+      "nameEn": "Indie Publishers Association of Taiwan",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 348,
+      "booth": "B400",
+      "origBooth": "B471",
+      "nameKo": "",
+      "nameEn": "comma books",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 349,
+      "booth": "B400",
+      "origBooth": "B471",
+      "nameKo": "",
+      "nameEn": "Guerrilla Publishing Co., Ltd",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 350,
+      "booth": "B400",
+      "origBooth": "B471",
+      "nameKo": "",
+      "nameEn": "Halftone Press",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 351,
+      "booth": "B400",
+      "origBooth": "B471",
+      "nameKo": "",
+      "nameEn": "Kuroshio Culture Co. Ltd.",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 352,
+      "booth": "B400",
+      "origBooth": "B471",
+      "nameKo": "",
+      "nameEn": "LA VIE CINE studio",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 353,
+      "booth": "B400",
+      "origBooth": "B471",
+      "nameKo": "",
+      "nameEn": "Monsoon Zone Publishing Co., Ltd.",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 354,
+      "booth": "B400",
+      "origBooth": "B471",
+      "nameKo": "",
+      "nameEn": "MULU OFFICE CO., LTD.",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 355,
+      "booth": "B400",
+      "origBooth": "B471",
+      "nameKo": "",
+      "nameEn": "SiLoo Story",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 356,
+      "booth": "B400",
+      "origBooth": "B471",
+      "nameKo": "",
+      "nameEn": "Slowork Publishing Ltd.",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 357,
+      "booth": "B400",
+      "origBooth": "B471",
+      "nameKo": "",
+      "nameEn": "TOKHIU BOOKS CO., LTD.",
+      "countryKo": "타이완",
+      "countryEn": "Taiwan",
+      "special": true
+    },
+    {
+      "no": 358,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "Independent Publishers Expo",
+      "countryKo": "일본",
+      "countryEn": "Japan",
+      "special": true
+    },
+    {
+      "no": 359,
+      "booth": "B400",
+      "origBooth": "B473",
+      "nameKo": "",
+      "nameEn": "Singapore Art Book Fair",
+      "countryKo": "싱가포르",
+      "countryEn": "Singapore",
+      "special": true
+    },
+    {
+      "no": 360,
+      "booth": "B501",
+      "nameKo": "한솔제지(주)",
+      "nameEn": "Hansol Paper",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 361,
+      "booth": "B502",
+      "nameKo": "윤에디션",
+      "nameEn": "YUN EDITION",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 362,
+      "booth": "B503",
+      "nameKo": "롤러코스터",
+      "nameEn": "Rollercoaster Press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 363,
+      "booth": "B503",
+      "nameKo": "초록비책공방",
+      "nameEn": "Greenrainbooks",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 364,
+      "booth": "B504",
+      "nameKo": "마포출판문화진흥센터",
+      "nameEn": "PLATFORM P",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 365,
+      "booth": "B504",
+      "nameKo": "경옥초이",
+      "nameEn": "KYONGOKCHOI BOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 366,
+      "booth": "B504",
+      "nameKo": "내로라 출판사",
+      "nameEn": "The Naerora Bookmakers",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 367,
+      "booth": "B504",
+      "nameKo": "니라이카나이",
+      "nameEn": "NIRAIKANAI",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 368,
+      "booth": "B504",
+      "nameKo": "도깨비사",
+      "nameEn": "dokebisha",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 369,
+      "booth": "B504",
+      "nameKo": "두두플래닛",
+      "nameEn": "Dodoplanet",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 370,
+      "booth": "B504",
+      "nameKo": "두유라이크",
+      "nameEn": "DO! U LIKE",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 371,
+      "booth": "B504",
+      "nameKo": "리케의 디자인랩",
+      "nameEn": "lidilab",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 372,
+      "booth": "B504",
+      "nameKo": "마리유니버스",
+      "nameEn": "Mariuniverse",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 373,
+      "booth": "B504",
+      "nameKo": "머핀북",
+      "nameEn": "MuffinbooK",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 374,
+      "booth": "B504",
+      "nameKo": "무블출판사",
+      "nameEn": "MOBL Books",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 375,
+      "booth": "B504",
+      "nameKo": "무중력프레스",
+      "nameEn": "Zero Gravity Press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 376,
+      "booth": "B504",
+      "nameKo": "물숨",
+      "nameEn": "moolsoom",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 377,
+      "booth": "B504",
+      "nameKo": "밤두",
+      "nameEn": "bamdoo press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 378,
+      "booth": "B504",
+      "nameKo": "북스토어블",
+      "nameEn": "bookstorable",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 379,
+      "booth": "B504",
+      "nameKo": "붉은사슴",
+      "nameEn": "Red Deer",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 380,
+      "booth": "B504",
+      "nameKo": "빛틈",
+      "nameEn": "vitteum",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 381,
+      "booth": "B504",
+      "nameKo": "생각하는 달팽이",
+      "nameEn": "Thinking Snail",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 382,
+      "booth": "B504",
+      "nameKo": "선홍빛",
+      "nameEn": "Sunhongbit",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 383,
+      "booth": "B504",
+      "nameKo": "스튜디오 에디트",
+      "nameEn": "studio_edit",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 384,
+      "booth": "B504",
+      "nameKo": "스튜디오블랑",
+      "nameEn": "STUDIO BLANC",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 385,
+      "booth": "B504",
+      "nameKo": "쓰는사람",
+      "nameEn": "SNSR",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 386,
+      "booth": "B504",
+      "nameKo": "여가도시",
+      "nameEn": "Yeogadosi",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 387,
+      "booth": "B504",
+      "nameKo": "여름의서재",
+      "nameEn": "summerbooks",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 388,
+      "booth": "B504",
+      "nameKo": "유유히",
+      "nameEn": "UUHEE BOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 389,
+      "booth": "B504",
+      "nameKo": "인생책방/마이북하우스",
+      "nameEn": "Lifebookstore/Mybookhouse",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 390,
+      "booth": "B504",
+      "nameKo": "정재이프레스",
+      "nameEn": "j.jaeipress",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 391,
+      "booth": "B504",
+      "nameKo": "출판사 이베르",
+      "nameEn": "hiver press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 392,
+      "booth": "B504",
+      "nameKo": "테일브릿지",
+      "nameEn": "The Tale Bridge",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 393,
+      "booth": "B504",
+      "nameKo": "톰톰프레스",
+      "nameEn": "TomTom Press",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 394,
+      "booth": "B504",
+      "nameKo": "페이지미디어브릿지",
+      "nameEn": "PMB",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 395,
+      "booth": "B504",
+      "nameKo": "해파리",
+      "nameEn": "HAEPARY",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 396,
+      "booth": "B504",
+      "nameKo": "혼혼",
+      "nameEn": "HONHON",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 397,
+      "booth": "B505",
+      "nameKo": "쪽프레스",
+      "nameEn": "JJOKKPRESS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 398,
+      "booth": "B506",
+      "nameKo": "도서출판도반",
+      "nameEn": "DOBAN BOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 399,
+      "booth": "B601",
+      "nameKo": "안전가옥",
+      "nameEn": "SAFEHOUSE",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 400,
+      "booth": "B602",
+      "nameKo": "문학동네",
+      "nameEn": "Munhakdongne",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 401,
+      "booth": "B603",
+      "nameKo": "창비",
+      "nameEn": "Changbi Publishers",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 402,
+      "booth": "B604",
+      "nameKo": "아침달",
+      "nameEn": "ACHIMDAL",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 403,
+      "booth": "B605",
+      "nameKo": "다람출판사",
+      "nameEn": "Darambooks Publishing",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 404,
+      "booth": "B606",
+      "nameKo": "주식회사 휴먼밸류 / 더클래스",
+      "nameEn": "HUMAN VALUE, THE CLASS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 405,
+      "booth": "B607",
+      "nameKo": "북챗",
+      "nameEn": "BOOKCHAT",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 406,
+      "booth": "B608",
+      "nameKo": "썸북스",
+      "nameEn": "SOMEBOOKS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 407,
+      "booth": "B609",
+      "nameKo": "국가보훈부",
+      "nameEn": "Ministry of Patriots and Veterans Affairs",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 408,
+      "booth": "B701",
+      "nameKo": "(주)커피 리브레",
+      "nameEn": "COFFEE LIBRE",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 409,
+      "booth": "B702",
+      "nameKo": "BBK × SIBF 책 라운지 with 일룸",
+      "nameEn": "BBK × SIBF Book Lounge with iloom",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 410,
+      "booth": "B703",
+      "nameKo": "주제전시",
+      "nameEn": "Theme Exhibition",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 411,
+      "booth": "B704",
+      "nameKo": "책마당",
+      "nameEn": "Book Salon",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 412,
+      "booth": "B705",
+      "nameKo": "프레스룸",
+      "nameEn": "Press Room",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 413,
+      "booth": "B706",
+      "nameKo": "연사 라운지3",
+      "nameEn": "Speakders Lounge 3",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 414,
+      "booth": "B707",
+      "nameKo": "연사 라운지",
+      "nameEn": "Speakders Lounge",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 415,
+      "booth": "A1903",
+      "nameKo": "연사 라운지2",
+      "nameEn": "Speakders Lounge 2",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 416,
+      "booth": "A1807",
+      "nameKo": "연사 라운지1",
+      "nameEn": "Speakders Lounge 1",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 417,
+      "booth": "Ticket-Info_B1",
+      "nameKo": "B1홀 티켓‧인포데스크",
+      "nameEn": "Ticket Office‧Information - Hall B1",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 418,
+      "booth": "Ticket-Info_A",
+      "nameKo": "A홀 티켓‧인포데스크",
+      "nameEn": "Ticket Office‧Information - Hall A",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 419,
+      "booth": "A1101",
+      "nameKo": "황금가지",
+      "nameEn": "Goldenbough",
+      "countryKo": "",
+      "countryEn": "",
+      "special": false
+    },
+    {
+      "no": 420,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "Blue Sheep Co., ltd.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 421,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "ELVIS PRESS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 422,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "LLC INSECTS",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 423,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "Manazuru Publishing",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 424,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "Milllion Years Bookstore",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 425,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "Nanarokusha Publishing",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 426,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "rn press INC.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 427,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "Seki Shobo",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 428,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "Shinyodo",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 429,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "Shoshikankanbou",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 430,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "Tababooks",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 431,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "The Editorial Department Inc.",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 432,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "Troublemakers Publishing",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 433,
+      "booth": "B400",
+      "origBooth": "B472",
+      "nameKo": "",
+      "nameEn": "Tsumujikaze-sha",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 434,
+      "booth": "B400",
+      "origBooth": "B473",
+      "nameKo": "",
+      "nameEn": "Thing Books Pte Ltd",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 435,
+      "booth": "B400",
+      "origBooth": "B473",
+      "nameKo": "",
+      "nameEn": "THEBOOKSHOW",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    },
+    {
+      "no": 436,
+      "booth": "B400",
+      "origBooth": "B473",
+      "nameKo": "",
+      "nameEn": "Thumb Books",
+      "countryKo": "",
+      "countryEn": "",
+      "special": true
+    }
+  ]
+}
