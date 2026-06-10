@@ -230,25 +230,25 @@ export function BookFairMap() {
   }
 
   return (
-    <main className="min-h-screen bg-[#f4f1e8] text-[#171511]">
+    <main className="min-h-screen bg-background text-foreground">
       <section className="grid min-h-screen grid-cols-1 lg:grid-cols-[390px_minmax(0,1fr)]">
-        <aside className="flex min-h-0 flex-col border-b border-[#171511] bg-[#fffdf7] lg:h-screen lg:border-r lg:border-b-0">
-          <div className="border-b border-[#171511] px-5 py-4">
+        <aside className="flex min-h-0 flex-col border-b border-border bg-brand-panel lg:h-screen lg:border-r lg:border-b-0">
+          <div className="border-b border-border px-5 py-4">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-xs font-bold tracking-[0.28em] text-[#7b3f2b] uppercase">
+                <p className="text-xs font-bold tracking-[0.28em] text-brand-rust uppercase">
                   SIBF 2026
                 </p>
                 <h1 className="mt-2 text-2xl font-black tracking-normal">서울국제도서전 맵</h1>
               </div>
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-[#171511] bg-[#fff000] font-black">
+              <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-border bg-brand-yellow font-black">
                 {favorites.length}
               </div>
             </div>
           </div>
 
-          <div className="border-b border-[#171511] p-4">
-            <div className="flex items-center gap-2 border border-[#171511] bg-white px-3">
+          <div className="border-b border-border p-4">
+            <div className="flex items-center gap-2 border border-border bg-white px-3">
               <Search className="h-4 w-4 shrink-0" />
               <Input
                 value={query}
@@ -267,13 +267,13 @@ export function BookFairMap() {
                 </button>
               ) : null}
             </div>
-            <div className="mt-2 flex items-center justify-between text-xs font-bold text-[#716a5c]">
+            <div className="mt-2 flex items-center justify-between text-xs font-bold text-brand-muted">
               <span>표시 {filteredExhibitors.length}개</span>
               <span>전체 {exhibitors.length}개</span>
             </div>
           </div>
 
-          <div className="min-h-[230px] flex-1 overflow-y-auto border-b border-[#171511] p-3 lg:min-h-0">
+          <div className="min-h-[230px] flex-1 overflow-y-auto border-b border-border p-3 lg:min-h-0">
             <ul className="space-y-1">
               {filteredExhibitors.map((exhibitor) => {
                 const booth = boothForMap(exhibitor);
@@ -288,8 +288,8 @@ export function BookFairMap() {
                       className={cn(
                         "grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2 text-left transition",
                         isSelected
-                          ? "bg-[#171511] text-white"
-                          : "hover:bg-[#f0eadb] focus-visible:bg-[#f0eadb]"
+                          ? "bg-brand-ink text-white"
+                          : "hover:bg-brand-hover focus-visible:bg-brand-hover"
                       )}
                     >
                       <span className="min-w-0">
@@ -299,18 +299,18 @@ export function BookFairMap() {
                         <span
                           className={cn(
                             "block truncate text-xs",
-                            isSelected ? "text-white/70" : "text-[#716a5c]"
+                            isSelected ? "text-white/70" : "text-brand-muted"
                           )}
                         >
                           {exhibitor.nameEn || exhibitor.countryEn || "Seoul International Book Fair"}
                         </span>
                       </span>
                       <span className="inline-flex items-center gap-2">
-                        {isFavorite ? <Heart className="h-4 w-4 fill-[#ff5a3d] text-[#ff5a3d]" /> : null}
+                        {isFavorite ? <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" /> : null}
                         <span
                           className={cn(
                             "min-w-16 border px-2 py-1 text-center text-xs font-black",
-                            isSelected ? "border-white/40" : "border-[#171511]"
+                            isSelected ? "border-white/40" : "border-border"
                           )}
                         >
                           {booth}
@@ -324,14 +324,14 @@ export function BookFairMap() {
           </div>
 
           {selected ? (
-            <div className="bg-[#00ff66] p-4">
+            <div className="bg-brand-green p-4">
               <div className="flex items-start justify-between gap-3">
                 <div>
-                  <p className="inline-flex border border-[#171511] bg-[#171511] px-3 py-1 text-sm font-black text-white">
+                  <p className="inline-flex border border-border bg-brand-ink px-3 py-1 text-sm font-black text-white">
                     {selectedBooth}
                   </p>
                   <h2 className="mt-3 text-xl font-black">{getDisplayName(selected)}</h2>
-                  {selected.nameEn ? <p className="text-sm font-bold text-[#214229]">{selected.nameEn}</p> : null}
+                  {selected.nameEn ? <p className="text-sm font-bold text-brand-green-deep">{selected.nameEn}</p> : null}
                 </div>
                 <Button
                   type="button"
@@ -339,36 +339,36 @@ export function BookFairMap() {
                   size="icon"
                   onClick={() => toggleFavorite(selectedBooth)}
                   aria-label="부스 찜하기"
-                  className="border-[#171511] bg-white hover:bg-[#fff000]"
+                  className="border-border bg-white hover:bg-brand-yellow"
                 >
                   <Heart
                     className={cn(
                       "h-4 w-4",
-                      favoriteSet.has(selectedBooth) && "fill-[#ff5a3d] text-[#ff5a3d]"
+                      favoriteSet.has(selectedBooth) && "fill-brand-coral text-brand-coral"
                     )}
                   />
                 </Button>
               </div>
 
               <div className="mt-4 grid grid-cols-2 gap-2 text-sm font-bold">
-                <div className="border border-[#171511] bg-white px-3 py-2">
+                <div className="border border-border bg-white px-3 py-2">
                   공유 부스
                   <strong className="block text-lg">{selectedBoothItems.length}</strong>
                 </div>
-                <div className="border border-[#171511] bg-white px-3 py-2">
+                <div className="border border-border bg-white px-3 py-2">
                   구분
                   <strong className="block text-lg">{selected.special ? "시설" : "참가사"}</strong>
                 </div>
               </div>
 
               {selectedBoothItems.length > 1 ? (
-                <div className="mt-3 max-h-28 overflow-y-auto border border-[#171511] bg-white">
+                <div className="mt-3 max-h-28 overflow-y-auto border border-border bg-white">
                   {selectedBoothItems.slice(0, 12).map((item) => (
                     <button
                       key={item.no}
                       type="button"
                       onClick={() => selectExhibitor(item)}
-                      className="block w-full border-b border-[#171511]/20 px-3 py-2 text-left text-sm font-bold last:border-b-0 hover:bg-[#fff000]"
+                      className="block w-full border-b border-border/20 px-3 py-2 text-left text-sm font-bold last:border-b-0 hover:bg-brand-yellow"
                     >
                       {getDisplayName(item)}
                     </button>
@@ -379,26 +379,26 @@ export function BookFairMap() {
           ) : null}
         </aside>
 
-        <section className="flex min-h-[70vh] flex-col bg-[#e5ded1] lg:h-screen">
-          <div className="flex items-center justify-between gap-3 border-b border-[#171511] bg-[#fffdf7] px-4 py-3">
+        <section className="flex min-h-[70vh] flex-col bg-brand-surface lg:h-screen">
+          <div className="flex items-center justify-between gap-3 border-b border-border bg-brand-panel px-4 py-3">
             <div className="flex items-center gap-3">
               <LocateFixed className="h-5 w-5" />
               <p className="text-sm font-black">Floor Plan</p>
             </div>
             <div className="flex items-center gap-2">
-              <div className="hidden items-center gap-2 text-xs font-bold text-[#625b50] sm:flex">
+              <div className="hidden items-center gap-2 text-xs font-bold text-brand-subtle sm:flex">
                 <span>{exhibitors.length} entries</span>
-                <span className="h-1 w-1 rounded-full bg-[#625b50]" />
+                <span className="h-1 w-1 rounded-full bg-brand-subtle" />
                 <span>{shapes.length} shapes</span>
               </div>
-              <div className="flex items-center border border-[#171511] bg-white">
+              <div className="flex items-center border border-border bg-white">
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon-sm"
                   onClick={() => zoomBy(0.86)}
                   aria-label="지도 축소"
-                  className="rounded-none border-r border-[#171511]"
+                  className="rounded-none border-r border-border"
                 >
                   <Minus className="h-4 w-4" />
                 </Button>
@@ -411,7 +411,7 @@ export function BookFairMap() {
                   size="icon-sm"
                   onClick={() => zoomBy(1.16)}
                   aria-label="지도 확대"
-                  className="rounded-none border-x border-[#171511]"
+                  className="rounded-none border-x border-border"
                 >
                   <Plus className="h-4 w-4" />
                 </Button>
@@ -436,15 +436,15 @@ export function BookFairMap() {
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
             className={cn(
-              "relative flex-1 overflow-hidden bg-[#d8d1c4] touch-none select-none",
+              "relative flex-1 overflow-hidden bg-brand-map touch-none select-none",
               isDragging ? "cursor-grabbing" : "cursor-grab"
             )}
           >
-            <div className="pointer-events-none absolute top-4 left-4 z-30 border border-[#171511] bg-[#fffdf7]/95 px-3 py-2 text-xs font-bold shadow-[3px_3px_0_#171511]">
+            <div className="pointer-events-none absolute top-4 left-4 z-30 border border-border bg-brand-panel/95 px-3 py-2 text-xs font-bold shadow-brutal-sm">
               휠 확대/축소 · 드래그 이동
             </div>
             <div
-              className="absolute top-0 left-0 overflow-hidden border border-[#171511] bg-white shadow-[8px_8px_0_#171511] will-change-transform"
+              className="absolute top-0 left-0 overflow-hidden border border-border bg-white shadow-brutal will-change-transform"
               style={{
                 width: MAP_WIDTH,
                 height: MAP_HEIGHT,
@@ -480,11 +480,11 @@ export function BookFairMap() {
                     onPointerDown={(event) => event.stopPropagation()}
                     onClick={() => selectExhibitor(boothItems[0])}
                     className={cn(
-                      "absolute transition focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-[#ff5a3d]",
+                      "absolute transition focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-brand-coral",
                       isSelected ? "z-30" : isFavorite ? "z-20" : "z-10",
-                      isSelected && "bg-[#00ff66]/45 ring-4 ring-[#00ff66]",
-                      isFavorite && !isSelected && "bg-[#ff5a3d]/25 ring-2 ring-[#ff5a3d]",
-                      !isSelected && !isFavorite && "hover:bg-[#fff000]/35 hover:ring-2 hover:ring-[#171511]"
+                      isSelected && "bg-brand-green/45 ring-4 ring-brand-green",
+                      isFavorite && !isSelected && "bg-brand-coral/25 ring-2 ring-brand-coral",
+                      !isSelected && !isFavorite && "hover:bg-brand-yellow/35 hover:ring-2 hover:ring-brand-ink"
                     )}
                     style={{
                       left: shape.x,
@@ -494,7 +494,7 @@ export function BookFairMap() {
                     }}
                   >
                     {isFavorite ? (
-                      <Star className="absolute -top-2 -right-2 h-4 w-4 fill-[#ff5a3d] text-[#171511]" />
+                      <Star className="absolute -top-2 -right-2 h-4 w-4 fill-brand-coral text-foreground" />
                     ) : null}
                   </button>
                 );
@@ -502,7 +502,7 @@ export function BookFairMap() {
 
               {selectedShape ? (
                 <div
-                  className="pointer-events-none absolute z-[5] border-2 border-[#171511] bg-[#00ff66]/30 shadow-[0_0_0_5px_#00ff66]"
+                  className="pointer-events-none absolute z-[5] border-2 border-border bg-brand-green/30 shadow-[0_0_0_5px_var(--color-brand-green)]"
                   style={{
                     left: selectedShape.x,
                     top: selectedShape.y,
@@ -517,9 +517,9 @@ export function BookFairMap() {
               <div
                 key={boothNumber}
                 className={cn(
-                  "pointer-events-none absolute z-40 max-w-[220px] text-center text-xs font-black leading-tight text-[#171511]",
-                  isSelected && "text-[#032f14]",
-                  isFavorite && !isSelected && "text-[#7a1f12]"
+                  "pointer-events-none absolute z-40 max-w-[220px] text-center text-xs font-black leading-tight text-foreground",
+                  isSelected && "text-brand-green-ink",
+                  isFavorite && !isSelected && "text-brand-coral-deep"
                 )}
                 style={{
                   left: transform.x + (shape.x + shape.width / 2) * transform.scale,
@@ -527,7 +527,7 @@ export function BookFairMap() {
                   width: 156,
                   fontSize: 12,
                   textShadow:
-                    "0 1px 0 #fffdf7, 1px 0 0 #fffdf7, 0 -1px 0 #fffdf7, -1px 0 0 #fffdf7",
+                    "0 1px 0 var(--color-brand-panel), 1px 0 0 var(--color-brand-panel), 0 -1px 0 var(--color-brand-panel), -1px 0 0 var(--color-brand-panel)",
                   transform: "translate(-50%, -100%)",
                   wordBreak: "keep-all",
                   overflowWrap: "anywhere",
@@ -539,16 +539,16 @@ export function BookFairMap() {
           </div>
 
           {favoriteItems.length ? (
-            <div className="border-t border-[#171511] bg-[#fffdf7] px-4 py-3">
+            <div className="border-t border-border bg-brand-panel px-4 py-3">
               <div className="flex gap-2 overflow-x-auto">
                 {favoriteItems.map((item) => (
                   <button
                     key={boothForMap(item)}
                     type="button"
                     onClick={() => selectExhibitor(item)}
-                    className="inline-flex shrink-0 items-center gap-2 border border-[#171511] bg-white px-3 py-2 text-sm font-black hover:bg-[#fff000]"
+                    className="inline-flex shrink-0 items-center gap-2 border border-border bg-white px-3 py-2 text-sm font-black hover:bg-brand-yellow"
                   >
-                    <Heart className="h-4 w-4 fill-[#ff5a3d] text-[#ff5a3d]" />
+                    <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" />
                     {boothForMap(item)} {getDisplayName(item)}
                   </button>
                 ))}
