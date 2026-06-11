@@ -12,8 +12,8 @@ export function Panel({
   action?: ReactNode;
 }) {
   return (
-    <section className="border-b border-border bg-brand-panel">
-      <div className="mx-auto flex w-full max-w-6xl flex-col gap-4 px-4 py-5 sm:px-6 lg:px-8">
+    <section className="flex flex-1 flex-col border-b border-border bg-brand-panel">
+      <div className="mx-auto flex w-full max-w-6xl flex-1 flex-col gap-4 px-4 py-5 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between gap-3">
           <div className="flex min-w-0 items-center gap-3">
             <span className="flex h-10 w-10 shrink-0 items-center justify-center border border-border bg-brand-yellow">

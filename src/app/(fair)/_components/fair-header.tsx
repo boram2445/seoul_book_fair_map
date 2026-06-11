@@ -22,10 +22,10 @@ export function FairHeader() {
     <header className="sticky top-0 z-50 border-b border-border bg-brand-panel">
       <div className="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
         <div className="flex items-center justify-between gap-4">
-          <div className="min-w-0">
+          <Link href="/" className="min-w-0">
             <p className="text-xs font-bold tracking-[0.28em] text-brand-rust uppercase">SIBF 2026</p>
             <h1 className="mt-1 text-2xl font-black tracking-normal">서울국제도서전 맵</h1>
-          </div>
+          </Link>
           <div className="flex shrink-0 items-center gap-2">
             <div className="flex h-9 items-center gap-2 border border-border bg-brand-yellow px-3 text-sm font-black">
               <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" />
