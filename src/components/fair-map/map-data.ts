@@ -9,6 +9,7 @@ type PublisherDetail = {
   name: string;
   categories: string[];
   homepage: string;
+  instagram?: string;
   introduction: string;
 };
 
@@ -18,6 +19,19 @@ const instagramLinksByNo: Record<number, Pick<MapExhibitor, "instagramUrl">> = {
   },
 };
 
+function getInstagramUrl(value?: string) {
+  if (!value) return undefined;
+
+  const match = value.match(/https?:\/\/(?:www\.)?instagram\.com\/[^\s]+/i);
+  return match?.[0];
+}
+
+function getHomepageUrl(value?: string) {
+  if (!value || getInstagramUrl(value)) return undefined;
+
+  return value;
+}
+
 const publisherDetails = publisherDetailData.details as PublisherDetail[];
 const publisherDetailByBoothAndName = new Map(
   publisherDetails.map((detail) => [`${detail.boothNumber}::${detail.name}`, detail])
@@ -25,12 +39,15 @@ const publisherDetailByBoothAndName = new Map(
 
 export const exhibitors = (exhibitorData.exhibitors as MapExhibitor[]).map((exhibitor) => {
   const publisherDetail = publisherDetailByBoothAndName.get(`${boothForMap(exhibitor)}::${exhibitor.nameKo}`);
+  const homepage = publisherDetail?.homepage;
+  const instagram = publisherDetail?.instagram || getInstagramUrl(homepage);
 
   return {
     ...exhibitor,
     categories: publisherDetail?.categories ?? [],
     introduction: publisherDetail?.introduction || undefined,
-    homepageUrl: publisherDetail?.homepage || undefined,
+    instagramUrl: instagram,
+    homepageUrl: getHomepageUrl(homepage),
     ...instagramLinksByNo[exhibitor.no],
   };
 });

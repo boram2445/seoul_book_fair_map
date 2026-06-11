@@ -25,11 +25,11 @@ export function ExportFavoritesButton({ booths }: ExportFavoritesButtonProps) {
     <>
       <Button
         type="button"
-        variant="outline"
+        variant="ghost"
         size="sm"
         onClick={exportPdf}
         disabled={isExporting || items.length === 0}
-        className="shrink-0 border-border bg-white hover:bg-brand-yellow"
+        className="shrink-0 rounded-none border border-border bg-white hover:bg-brand-yellow"
       >
         {isExporting ? (
           <Loader2 className="h-4 w-4 animate-spin" />
