@@ -2,16 +2,33 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  DndContext,
+  type DragEndEvent,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  horizontalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  GripVertical,
   Heart,
   Instagram,
   Minus,
   Plus,
   Info,
   RotateCcw,
+  Route,
   Search,
   Star,
   X,
@@ -23,13 +40,13 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+import { getBoothEvents, getEventScheduleLabel } from "./booth-events";
 import { boothForMap, exhibitors, getDisplayName, getSearchText, shapes } from "./map-data";
 import { ExportFavoritesButton } from "./favorites-pdf/index";
-import type { MapExhibitor } from "./types";
+import { buildRoute, MAP_HEIGHT, MAP_WIDTH } from "./route-path";
+import type { BoothShape, MapExhibitor } from "./types";
 import { useFavorites } from "./use-favorites";
 
-const MAP_WIDTH = 3230;
-const MAP_HEIGHT = 3650;
 const MIN_SCALE = 0.16;
 const MAX_SCALE = 2.4;
 
@@ -47,81 +64,66 @@ function computeSnapOffsets(vh: number) {
   };
 }
 
-type BoothEvent = {
-  time?: string;
-  period?: string;
-  category: string;
-  title: string;
-  content: string;
-  sourceName: string;
-  instagramUrl?: string;
-  imageUrl?: string;
-};
-
-function getBoothEvents(booth: string): BoothEvent[] {
-  if (booth === "A1703") {
-    return [
-      {
-        period: "06.01-06.14",
-        category: "댓글이벤트",
-        title: "[#서울국제도서전] 티켓 증정 댓글이벤트",
-        content: `올해 예스24 부스 컨셉은 YES24 BASE CAMP입니다.
-
-예스24 부스 방문 전, 꿀팁 3가지 확인하고 서울국제도서전 티켓 받아가세요. 지금 댓글로 참여하세요.
-
-참여 방법
-1. 예스24(@yes24_official) 팔로우
-2. 도서전 함께 가고 싶은 친구 태그
-3. 예스24 부스 방문의 기대감을 이모지로 댓글 작성
-
-이벤트 정보
-참여 기간: 2026년 6월 1일 ~ 6월 14일
-당첨 인원: 30명
-당첨 경품: 서울국제도서전 티켓 1인 1매 제공
-당첨자 발표: 6월 15일
-초대권 발송: 6월 19일, 카카오톡 알림톡 발송
-
-#예스24 #예스24베이스캠프 #리딩런`,
-        sourceName: "YES24 Instagram",
-        instagramUrl: "https://www.instagram.com/yes24_official/",
-      },
-    ];
-  }
-
-  return [
-    {
-      time: "10:30-11:00",
-      category: "사인회",
-      title: `${booth} 작가 사인회`,
-      content: "부스에서 신간 구매자를 대상으로 진행되는 현장 사인회입니다. 대기 상황에 따라 조기 마감될 수 있습니다.",
-      sourceName: "Instagram",
-      instagramUrl: "https://www.instagram.com/ghost__books/",
-    },
-    {
-      time: "13:20-14:00",
-      category: "토크",
-      title: "오늘의 책을 고르는 대화",
-      content: "출판사가 고른 대표 도서와 제작 이야기를 짧게 나누는 미니 토크입니다.",
-      sourceName: "Instagram",
-      instagramUrl: "https://www.instagram.com/ghost__books/",
-    },
-    {
-      time: "16:00-16:30",
-      category: "이벤트",
-      title: "현장 한정 굿즈 증정",
-      content: "부스 방문 및 SNS 팔로우 인증 시 한정 수량 굿즈를 증정합니다.",
-      sourceName: "Instagram",
-      instagramUrl: "https://www.instagram.com/ghost__books/",
-    },
-  ] satisfies BoothEvent[];
-}
-
-function getEventScheduleLabel(event: BoothEvent) {
-  return event.period ?? event.time ?? "상시";
-}
-
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+// ─── 찜 목록 바 — 드래그 정렬 칩 ────────────────────────────────────────────
+
+function SortableFavoriteChip({
+  booth,
+  label,
+  onSelect,
+  onRemove,
+}: {
+  booth: string;
+  label: string;
+  onSelect: () => void;
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: booth });
+
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className={cn(
+        "inline-flex shrink-0 items-stretch border border-border bg-white text-sm font-black transition",
+        isDragging && "opacity-50 shadow-lg"
+      )}
+    >
+      <button
+        type="button"
+        {...listeners}
+        aria-label="순서 변경"
+        className="flex cursor-grab items-center border-r border-border px-2 text-brand-muted hover:bg-brand-hover active:cursor-grabbing touch-none"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={onSelect}
+        className="flex items-center gap-2 px-3 py-2 hover:bg-brand-yellow"
+      >
+        <span
+          role="button"
+          aria-label="찜 해제"
+          tabIndex={0}
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); onRemove(); } }}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="inline-flex cursor-pointer items-center [&:hover>svg]:fill-brand-coral/40 [&:hover>svg]:text-brand-coral/40"
+        >
+          <Heart className="h-4 w-4 fill-brand-coral text-brand-coral transition-colors" />
+        </span>
+        {label}
+      </button>
+    </div>
+  );
 }
 
 export function BookFairMap() {
@@ -133,8 +135,19 @@ export function BookFairMap() {
   const [hoveredBooth, setHoveredBooth] = useState("");
   const [isEventPanelOpen, setIsEventPanelOpen] = useState(false);
   const [isIntroductionExpanded, setIsIntroductionExpanded] = useState(false);
-  const { favorites, toggleFavorite } = useFavorites();
+  const { favorites, toggleFavorite, reorderFavorites } = useFavorites();
   const isMobile = useIsMobile();
+  const favoriteSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
+
+  function onFavoriteDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = favorites.indexOf(String(active.id));
+    const newIndex = favorites.indexOf(String(over.id));
+    reorderFavorites(arrayMove(favorites, oldIndex, newIndex));
+  }
   /** 시트 translateY 오프셋(px). 0 = 완전 확장(90vh 노출), 클수록 아래로 밀림. 첫 진입 = 절반 */
   const [sheetOffset, setSheetOffset] = useState(() => {
     if (typeof window === "undefined") return 0;
@@ -153,9 +166,31 @@ export function BookFairMap() {
     originY: 0,
   });
 
+  const [isRouteVisible, setIsRouteVisible] = useState(false);
+
   const shapesByBooth = useMemo(() => {
     return new Map(shapes.map((shape) => [shape.boothNumber, shape]));
   }, []);
+
+  /** A* 경로 꺾은선 — SVG polyline points */
+  const routePath = useMemo(() => {
+    if (!isRouteVisible || favorites.length < 2) return [];
+    return buildRoute(favorites);
+  }, [isRouteVisible, favorites]);
+
+  /** 순번 배지 위치 — 각 찜 부스의 중심 */
+  const routeBadges = useMemo(() => {
+    if (!isRouteVisible || favorites.length < 2) return [];
+    return favorites
+      .map((booth) => shapesByBooth.get(booth))
+      .filter((shape): shape is BoothShape => Boolean(shape))
+      .map((shape, index) => ({
+        x: shape.x + shape.width / 2,
+        y: shape.y + shape.height / 2,
+        boothNumber: shape.boothNumber,
+        index,
+      }));
+  }, [isRouteVisible, favorites, shapesByBooth]);
 
   const exhibitorsByBooth = useMemo(() => {
     return exhibitors.reduce<Record<string, MapExhibitor[]>>((acc, exhibitor) => {
@@ -405,6 +440,32 @@ export function BookFairMap() {
   // 끝까지 스크롤하려면 동일한 패딩이 필요하다. 데스크톱은 0.
   const scrollPaddingBottom = isMobile ? sheetOffset : 0;
 
+  // 찜 바 — 데스크톱 하단과 모바일 드로어 최상단에서 공유
+  const favoritesBar = favoriteItems.length ? (
+    <DndContext
+      sensors={favoriteSensors}
+      collisionDetection={closestCenter}
+      onDragEnd={onFavoriteDragEnd}
+    >
+      <SortableContext items={favorites} strategy={horizontalListSortingStrategy}>
+        <div className="flex gap-2 overflow-x-auto px-4 py-3">
+          {favoriteItems.map((item) => {
+            const booth = boothForMap(item);
+            return (
+              <SortableFavoriteChip
+                key={booth}
+                booth={booth}
+                label={`${booth} ${getDisplayName(item)}`}
+                onSelect={() => selectExhibitor(item)}
+                onRemove={() => toggleFavorite(booth)}
+              />
+            );
+          })}
+        </div>
+      </SortableContext>
+    </DndContext>
+  ) : null;
+
   // 검색·필터·리스트 — 데스크톱 aside와 모바일 시트 리스트 뷰에서 공유
   const listContent = (
     <>
@@ -485,7 +546,18 @@ export function BookFairMap() {
                     </span>
                   </span>
                   <span className="inline-flex items-center gap-2">
-                    {isFavorite ? <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" /> : null}
+                    {isFavorite ? (
+                      <span
+                        role="button"
+                        aria-label="찜 해제"
+                        tabIndex={0}
+                        onClick={(e) => { e.stopPropagation(); toggleFavorite(booth); }}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); toggleFavorite(booth); } }}
+                        className="inline-flex cursor-pointer items-center [&:hover>svg]:fill-brand-coral/40 [&:hover>svg]:text-brand-coral/40"
+                      >
+                        <Heart className="h-4 w-4 fill-brand-coral text-brand-coral transition-colors" />
+                      </span>
+                    ) : null}
                     <span
                       className={cn(
                         "min-w-16 border px-2 py-1 text-center text-xs font-black",
@@ -742,41 +814,23 @@ export function BookFairMap() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex items-center border border-border bg-white">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => zoomBy(0.86)}
-                  aria-label="지도 축소"
-                  className="rounded-none border-r border-border"
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="min-w-14 px-2 text-center text-xs font-black">
-                  {Math.round(transform.scale * 100)}%
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => zoomBy(1.16)}
-                  aria-label="지도 확대"
-                  className="rounded-none border-x border-border"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={resetMap}
-                  aria-label="지도 초기화"
-                  className="rounded-none"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsRouteVisible((v) => !v)}
+                disabled={favorites.length < 2}
+                aria-label="경로 표시 토글"
+                className={cn(
+                  "rounded-none border-border",
+                  isRouteVisible
+                    ? "bg-brand-coral text-white hover:bg-brand-coral hover:text-white"
+                    : "bg-white"
+                )}
+              >
+                <Route className="h-4 w-4" />
+                경로
+              </Button>
               <ExportFavoritesButton booths={favorites} />
             </div>
           </div>
@@ -860,6 +914,92 @@ export function BookFairMap() {
                   }}
                 />
               ) : null}
+
+              {/* 경로 오버레이 — 찜 순서대로 부스 중심을 잇는 선 + 순번 배지 */}
+              {routePath.length >= 2 ? (
+                <svg
+                  className="pointer-events-none absolute inset-0 z-[35] overflow-visible"
+                  style={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
+                  viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+                  aria-hidden
+                >
+                  {/* A* 통로 경로 꺾은선 */}
+                  <polyline
+                    points={routePath.map((p) => `${p.x},${p.y}`).join(" ")}
+                    fill="none"
+                    stroke="var(--color-brand-coral)"
+                    strokeWidth={8}
+                    strokeDasharray="20 8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity={0.85}
+                  />
+                  {/* 찜 순번 배지 — 각 부스 중심 */}
+                  {routeBadges.map((badge) => (
+                    <g key={badge.boothNumber}>
+                      <circle
+                        cx={badge.x}
+                        cy={badge.y}
+                        r={20}
+                        fill="var(--color-brand-coral)"
+                        stroke="white"
+                        strokeWidth={4}
+                      />
+                      <text
+                        x={badge.x}
+                        y={badge.y + 7}
+                        textAnchor="middle"
+                        fill="white"
+                        fontSize={18}
+                        fontWeight="bold"
+                        fontFamily="system-ui, sans-serif"
+                      >
+                        {badge.index + 1}
+                      </text>
+                    </g>
+                  ))}
+                </svg>
+              ) : null}
+            </div>
+
+            {/* 줌 컨트롤 — 지도 우측 상단 플로팅 */}
+            <div
+              className="pointer-events-auto absolute top-3 right-4 z-50 flex items-center border border-border bg-white shadow-brutal-sm"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => zoomBy(0.86)}
+                aria-label="지도 축소"
+                className="rounded-none border-r border-border"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="min-w-14 px-2 text-center text-xs font-black">
+                {Math.round(transform.scale * 100)}%
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => zoomBy(1.16)}
+                aria-label="지도 확대"
+                className="rounded-none border-x border-border"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={resetMap}
+                aria-label="지도 초기화"
+                className="rounded-none"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
             </div>
 
             {activeMapLabels.map(({ boothNumber, label, shape, isSelected, isFavorite }) => (
@@ -897,22 +1037,10 @@ export function BookFairMap() {
             ) : null}
           </div>
 
-          {/* 찜 목록 바 — 모바일(768px 미만)에서는 바텀시트 peek과 겹치므로 md 이상 전용 */}
+          {/* 찜 목록 바 — 모바일(768px 미만)에서는 바텀시트에 있으므로 md 이상 전용 */}
           {favoriteItems.length ? (
-            <div className="hidden border-t border-border bg-brand-panel px-4 py-3 md:block">
-              <div className="flex gap-2 overflow-x-auto">
-                {favoriteItems.map((item) => (
-                  <button
-                    key={boothForMap(item)}
-                    type="button"
-                    onClick={() => selectExhibitor(item)}
-                    className="inline-flex shrink-0 cursor-pointer items-center gap-2 border border-border bg-white px-3 py-2 text-sm font-black hover:bg-brand-yellow"
-                  >
-                    <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" />
-                    {boothForMap(item)} {getDisplayName(item)}
-                  </button>
-                ))}
-              </div>
+            <div className="hidden border-t border-border bg-brand-panel md:block">
+              {favoritesBar}
             </div>
           ) : null}
         </section>
@@ -978,7 +1106,14 @@ export function BookFairMap() {
               </div>
             </div>
           ) : (
-            <div className="flex min-h-0 flex-1 flex-col">{listContent}</div>
+            <div className="flex min-h-0 flex-1 flex-col">
+              {favoriteItems.length ? (
+                <div className="shrink-0 border-b border-border bg-brand-panel">
+                  {favoritesBar}
+                </div>
+              ) : null}
+              {listContent}
+            </div>
           )}
         </div>
       ) : null}

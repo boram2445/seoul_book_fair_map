@@ -1,44 +1,251 @@
 "use client";
 
-import { useMemo } from "react";
-import { Heart } from "lucide-react";
+import { useState, useMemo } from "react";
+import {
+  DndContext,
+  type DragEndEvent,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import { CalendarDays, GripVertical, Heart, Instagram, MapPinned, NotebookPen } from "lucide-react";
 
+import { getMockHeartCount } from "@/app/(fair)/_lib/publisher-stats";
+import { getBoothEvents, getEventScheduleLabel } from "@/components/fair-map/booth-events";
 import { boothForMap, exhibitors, getDisplayName } from "@/components/fair-map/map-data";
 import { useFavorites } from "@/components/fair-map/use-favorites";
+import { useBoothMemo } from "@/components/fair-map/use-booth-memo";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+// ─── 개별 카드 ────────────────────────────────────────────────────────────────
+
+type ExhibitorItem = (typeof exhibitors)[number];
+
+function SortableBoothCard({
+  booth,
+  exhibitor,
+  index,
+  memo,
+  onMemoChange,
+  onFavoriteToggle,
+}: {
+  booth: string;
+  exhibitor: ExhibitorItem;
+  index: number;
+  memo: string;
+  onMemoChange: (booth: string, text: string) => void;
+  onFavoriteToggle: (booth: string) => void;
+}) {
+  // 마운트 시 초기값으로만 사용, 변경은 onBlur 저장
+  const [localMemo, setLocalMemo] = useState(memo);
+  const events = getBoothEvents(booth);
+  const heartCount = getMockHeartCount(exhibitor.no) + 1;
+
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: booth });
+
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <li
+      ref={setNodeRef}
+      style={style}
+      className={cn("border border-border bg-white", isDragging && "opacity-50 shadow-brutal-sm")}
+    >
+      <div className="grid grid-cols-[42px_minmax(0,1fr)]">
+        <button
+          type="button"
+          {...attributes}
+          {...listeners}
+          className="flex cursor-grab items-center justify-center border-r border-border bg-brand-panel text-brand-muted hover:bg-brand-hover active:cursor-grabbing touch-none"
+          aria-label="순서 변경"
+        >
+          <GripVertical className="h-4 w-4" />
+        </button>
+        <article>
+          <div className="grid gap-3 border-b border-border p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+            <div className="min-w-0">
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="border border-border bg-brand-green px-2 py-1 text-xs font-black text-brand-green-ink">
+                  {index + 1}
+                </span>
+                <span className="border border-border bg-brand-panel px-2 py-1 text-xs font-black text-brand-muted">
+                  {booth}
+                </span>
+                <span className="inline-flex items-center gap-1 border border-border bg-white px-2 py-1 text-xs font-black text-brand-coral-deep">
+                  <Heart className="h-3.5 w-3.5 fill-brand-coral text-brand-coral" />
+                  {heartCount}
+                </span>
+              </div>
+              <h3 className="mt-3 truncate text-lg font-black">{getDisplayName(exhibitor)}</h3>
+              {exhibitor.nameEn ? (
+                <p className="text-sm font-bold text-brand-muted">{exhibitor.nameEn}</p>
+              ) : null}
+              {exhibitor.categories?.length ? (
+                <div className="mt-3 flex flex-wrap gap-1.5">
+                  {[...new Set(exhibitor.categories)].slice(0, 6).map((category) => (
+                    <span
+                      key={category}
+                      className="border border-border/60 bg-brand-panel px-2 py-1 text-xs font-black text-brand-subtle"
+                    >
+                      {category}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+
+            <div className="flex flex-wrap gap-2 md:justify-end">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label="찜 해제"
+                className="rounded-none border-border bg-white hover:bg-brand-yellow"
+                onClick={() => onFavoriteToggle(booth)}
+              >
+                <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" />
+              </Button>
+              {exhibitor.instagramUrl ? (
+                <Button
+                  asChild
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="rounded-none border-border bg-brand-panel font-black hover:bg-brand-yellow"
+                >
+                  <a href={exhibitor.instagramUrl} target="_blank" rel="noreferrer">
+                    <Instagram className="h-4 w-4" />
+                    Instagram
+                  </a>
+                </Button>
+              ) : null}
+            </div>
+          </div>
+
+          <div className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]">
+            <div>
+              <div className="mb-2 flex items-center gap-2 text-xs font-black text-brand-muted">
+                <NotebookPen className="h-3.5 w-3.5" />
+                <span>방문 메모</span>
+              </div>
+              <textarea
+                value={localMemo}
+                onChange={(e) => setLocalMemo(e.target.value)}
+                onBlur={(e) => onMemoChange(booth, e.target.value)}
+                placeholder="구매할 책, 사인회 시간, 들를 이유를 적어두세요"
+                rows={4}
+                className="min-h-24 w-full resize-none border border-border bg-white px-3 py-2 text-sm font-bold leading-6 text-foreground placeholder:text-brand-muted focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              />
+            </div>
+
+            <div className="border border-border bg-brand-surface">
+              <div className="flex items-center justify-between border-b border-border px-3 py-2">
+                <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
+                  <CalendarDays className="h-4 w-4" />
+                  이벤트
+                </span>
+                <span className="text-xs font-black text-brand-muted">{events.length}개 예정</span>
+              </div>
+              <ul>
+                {events.slice(0, 3).map((event) => (
+                  <li
+                    key={`${getEventScheduleLabel(event)}-${event.title}`}
+                    className="grid grid-cols-[5.75rem_minmax(0,1fr)] gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0"
+                  >
+                    <span className="font-mono text-xs font-black whitespace-nowrap text-brand-coral-deep">
+                      {getEventScheduleLabel(event)}
+                    </span>
+                    <span className="min-w-0">
+                      <span className="mr-1 border border-border bg-white px-1.5 py-0.5 text-[11px] font-black">
+                        {event.category}
+                      </span>
+                      <span className="font-bold">{event.title}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
+        </article>
+      </div>
+    </li>
+  );
+}
+
+// ─── 메인 리스트 ──────────────────────────────────────────────────────────────
 
 export function RouteList() {
-  const { favorites } = useFavorites();
+  const { favorites, reorderFavorites, toggleFavorite } = useFavorites();
+  const { memos, updateMemo } = useBoothMemo();
 
   const favoriteItems = useMemo(() => {
     return favorites
-      .map((booth) => exhibitors.find((exhibitor) => boothForMap(exhibitor) === booth))
-      .filter((exhibitor): exhibitor is (typeof exhibitors)[number] => Boolean(exhibitor));
+      .map((booth) => {
+        const exhibitor = exhibitors.find((e) => boothForMap(e) === booth);
+        return exhibitor ? { booth, exhibitor } : null;
+      })
+      .filter(
+        (item): item is { booth: string; exhibitor: ExhibitorItem } => Boolean(item),
+      );
   }, [favorites]);
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
+
+  function onDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = favorites.indexOf(String(active.id));
+    const newIndex = favorites.indexOf(String(over.id));
+    reorderFavorites(arrayMove(favorites, oldIndex, newIndex));
+  }
 
   if (!favoriteItems.length) {
     return (
-      <div className="border border-border bg-white p-6">
-        <p className="text-lg font-black">찜한 부스가 없습니다.</p>
+      <div className="grid min-h-72 place-items-center border border-border bg-brand-panel p-6 text-center">
+        <div className="max-w-sm">
+          <span className="mx-auto flex h-14 w-14 items-center justify-center border border-border bg-brand-yellow shadow-brutal-sm">
+            <MapPinned className="h-6 w-6" />
+          </span>
+          <p className="mt-5 text-xl font-black">아직 저장한 부스가 없습니다.</p>
+          <p className="mt-2 text-sm font-bold leading-6 text-brand-muted">
+            홈 지도에서 관심 부스를 찜하면 방문 순서와 메모를 여기에서 정리할 수 있습니다.
+          </p>
+        </div>
       </div>
     );
   }
 
   return (
-    <ol className="grid gap-3">
-      {favoriteItems.map((item, index) => (
-        <li key={`${boothForMap(item)}-${item.no}`} className="grid grid-cols-[48px_minmax(0,1fr)_auto] border border-border bg-white">
-          <div className="flex items-center justify-center border-r border-border bg-brand-green font-black">
-            {index + 1}
-          </div>
-          <div className="min-w-0 px-4 py-3">
-            <h3 className="truncate text-base font-black">{getDisplayName(item)}</h3>
-            <p className="text-sm font-bold text-brand-muted">{boothForMap(item)}</p>
-          </div>
-          <div className="flex items-center border-l border-border px-3">
-            <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" />
-          </div>
-        </li>
-      ))}
-    </ol>
+    <div className="grid gap-3">
+      <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
+        <SortableContext items={favorites} strategy={verticalListSortingStrategy}>
+          <ol className="grid gap-3">
+            {favoriteItems.map(({ booth, exhibitor }, index) => (
+              <SortableBoothCard
+                key={booth}
+                booth={booth}
+                exhibitor={exhibitor as ExhibitorItem}
+                index={index}
+                memo={memos[booth] ?? ""}
+                onMemoChange={updateMemo}
+                onFavoriteToggle={toggleFavorite}
+              />
+            ))}
+          </ol>
+        </SortableContext>
+      </DndContext>
+    </div>
   );
 }
