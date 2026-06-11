@@ -40,7 +40,7 @@ export function FairHeader({ user }: FairHeaderProps) {
           </div>
         </div>
 
-        <nav className="grid h-12 w-full grid-cols-6 gap-0 overflow-hidden border border-border bg-white lg:w-auto">
+        <nav className="grid h-12 w-full grid-cols-5 gap-0 overflow-hidden border border-border bg-white lg:w-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = isActiveTab(pathname, tab.href);

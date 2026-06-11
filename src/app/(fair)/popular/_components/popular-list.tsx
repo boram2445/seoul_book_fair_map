@@ -32,7 +32,7 @@ const mockEventRows = [
 export function PopularList() {
   const router = useRouter();
   const [query, setQuery] = useState("");
-  const { favorites } = useFavorites();
+  const { favorites, toggleFavorite } = useFavorites();
   const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
 
   const filteredItems = useMemo(() => {
@@ -138,6 +138,24 @@ export function PopularList() {
                 </div>
 
                 <div className="flex flex-wrap gap-2 md:justify-end">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className={cn(
+                      "rounded-none border-border font-black",
+                      isFavorite
+                        ? "bg-brand-coral text-white hover:bg-brand-coral/90 border-brand-coral"
+                        : "bg-brand-panel hover:bg-brand-yellow"
+                    )}
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      toggleFavorite(booth);
+                    }}
+                  >
+                    <Heart className={cn("h-4 w-4", isFavorite ? "fill-white text-white" : "text-brand-coral")} />
+                    {isFavorite ? "찜 해제" : "찜하기"}
+                  </Button>
                   {item.instagramUrl ? (
                     <Button
                       asChild
