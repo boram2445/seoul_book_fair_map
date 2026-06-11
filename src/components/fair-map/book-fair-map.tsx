@@ -10,6 +10,7 @@ import {
   Instagram,
   Minus,
   Plus,
+  Info,
   RotateCcw,
   Search,
   Star,
@@ -733,9 +734,12 @@ export function BookFairMap() {
 
         <section className="flex h-[calc(100vh-125px)] min-h-[calc(100vh-125px)] flex-col bg-brand-surface lg:h-[calc(100vh-81px)] lg:min-h-0">
           <div className="flex items-center justify-between gap-3 border-b border-border bg-brand-panel px-4 py-3">
-            <div className="flex items-center gap-3">
-              <span className="text-sm font-black">*</span>
-              <p className="text-xs font-bold text-brand-subtle">휠 확대/축소 · 드래그 이동</p>
+            <div className="flex min-w-0 items-center gap-3">
+              <Info className="h-4 w-4 shrink-0 text-brand-subtle" />
+              <div className="grid min-w-0 gap-0.5">
+                <p className="truncate text-xs font-bold text-brand-subtle">서울국제도서전 비공식 프로젝트입니다.</p>
+                <p className="truncate text-xs font-bold text-brand-subtle">부스 및 참가사 정보는 서울국제도서전 공식 홈페이지를 기반으로 제작되었습니다.</p>
+              </div>
             </div>
             <div className="flex items-center gap-2">
               <div className="flex items-center border border-border bg-white">
