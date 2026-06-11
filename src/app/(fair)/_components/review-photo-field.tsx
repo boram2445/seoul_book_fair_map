@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { ImagePlus, X } from "lucide-react";
+import imageCompression from "browser-image-compression";
+import { ImagePlus, Loader2, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -13,9 +14,16 @@ type PhotoPreview = {
   url: string;
 };
 
+const COMPRESSION_OPTIONS = {
+  maxSizeMB: 1,
+  maxWidthOrHeight: 1920,
+  useWebWorker: true,
+};
+
 export function ReviewPhotoField() {
   const inputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
+  const [isCompressing, setIsCompressing] = useState(false);
 
   // Ref keeps the latest photos array accessible in the unmount cleanup,
   // avoiding stale closure issues with useEffect's dependency array.
@@ -30,18 +38,30 @@ export function ReviewPhotoField() {
     };
   }, []);
 
-  function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
     const remaining = MAX_PHOTOS - photos.length;
     if (remaining <= 0) return;
 
-    const next: PhotoPreview[] = Array.from(files)
-      .slice(0, remaining)
-      .map((file) => ({ file, url: URL.createObjectURL(file) }));
+    setIsCompressing(true);
+    const candidates = Array.from(files).slice(0, remaining);
+
+    const next: PhotoPreview[] = await Promise.all(
+      candidates.map(async (file) => {
+        try {
+          const compressed = await imageCompression(file, COMPRESSION_OPTIONS);
+          return { file: compressed, url: URL.createObjectURL(compressed) };
+        } catch {
+          // Fallback to original file if compression fails
+          return { file, url: URL.createObjectURL(file) };
+        }
+      })
+    );
 
     setPhotos((prev) => [...prev, ...next]);
+    setIsCompressing(false);
   }
 
   function handleRemove(index: number) {
@@ -95,11 +115,20 @@ export function ReviewPhotoField() {
         type="button"
         variant="outline"
         onClick={() => inputRef.current?.click()}
-        disabled={photos.length >= MAX_PHOTOS}
+        disabled={photos.length >= MAX_PHOTOS || isCompressing}
         className="w-fit rounded-none border-border bg-white font-black hover:bg-brand-green disabled:cursor-not-allowed disabled:opacity-50"
       >
-        <ImagePlus className="h-4 w-4" />
-        사진 추가 ({photos.length}/{MAX_PHOTOS})
+        {isCompressing ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            압축 중…
+          </>
+        ) : (
+          <>
+            <ImagePlus className="h-4 w-4" />
+            사진 추가 ({photos.length}/{MAX_PHOTOS})
+          </>
+        )}
       </Button>
     </div>
   );
