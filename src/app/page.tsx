@@ -1,5 +1,5 @@
-import { BookFairMap } from "@/components/fair-map/book-fair-map";
+import { FairAppShell } from "@/components/fair-app/fair-app-shell";
 
 export default function Home() {
-  return <BookFairMap />;
+  return <FairAppShell />;
 }

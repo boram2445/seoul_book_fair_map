@@ -4,44 +4,18 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Heart, LocateFixed, Minus, Plus, RotateCcw, Search, Star, X } from "lucide-react";
 import Image from "next/image";
 
-import boothData from "@/data/sibf-2026-floor-booths.json";
-import exhibitorData from "@/data/sibf-2026-floor-exhibitors.json";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
+import { boothForMap, exhibitors, getDisplayName, getSearchText, shapes } from "./map-data";
+import type { MapExhibitor } from "./types";
 import { useFavorites } from "./use-favorites";
-import type { BoothShape, MapExhibitor } from "./types";
 
 const MAP_WIDTH = 3230;
 const MAP_HEIGHT = 3650;
 const MIN_SCALE = 0.16;
 const MAX_SCALE = 2.4;
-
-const exhibitors = exhibitorData.exhibitors as MapExhibitor[];
-const shapes = boothData.booths as BoothShape[];
-
-function getDisplayName(exhibitor: MapExhibitor) {
-  return exhibitor.nameKo || exhibitor.nameEn || exhibitor.booth;
-}
-
-function getSearchText(exhibitor: MapExhibitor) {
-  return [
-    exhibitor.booth,
-    exhibitor.origBooth,
-    exhibitor.nameKo,
-    exhibitor.nameEn,
-    exhibitor.countryKo,
-    exhibitor.countryEn,
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-}
-
-function boothForMap(exhibitor: MapExhibitor) {
-  return exhibitor.origBooth || exhibitor.booth;
-}
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -230,23 +204,9 @@ export function BookFairMap() {
   }
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
-      <section className="grid min-h-screen grid-cols-1 lg:grid-cols-[390px_minmax(0,1fr)]">
-        <aside className="flex min-h-0 flex-col border-b border-border bg-brand-panel lg:h-screen lg:border-r lg:border-b-0">
-          <div className="border-b border-border px-5 py-4">
-            <div className="flex items-start justify-between gap-4">
-              <div>
-                <p className="text-xs font-bold tracking-[0.28em] text-brand-rust uppercase">
-                  SIBF 2026
-                </p>
-                <h1 className="mt-2 text-2xl font-black tracking-normal">서울국제도서전 맵</h1>
-              </div>
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center border border-border bg-brand-yellow font-black">
-                {favorites.length}
-              </div>
-            </div>
-          </div>
-
+    <div className="h-full min-h-[calc(100vh-125px)] bg-background text-foreground lg:min-h-[calc(100vh-81px)]">
+      <section className="grid h-full min-h-[calc(100vh-125px)] grid-cols-1 lg:min-h-[calc(100vh-81px)] lg:grid-cols-[390px_minmax(0,1fr)]">
+        <aside className="flex min-h-0 flex-col border-b border-border bg-brand-panel lg:h-[calc(100vh-81px)] lg:border-r lg:border-b-0">
           <div className="border-b border-border p-4">
             <div className="flex items-center gap-2 border border-border bg-white px-3">
               <Search className="h-4 w-4 shrink-0" />
@@ -379,7 +339,7 @@ export function BookFairMap() {
           ) : null}
         </aside>
 
-        <section className="flex min-h-[70vh] flex-col bg-brand-surface lg:h-screen">
+        <section className="flex min-h-[70vh] flex-col bg-brand-surface lg:h-[calc(100vh-81px)]">
           <div className="flex items-center justify-between gap-3 border-b border-border bg-brand-panel px-4 py-3">
             <div className="flex items-center gap-3">
               <LocateFixed className="h-5 w-5" />
@@ -557,6 +517,6 @@ export function BookFairMap() {
           ) : null}
         </section>
       </section>
-    </main>
+    </div>
   );
 }
