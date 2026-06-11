@@ -1,11 +1,17 @@
 import type { ReactNode } from "react";
 
 import { FairHeader } from "@/app/(fair)/_components/fair-header";
+import { createClient } from "@/lib/supabase/server";
 
-export default function FairLayout({ children }: { children: ReactNode }) {
+export default async function FairLayout({ children }: { children: ReactNode }) {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
   return (
     <main className="flex min-h-screen flex-col bg-background text-foreground">
-      <FairHeader />
+      <FairHeader user={user} />
       <div className="flex flex-1 flex-col bg-brand-surface [&>*]:flex [&>*]:flex-1 [&>*]:flex-col">
         {children}
       </div>

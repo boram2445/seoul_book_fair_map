@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart, LogIn } from "lucide-react";
+import { Heart } from "lucide-react";
+import type { User } from "@supabase/supabase-js";
 
 import { tabs } from "@/app/(fair)/_lib/tabs";
+import { AuthMenu } from "@/components/auth/auth-menu";
 import { useFavorites } from "@/components/fair-map/use-favorites";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 function isActiveTab(pathname: string, href: string): boolean {
@@ -14,7 +15,11 @@ function isActiveTab(pathname: string, href: string): boolean {
   return pathname.startsWith(href);
 }
 
-export function FairHeader() {
+interface FairHeaderProps {
+  user: User | null;
+}
+
+export function FairHeader({ user }: FairHeaderProps) {
   const pathname = usePathname();
   const { favorites } = useFavorites();
 
@@ -31,10 +36,7 @@ export function FairHeader() {
               <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" />
               {favorites.length}
             </div>
-            <Button type="button" variant="outline" size="sm" className="h-9 border-border bg-white">
-              <LogIn className="h-4 w-4" />
-              로그인
-            </Button>
+            <AuthMenu user={user} />
           </div>
         </div>
 
