@@ -11,6 +11,7 @@ import {
   Minus,
   Plus,
   RotateCcw,
+  Route,
   Search,
   Star,
   X,
@@ -22,13 +23,13 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
+import { getBoothEvents, getEventScheduleLabel } from "./booth-events";
 import { boothForMap, exhibitors, getDisplayName, getSearchText, shapes } from "./map-data";
 import { ExportFavoritesButton } from "./favorites-pdf/index";
-import type { MapExhibitor } from "./types";
+import { buildRoute, MAP_HEIGHT, MAP_WIDTH } from "./route-path";
+import type { BoothShape, MapExhibitor } from "./types";
 import { useFavorites } from "./use-favorites";
 
-const MAP_WIDTH = 3230;
-const MAP_HEIGHT = 3650;
 const MIN_SCALE = 0.16;
 const MAX_SCALE = 2.4;
 
@@ -44,79 +45,6 @@ function computeSnapOffsets(vh: number) {
     half: sheetHeight - vh * 0.5, // 50vh 노출 (= 40vh 밀어내림)
     peek: sheetHeight - SHEET_PEEK_PX, // 120px만 노출
   };
-}
-
-type BoothEvent = {
-  time?: string;
-  period?: string;
-  category: string;
-  title: string;
-  content: string;
-  sourceName: string;
-  instagramUrl?: string;
-  imageUrl?: string;
-};
-
-function getBoothEvents(booth: string): BoothEvent[] {
-  if (booth === "A1703") {
-    return [
-      {
-        period: "06.01-06.14",
-        category: "댓글이벤트",
-        title: "[#서울국제도서전] 티켓 증정 댓글이벤트",
-        content: `올해 예스24 부스 컨셉은 YES24 BASE CAMP입니다.
-
-예스24 부스 방문 전, 꿀팁 3가지 확인하고 서울국제도서전 티켓 받아가세요. 지금 댓글로 참여하세요.
-
-참여 방법
-1. 예스24(@yes24_official) 팔로우
-2. 도서전 함께 가고 싶은 친구 태그
-3. 예스24 부스 방문의 기대감을 이모지로 댓글 작성
-
-이벤트 정보
-참여 기간: 2026년 6월 1일 ~ 6월 14일
-당첨 인원: 30명
-당첨 경품: 서울국제도서전 티켓 1인 1매 제공
-당첨자 발표: 6월 15일
-초대권 발송: 6월 19일, 카카오톡 알림톡 발송
-
-#예스24 #예스24베이스캠프 #리딩런`,
-        sourceName: "YES24 Instagram",
-        instagramUrl: "https://www.instagram.com/yes24_official/",
-      },
-    ];
-  }
-
-  return [
-    {
-      time: "10:30-11:00",
-      category: "사인회",
-      title: `${booth} 작가 사인회`,
-      content: "부스에서 신간 구매자를 대상으로 진행되는 현장 사인회입니다. 대기 상황에 따라 조기 마감될 수 있습니다.",
-      sourceName: "Instagram",
-      instagramUrl: "https://www.instagram.com/ghost__books/",
-    },
-    {
-      time: "13:20-14:00",
-      category: "토크",
-      title: "오늘의 책을 고르는 대화",
-      content: "출판사가 고른 대표 도서와 제작 이야기를 짧게 나누는 미니 토크입니다.",
-      sourceName: "Instagram",
-      instagramUrl: "https://www.instagram.com/ghost__books/",
-    },
-    {
-      time: "16:00-16:30",
-      category: "이벤트",
-      title: "현장 한정 굿즈 증정",
-      content: "부스 방문 및 SNS 팔로우 인증 시 한정 수량 굿즈를 증정합니다.",
-      sourceName: "Instagram",
-      instagramUrl: "https://www.instagram.com/ghost__books/",
-    },
-  ] satisfies BoothEvent[];
-}
-
-function getEventScheduleLabel(event: BoothEvent) {
-  return event.period ?? event.time ?? "상시";
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -152,9 +80,31 @@ export function BookFairMap() {
     originY: 0,
   });
 
+  const [isRouteVisible, setIsRouteVisible] = useState(false);
+
   const shapesByBooth = useMemo(() => {
     return new Map(shapes.map((shape) => [shape.boothNumber, shape]));
   }, []);
+
+  /** A* 경로 꺾은선 — SVG polyline points */
+  const routePath = useMemo(() => {
+    if (!isRouteVisible || favorites.length < 2) return [];
+    return buildRoute(favorites);
+  }, [isRouteVisible, favorites]);
+
+  /** 순번 배지 위치 — 각 찜 부스의 중심 */
+  const routeBadges = useMemo(() => {
+    if (!isRouteVisible || favorites.length < 2) return [];
+    return favorites
+      .map((booth) => shapesByBooth.get(booth))
+      .filter((shape): shape is BoothShape => Boolean(shape))
+      .map((shape, index) => ({
+        x: shape.x + shape.width / 2,
+        y: shape.y + shape.height / 2,
+        boothNumber: shape.boothNumber,
+        index,
+      }));
+  }, [isRouteVisible, favorites, shapesByBooth]);
 
   const exhibitorsByBooth = useMemo(() => {
     return exhibitors.reduce<Record<string, MapExhibitor[]>>((acc, exhibitor) => {
@@ -738,41 +688,23 @@ export function BookFairMap() {
               <p className="text-xs font-bold text-brand-subtle">휠 확대/축소 · 드래그 이동</p>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex items-center border border-border bg-white">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => zoomBy(0.86)}
-                  aria-label="지도 축소"
-                  className="rounded-none border-r border-border"
-                >
-                  <Minus className="h-4 w-4" />
-                </Button>
-                <span className="min-w-14 px-2 text-center text-xs font-black">
-                  {Math.round(transform.scale * 100)}%
-                </span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={() => zoomBy(1.16)}
-                  aria-label="지도 확대"
-                  className="rounded-none border-x border-border"
-                >
-                  <Plus className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon-sm"
-                  onClick={resetMap}
-                  aria-label="지도 초기화"
-                  className="rounded-none"
-                >
-                  <RotateCcw className="h-4 w-4" />
-                </Button>
-              </div>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsRouteVisible((v) => !v)}
+                disabled={favorites.length < 2}
+                aria-label="경로 표시 토글"
+                className={cn(
+                  "rounded-none border-border",
+                  isRouteVisible
+                    ? "bg-brand-coral text-white hover:bg-brand-coral hover:text-white"
+                    : "bg-white"
+                )}
+              >
+                <Route className="h-4 w-4" />
+                경로
+              </Button>
               <ExportFavoritesButton booths={favorites} />
             </div>
           </div>
@@ -856,6 +788,92 @@ export function BookFairMap() {
                   }}
                 />
               ) : null}
+
+              {/* 경로 오버레이 — 찜 순서대로 부스 중심을 잇는 선 + 순번 배지 */}
+              {routePath.length >= 2 ? (
+                <svg
+                  className="pointer-events-none absolute inset-0 z-[35] overflow-visible"
+                  style={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
+                  viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
+                  aria-hidden
+                >
+                  {/* A* 통로 경로 꺾은선 */}
+                  <polyline
+                    points={routePath.map((p) => `${p.x},${p.y}`).join(" ")}
+                    fill="none"
+                    stroke="var(--color-brand-coral)"
+                    strokeWidth={8}
+                    strokeDasharray="20 8"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    opacity={0.85}
+                  />
+                  {/* 찜 순번 배지 — 각 부스 중심 */}
+                  {routeBadges.map((badge) => (
+                    <g key={badge.boothNumber}>
+                      <circle
+                        cx={badge.x}
+                        cy={badge.y}
+                        r={20}
+                        fill="var(--color-brand-coral)"
+                        stroke="white"
+                        strokeWidth={4}
+                      />
+                      <text
+                        x={badge.x}
+                        y={badge.y + 7}
+                        textAnchor="middle"
+                        fill="white"
+                        fontSize={18}
+                        fontWeight="bold"
+                        fontFamily="system-ui, sans-serif"
+                      >
+                        {badge.index + 1}
+                      </text>
+                    </g>
+                  ))}
+                </svg>
+              ) : null}
+            </div>
+
+            {/* 줌 컨트롤 — 지도 우측 상단 플로팅 */}
+            <div
+              className="pointer-events-auto absolute top-3 right-3 z-50 flex items-center border border-border bg-white shadow-brutal-sm"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => zoomBy(0.86)}
+                aria-label="지도 축소"
+                className="rounded-none border-r border-border"
+              >
+                <Minus className="h-4 w-4" />
+              </Button>
+              <span className="min-w-14 px-2 text-center text-xs font-black">
+                {Math.round(transform.scale * 100)}%
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={() => zoomBy(1.16)}
+                aria-label="지도 확대"
+                className="rounded-none border-x border-border"
+              >
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon-sm"
+                onClick={resetMap}
+                aria-label="지도 초기화"
+                className="rounded-none"
+              >
+                <RotateCcw className="h-4 w-4" />
+              </Button>
             </div>
 
             {activeMapLabels.map(({ boothNumber, label, shape, isSelected, isFavorite }) => (

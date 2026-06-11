@@ -45,5 +45,11 @@ export function useFavorites() {
     notifyChange();
   }
 
-  return { favorites, toggleFavorite };
+  function reorderFavorites(newOrder: string[]) {
+    cache = null;
+    window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(newOrder));
+    notifyChange();
+  }
+
+  return { favorites, toggleFavorite, reorderFavorites };
 }
