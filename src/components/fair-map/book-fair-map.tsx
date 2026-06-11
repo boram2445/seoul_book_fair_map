@@ -1,7 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Heart, LocateFixed, Minus, Plus, RotateCcw, Search, Star, X } from "lucide-react";
+import {
+  CalendarDays,
+  ChevronRight,
+  ExternalLink,
+  Heart,
+  Instagram,
+  LocateFixed,
+  Minus,
+  Plus,
+  RotateCcw,
+  Search,
+  Star,
+  X,
+} from "lucide-react";
 import Image from "next/image";
 
 import { Button } from "@/components/ui/button";
@@ -17,6 +30,26 @@ const MAP_HEIGHT = 3650;
 const MIN_SCALE = 0.16;
 const MAX_SCALE = 2.4;
 
+function getBoothEvents(booth: string) {
+  return [
+    {
+      time: "10:30-11:00",
+      category: "사인회",
+      title: `${booth} 작가 사인회`,
+    },
+    {
+      time: "13:20-14:00",
+      category: "토크",
+      title: "오늘의 책을 고르는 대화",
+    },
+    {
+      time: "16:00-16:30",
+      category: "이벤트",
+      title: "현장 한정 굿즈 증정",
+    },
+  ];
+}
+
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
@@ -27,6 +60,7 @@ export function BookFairMap() {
   const [transform, setTransform] = useState({ scale: 0.28, x: 56, y: 18 });
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredBooth, setHoveredBooth] = useState("");
+  const [isEventPanelOpen, setIsEventPanelOpen] = useState(false);
   const { favorites, toggleFavorite } = useFavorites();
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({
@@ -53,6 +87,7 @@ export function BookFairMap() {
   const selected = exhibitors.find((exhibitor) => exhibitor.no === selectedNo) ?? exhibitors[0];
   const selectedBooth = selected ? boothForMap(selected) : "";
   const selectedShape = selected ? shapesByBooth.get(selectedBooth) : undefined;
+  const selectedBoothEvents = selectedBooth ? getBoothEvents(selectedBooth) : [];
 
   const filteredExhibitors = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -292,6 +327,38 @@ export function BookFairMap() {
                   </p>
                   <h2 className="mt-3 text-xl font-black">{getDisplayName(selected)}</h2>
                   {selected.nameEn ? <p className="text-sm font-bold text-brand-green-deep">{selected.nameEn}</p> : null}
+                  {selected.instagramUrl || selected.websiteUrl ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {selected.instagramUrl ? (
+                        <Button
+                          asChild
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 rounded-none border-border bg-white px-2 text-xs font-black hover:bg-brand-yellow"
+                        >
+                          <a href={selected.instagramUrl} target="_blank" rel="noreferrer">
+                            <Instagram className="h-4 w-4" />
+                            Instagram
+                          </a>
+                        </Button>
+                      ) : null}
+                      {selected.websiteUrl ? (
+                        <Button
+                          asChild
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          className="h-8 rounded-none border-border bg-white px-2 text-xs font-black hover:bg-brand-yellow"
+                        >
+                          <a href={selected.websiteUrl} target="_blank" rel="noreferrer">
+                            <ExternalLink className="h-4 w-4" />
+                            Website
+                          </a>
+                        </Button>
+                      ) : null}
+                    </div>
+                  ) : null}
                 </div>
                 <Button
                   type="button"
@@ -310,15 +377,34 @@ export function BookFairMap() {
                 </Button>
               </div>
 
-              <div className="mt-4 grid grid-cols-2 gap-2 text-sm font-bold">
-                <div className="border border-border bg-white px-3 py-2">
-                  공유 부스
-                  <strong className="block text-lg">{selectedBoothItems.length}</strong>
+              <div className="mt-4 border border-border bg-white">
+                <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2">
+                  <div className="min-w-0">
+                    <p className="text-xs font-black text-brand-muted">이벤트</p>
+                    <p className="truncate text-sm font-black">{selectedBoothEvents.length}개 예정</p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon-sm"
+                    onClick={() => setIsEventPanelOpen(true)}
+                    aria-label="부스 이벤트 패널 열기"
+                    className="shrink-0 rounded-none border border-border bg-brand-yellow hover:bg-brand-green"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
                 </div>
-                <div className="border border-border bg-white px-3 py-2">
-                  구분
-                  <strong className="block text-lg">{selected.special ? "시설" : "참가사"}</strong>
-                </div>
+                <ul>
+                  {selectedBoothEvents.slice(0, 3).map((event) => (
+                    <li
+                      key={`${event.time}-${event.title}`}
+                      className="grid grid-cols-[86px_minmax(0,1fr)] gap-3 border-b border-border/20 px-3 py-2 text-sm last:border-b-0"
+                    >
+                      <span className="font-mono text-xs font-black text-brand-coral-deep">{event.time}</span>
+                      <span className="truncate font-black">{event.title}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
 
               {selectedBoothItems.length > 1 ? (
@@ -496,6 +582,54 @@ export function BookFairMap() {
                 {label}
               </div>
             ))}
+
+            {isEventPanelOpen && selected ? (
+              <aside
+                onPointerDown={(event) => event.stopPropagation()}
+                className="absolute inset-x-4 top-16 bottom-4 z-50 flex flex-col border border-border bg-brand-panel shadow-brutal sm:inset-x-auto sm:right-4 sm:w-[360px]"
+              >
+                <div className="flex items-start justify-between gap-3 border-b border-border bg-brand-yellow p-4">
+                  <div className="min-w-0">
+                    <p className="inline-flex border border-border bg-brand-ink px-2 py-1 text-xs font-black text-white">
+                      {selectedBooth}
+                    </p>
+                    <h3 className="mt-2 truncate text-lg font-black">{getDisplayName(selected)}</h3>
+                    <p className="mt-1 text-xs font-bold text-brand-subtle">
+                      이벤트 {selectedBoothEvents.length}개
+                    </p>
+                  </div>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon-sm"
+                    onClick={() => setIsEventPanelOpen(false)}
+                    aria-label="부스 이벤트 패널 닫기"
+                    className="shrink-0 rounded-none border-border bg-white"
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                </div>
+                <div className="min-h-0 flex-1 overflow-y-auto p-3">
+                  <ul className="space-y-2">
+                    {selectedBoothEvents.map((event) => (
+                      <li key={`${event.time}-${event.title}`} className="border border-border bg-white p-3">
+                        <div className="flex items-center justify-between gap-3">
+                          <span className="font-mono text-base font-black">{event.time}</span>
+                          <span className="border border-border bg-brand-green px-2 py-1 text-xs font-black">
+                            {event.category}
+                          </span>
+                        </div>
+                        <p className="mt-3 text-sm font-black leading-5">{event.title}</p>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="border-t border-border bg-white px-4 py-3 text-xs font-bold text-brand-muted">
+                  <CalendarDays className="mr-1 inline h-4 w-4 align-[-3px]" />
+                  실제 이벤트 데이터 연결 전 레이아웃 골격입니다.
+                </div>
+              </aside>
+            ) : null}
           </div>
 
           {favoriteItems.length ? (

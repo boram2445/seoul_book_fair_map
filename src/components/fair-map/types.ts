@@ -17,4 +17,6 @@ export type MapExhibitor = {
   countryKo: string;
   countryEn: string;
   special: boolean;
+  instagramUrl?: string;
+  websiteUrl?: string;
 };

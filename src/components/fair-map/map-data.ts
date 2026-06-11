@@ -3,7 +3,17 @@ import exhibitorData from "@/data/sibf-2026-floor-exhibitors.json";
 
 import type { BoothShape, MapExhibitor } from "./types";
 
-export const exhibitors = exhibitorData.exhibitors as MapExhibitor[];
+const exhibitorLinksByNo: Record<number, Pick<MapExhibitor, "instagramUrl" | "websiteUrl">> = {
+  4: {
+    instagramUrl: "https://www.instagram.com/ghost__books/",
+    websiteUrl: "https://www.ghostbooks.kr/",
+  },
+};
+
+export const exhibitors = (exhibitorData.exhibitors as MapExhibitor[]).map((exhibitor) => ({
+  ...exhibitor,
+  ...exhibitorLinksByNo[exhibitor.no],
+}));
 export const shapes = boothData.booths as BoothShape[];
 
 export function getDisplayName(exhibitor: MapExhibitor) {
