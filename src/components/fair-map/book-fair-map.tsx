@@ -2,10 +2,26 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
+  DndContext,
+  type DragEndEvent,
+  PointerSensor,
+  closestCenter,
+  useSensor,
+  useSensors,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  arrayMove,
+  horizontalListSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
+import {
   CalendarDays,
   ChevronLeft,
   ChevronRight,
   ExternalLink,
+  GripVertical,
   Heart,
   Instagram,
   Minus,
@@ -51,6 +67,64 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
+// ─── 찜 목록 바 — 드래그 정렬 칩 ────────────────────────────────────────────
+
+function SortableFavoriteChip({
+  booth,
+  label,
+  onSelect,
+  onRemove,
+}: {
+  booth: string;
+  label: string;
+  onSelect: () => void;
+  onRemove: () => void;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: booth });
+
+  const style = { transform: CSS.Transform.toString(transform), transition };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      className={cn(
+        "inline-flex shrink-0 items-stretch border border-border bg-white text-sm font-black transition",
+        isDragging && "opacity-50 shadow-lg"
+      )}
+    >
+      <button
+        type="button"
+        {...listeners}
+        aria-label="순서 변경"
+        className="flex cursor-grab items-center border-r border-border px-2 text-brand-muted hover:bg-brand-hover active:cursor-grabbing touch-none"
+      >
+        <GripVertical className="h-4 w-4" />
+      </button>
+      <button
+        type="button"
+        onClick={onSelect}
+        className="flex items-center gap-2 px-3 py-2 hover:bg-brand-yellow"
+      >
+        <span
+          role="button"
+          aria-label="찜 해제"
+          tabIndex={0}
+          onClick={(e) => { e.stopPropagation(); onRemove(); }}
+          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); onRemove(); } }}
+          onPointerDown={(e) => e.stopPropagation()}
+          className="inline-flex cursor-pointer items-center [&:hover>svg]:fill-brand-coral/40 [&:hover>svg]:text-brand-coral/40"
+        >
+          <Heart className="h-4 w-4 fill-brand-coral text-brand-coral transition-colors" />
+        </span>
+        {label}
+      </button>
+    </div>
+  );
+}
+
 export function BookFairMap() {
   const [query, setQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState("전체");
@@ -60,8 +134,19 @@ export function BookFairMap() {
   const [hoveredBooth, setHoveredBooth] = useState("");
   const [isEventPanelOpen, setIsEventPanelOpen] = useState(false);
   const [isIntroductionExpanded, setIsIntroductionExpanded] = useState(false);
-  const { favorites, toggleFavorite } = useFavorites();
+  const { favorites, toggleFavorite, reorderFavorites } = useFavorites();
   const isMobile = useIsMobile();
+  const favoriteSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+  );
+
+  function onFavoriteDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = favorites.indexOf(String(active.id));
+    const newIndex = favorites.indexOf(String(over.id));
+    reorderFavorites(arrayMove(favorites, oldIndex, newIndex));
+  }
   /** 시트 translateY 오프셋(px). 0 = 완전 확장(90vh 노출), 클수록 아래로 밀림. 첫 진입 = 절반 */
   const [sheetOffset, setSheetOffset] = useState(() => {
     if (typeof window === "undefined") return 0;
@@ -354,6 +439,32 @@ export function BookFairMap() {
   // 끝까지 스크롤하려면 동일한 패딩이 필요하다. 데스크톱은 0.
   const scrollPaddingBottom = isMobile ? sheetOffset : 0;
 
+  // 찜 바 — 데스크톱 하단과 모바일 드로어 최상단에서 공유
+  const favoritesBar = favoriteItems.length ? (
+    <DndContext
+      sensors={favoriteSensors}
+      collisionDetection={closestCenter}
+      onDragEnd={onFavoriteDragEnd}
+    >
+      <SortableContext items={favorites} strategy={horizontalListSortingStrategy}>
+        <div className="flex gap-2 overflow-x-auto px-4 py-3">
+          {favoriteItems.map((item) => {
+            const booth = boothForMap(item);
+            return (
+              <SortableFavoriteChip
+                key={booth}
+                booth={booth}
+                label={`${booth} ${getDisplayName(item)}`}
+                onSelect={() => selectExhibitor(item)}
+                onRemove={() => toggleFavorite(booth)}
+              />
+            );
+          })}
+        </div>
+      </SortableContext>
+    </DndContext>
+  ) : null;
+
   // 검색·필터·리스트 — 데스크톱 aside와 모바일 시트 리스트 뷰에서 공유
   const listContent = (
     <>
@@ -434,7 +545,18 @@ export function BookFairMap() {
                     </span>
                   </span>
                   <span className="inline-flex items-center gap-2">
-                    {isFavorite ? <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" /> : null}
+                    {isFavorite ? (
+                      <span
+                        role="button"
+                        aria-label="찜 해제"
+                        tabIndex={0}
+                        onClick={(e) => { e.stopPropagation(); toggleFavorite(booth); }}
+                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); toggleFavorite(booth); } }}
+                        className="inline-flex cursor-pointer items-center [&:hover>svg]:fill-brand-coral/40 [&:hover>svg]:text-brand-coral/40"
+                      >
+                        <Heart className="h-4 w-4 fill-brand-coral text-brand-coral transition-colors" />
+                      </span>
+                    ) : null}
                     <span
                       className={cn(
                         "min-w-16 border px-2 py-1 text-center text-xs font-black",
@@ -838,7 +960,7 @@ export function BookFairMap() {
 
             {/* 줌 컨트롤 — 지도 우측 상단 플로팅 */}
             <div
-              className="pointer-events-auto absolute top-3 right-3 z-50 flex items-center border border-border bg-white shadow-brutal-sm"
+              className="pointer-events-auto absolute top-3 right-4 z-50 flex items-center border border-border bg-white shadow-brutal-sm"
               onPointerDown={(e) => e.stopPropagation()}
             >
               <Button
@@ -911,22 +1033,10 @@ export function BookFairMap() {
             ) : null}
           </div>
 
-          {/* 찜 목록 바 — 모바일(768px 미만)에서는 바텀시트 peek과 겹치므로 md 이상 전용 */}
+          {/* 찜 목록 바 — 모바일(768px 미만)에서는 바텀시트에 있으므로 md 이상 전용 */}
           {favoriteItems.length ? (
-            <div className="hidden border-t border-border bg-brand-panel px-4 py-3 md:block">
-              <div className="flex gap-2 overflow-x-auto">
-                {favoriteItems.map((item) => (
-                  <button
-                    key={boothForMap(item)}
-                    type="button"
-                    onClick={() => selectExhibitor(item)}
-                    className="inline-flex shrink-0 cursor-pointer items-center gap-2 border border-border bg-white px-3 py-2 text-sm font-black hover:bg-brand-yellow"
-                  >
-                    <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" />
-                    {boothForMap(item)} {getDisplayName(item)}
-                  </button>
-                ))}
-              </div>
+            <div className="hidden border-t border-border bg-brand-panel md:block">
+              {favoritesBar}
             </div>
           ) : null}
         </section>
@@ -992,7 +1102,14 @@ export function BookFairMap() {
               </div>
             </div>
           ) : (
-            <div className="flex min-h-0 flex-1 flex-col">{listContent}</div>
+            <div className="flex min-h-0 flex-1 flex-col">
+              {favoriteItems.length ? (
+                <div className="shrink-0 border-b border-border bg-brand-panel">
+                  {favoritesBar}
+                </div>
+              ) : null}
+              {listContent}
+            </div>
           )}
         </div>
       ) : null}
