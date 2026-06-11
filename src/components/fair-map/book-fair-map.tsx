@@ -449,7 +449,7 @@ export function BookFairMap() {
       </div>
 
       <div
-        className="min-h-[230px] flex-1 overflow-y-auto border-b border-border p-3 lg:min-h-0"
+        className="min-h-[230px] flex-1 overflow-y-auto border-b border-border p-3 md:min-h-0"
         style={{ paddingBottom: scrollPaddingBottom }}
       >
         <ul className="space-y-1">
@@ -724,9 +724,9 @@ export function BookFairMap() {
 
   return (
     <div className="h-full min-h-[calc(100vh-125px)] bg-background text-foreground lg:min-h-[calc(100vh-81px)]">
-      <section className="grid h-full min-h-[calc(100vh-125px)] grid-cols-1 lg:min-h-[calc(100vh-81px)] lg:grid-cols-[390px_minmax(0,1fr)]">
-        {/* 데스크톱 전용 사이드바 — 모바일에서는 hidden, 내용은 아래 바텀시트와 공유 */}
-        <aside className="hidden min-h-0 flex-col border-b border-border bg-brand-panel lg:flex lg:h-[calc(100vh-81px)] lg:border-r lg:border-b-0">
+      <section className="grid h-full min-h-[calc(100vh-125px)] grid-cols-1 lg:min-h-[calc(100vh-81px)] md:grid-cols-[390px_minmax(0,1fr)]">
+        {/* 사이드바 — 모바일(768px 미만)에서는 hidden, 내용은 아래 바텀시트와 공유 */}
+        <aside className="hidden min-h-0 flex-col border-b border-border bg-brand-panel md:flex md:h-[calc(100vh-125px)] md:border-r md:border-b-0 lg:h-[calc(100vh-81px)]">
           {listContent}
           {detailContent}
         </aside>
@@ -893,9 +893,9 @@ export function BookFairMap() {
             ) : null}
           </div>
 
-          {/* 찜 목록 바 — 모바일에서는 바텀시트 peek과 겹치므로 데스크톱 전용 */}
+          {/* 찜 목록 바 — 모바일(768px 미만)에서는 바텀시트 peek과 겹치므로 md 이상 전용 */}
           {favoriteItems.length ? (
-            <div className="hidden border-t border-border bg-brand-panel px-4 py-3 lg:block">
+            <div className="hidden border-t border-border bg-brand-panel px-4 py-3 md:block">
               <div className="flex gap-2 overflow-x-auto">
                 {favoriteItems.map((item) => (
                   <button
@@ -916,10 +916,10 @@ export function BookFairMap() {
 
       {/* 모바일 전용 바텀시트 — non-modal(오버레이 없음, 지도 인터랙션 유지)
           높이 90vh 고정 + translateY(sheetOffset)로 노출 높이 조절.
-          데스크톱에서는 lg:hidden으로 숨김 */}
+          데스크톱에서는 md:hidden으로 숨김 */}
       {isMobile ? (
         <div
-          className="fixed inset-x-0 bottom-0 z-50 flex flex-col border-t border-border bg-brand-panel lg:hidden"
+          className="fixed inset-x-0 bottom-0 z-50 flex flex-col border-t border-border bg-brand-panel md:hidden"
           style={{
             height: `${SHEET_HEIGHT_RATIO * 100}vh`,
             transform: `translate3d(0, ${sheetOffset}px, 0)`,
