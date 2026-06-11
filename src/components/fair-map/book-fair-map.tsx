@@ -3,11 +3,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
   CalendarDays,
+  ChevronLeft,
   ChevronRight,
   ExternalLink,
   Heart,
   Instagram,
-  LocateFixed,
   Minus,
   Plus,
   RotateCcw,
@@ -20,6 +20,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 import { boothForMap, exhibitors, getDisplayName, getSearchText, shapes } from "./map-data";
 import { ExportFavoritesButton } from "./favorites-pdf/index";
@@ -30,6 +31,20 @@ const MAP_WIDTH = 3230;
 const MAP_HEIGHT = 3650;
 const MIN_SCALE = 0.16;
 const MAX_SCALE = 2.4;
+
+const SHEET_HEIGHT_RATIO = 0.9; // 시트 최대 높이 = 뷰포트의 90%
+const SHEET_PEEK_PX = 120; // peek 스냅: 최소 노출 높이(px)
+
+/** 뷰포트 높이(vh)로부터 스냅 3종의 translateY 오프셋을 계산한다.
+ *  offset 0 = 완전 확장(90vh 노출), 클수록 아래로 밀려 덜 보임. */
+function computeSnapOffsets(vh: number) {
+  const sheetHeight = vh * SHEET_HEIGHT_RATIO;
+  return {
+    expanded: 0, // 90vh 전체 노출
+    half: sheetHeight - vh * 0.5, // 50vh 노출 (= 40vh 밀어내림)
+    peek: sheetHeight - SHEET_PEEK_PX, // 120px만 노출
+  };
+}
 
 type BoothEvent = {
   time?: string;
@@ -118,6 +133,16 @@ export function BookFairMap() {
   const [isEventPanelOpen, setIsEventPanelOpen] = useState(false);
   const [isIntroductionExpanded, setIsIntroductionExpanded] = useState(false);
   const { favorites, toggleFavorite } = useFavorites();
+  const isMobile = useIsMobile();
+  /** 시트 translateY 오프셋(px). 0 = 완전 확장(90vh 노출), 클수록 아래로 밀림. 첫 진입 = 절반 */
+  const [sheetOffset, setSheetOffset] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    return computeSnapOffsets(window.innerHeight).half;
+  });
+  const [isSheetDragging, setIsSheetDragging] = useState(false);
+  /** 모바일 시트 내부 뷰 상태: false = 리스트, true = 상세 */
+  const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
+  const sheetDragRef = useRef({ pointerId: -1, startY: 0, startOffset: 0, currentOffset: 0 });
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({
     pointerId: 0,
@@ -177,6 +202,7 @@ export function BookFairMap() {
       .map((booth) => exhibitorsByBooth[booth]?.[0])
       .filter((exhibitor): exhibitor is MapExhibitor => Boolean(exhibitor));
   }, [exhibitorsByBooth, favorites]);
+
   const activeMapLabels = shapes.flatMap((shape) => {
     const boothItems = exhibitorsByBooth[shape.boothNumber] ?? [];
     if (!boothItems.length) return [];
@@ -244,10 +270,21 @@ export function BookFairMap() {
     const centerX = shape.x + shape.width / 2;
     const centerY = shape.y + shape.height / 2;
 
+    // 모바일: 시트가 가리는 높이를 빼고 가시 영역 상단 1/3에 부스를 맞춘다.
+    // 데스크톱: 뷰포트 정중앙 그대로 (기존 동작 불변).
+    let targetY: number;
+    if (isMobile) {
+      const visibleSheetHeight = Math.max(0, window.innerHeight * SHEET_HEIGHT_RATIO - sheetOffset);
+      const visibleAreaHeight = rect.height - visibleSheetHeight;
+      targetY = visibleAreaHeight / 3;
+    } else {
+      targetY = rect.height / 2;
+    }
+
     setTransform({
       scale,
       x: rect.width / 2 - centerX * scale,
-      y: rect.height / 2 - centerY * scale,
+      y: targetY - centerY * scale,
     });
   }
 
@@ -255,6 +292,8 @@ export function BookFairMap() {
     setSelectedNo(exhibitor.no);
     setIsIntroductionExpanded(false);
     centerBooth(boothForMap(exhibitor));
+    // 모바일에서 선택 시 상세 뷰로 전환 (시트 높이는 그대로 유지)
+    if (isMobile) setIsMobileDetailOpen(true);
   }
 
   function zoomBy(delta: number) {
@@ -313,221 +352,392 @@ export function BookFairMap() {
     }
   }
 
+  // ── 모바일 바텀시트 드래그 핸들러 (지도 pan/zoom과 동일한 pointer capture 패턴) ──
+
+  function handleSheetPointerDown(event: React.PointerEvent<HTMLDivElement>) {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    sheetDragRef.current = {
+      pointerId: event.pointerId,
+      startY: event.clientY,
+      startOffset: sheetOffset,
+      currentOffset: sheetOffset,
+    };
+    setIsSheetDragging(true);
+  }
+
+  function handleSheetPointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (sheetDragRef.current.pointerId !== event.pointerId) return;
+    const dy = event.clientY - sheetDragRef.current.startY;
+    const { expanded, peek } = computeSnapOffsets(window.innerHeight);
+    const newOffset = clamp(sheetDragRef.current.startOffset + dy, expanded, peek);
+    sheetDragRef.current.currentOffset = newOffset;
+    setSheetOffset(newOffset);
+  }
+
+  function handleSheetPointerUp(event: React.PointerEvent<HTMLDivElement>) {
+    if (sheetDragRef.current.pointerId !== event.pointerId) return;
+    setIsSheetDragging(false);
+    // stale closure 방지: ref에 저장된 마지막 offset으로 스냅 계산
+    const offsets = computeSnapOffsets(window.innerHeight);
+    const snapValues = [offsets.expanded, offsets.half, offsets.peek];
+    const current = sheetDragRef.current.currentOffset;
+    const nearest = snapValues.reduce((a, b) =>
+      Math.abs(a - current) <= Math.abs(b - current) ? a : b
+    );
+    setSheetOffset(nearest);
+  }
+
+  // 화면 회전 시 스냅 오프셋 재클램프
+  useEffect(() => {
+    function onResize() {
+      const offsets = computeSnapOffsets(window.innerHeight);
+      const snapValues = [offsets.expanded, offsets.half, offsets.peek];
+      setSheetOffset((current) =>
+        snapValues.reduce((a, b) => (Math.abs(a - current) <= Math.abs(b - current) ? a : b))
+      );
+    }
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, []);
+
+  // 모바일: 시트가 아래로 밀린 sheetOffset만큼 스크롤 컨테이너 바닥이 fold 아래에 있어
+  // 끝까지 스크롤하려면 동일한 패딩이 필요하다. 데스크톱은 0.
+  const scrollPaddingBottom = isMobile ? sheetOffset : 0;
+
+  // 검색·필터·리스트 — 데스크톱 aside와 모바일 시트 리스트 뷰에서 공유
+  const listContent = (
+    <>
+      <div className="border-b border-border p-4">
+        <div className="flex items-center gap-2 border border-border bg-white px-3">
+          <Search className="h-4 w-4 shrink-0" />
+          <Input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="출판사, 부스, 국가 검색"
+            className="h-11 border-0 px-0 shadow-none focus-visible:ring-0"
+          />
+          {query ? (
+            <button
+              type="button"
+              aria-label="검색어 지우기"
+              onClick={() => setQuery("")}
+              className="inline-flex h-7 w-7 cursor-pointer items-center justify-center"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : null}
+        </div>
+        <div className="mt-2 flex items-center justify-between text-xs font-bold text-brand-muted">
+          <span>표시 {filteredExhibitors.length}개</span>
+          <span>전체 {exhibitors.length}개</span>
+        </div>
+        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+          {categoryOptions.map((category) => (
+            <button
+              key={category}
+              type="button"
+              onClick={() => setSelectedCategory(category)}
+              className={cn(
+                "shrink-0 cursor-pointer border border-border px-3 py-1.5 text-xs font-black",
+                selectedCategory === category ? "bg-brand-ink text-white" : "bg-white hover:bg-brand-yellow"
+              )}
+            >
+              {category}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div
+        className="min-h-[230px] flex-1 overflow-y-auto border-b border-border p-3 lg:min-h-0"
+        style={{ paddingBottom: scrollPaddingBottom }}
+      >
+        <ul className="space-y-1">
+          {filteredExhibitors.map((exhibitor) => {
+            const booth = boothForMap(exhibitor);
+            const isSelected = exhibitor.no === selected?.no;
+            const isFavorite = favoriteSet.has(booth);
+
+            return (
+              <li key={exhibitor.no}>
+                <button
+                  type="button"
+                  onClick={() => selectExhibitor(exhibitor)}
+                  className={cn(
+                    "grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2 text-left transition",
+                    isSelected
+                      ? "bg-brand-ink text-white"
+                      : "hover:bg-brand-hover focus-visible:bg-brand-hover"
+                  )}
+                >
+                  <span className="min-w-0">
+                    <span className="block truncate text-sm font-extrabold">
+                      {getDisplayName(exhibitor)}
+                    </span>
+                    <span
+                      className={cn(
+                        "block truncate text-xs",
+                        isSelected ? "text-white/70" : "text-brand-muted"
+                      )}
+                    >
+                      {exhibitor.nameEn || exhibitor.countryEn || "Seoul International Book Fair"}
+                    </span>
+                  </span>
+                  <span className="inline-flex items-center gap-2">
+                    {isFavorite ? <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" /> : null}
+                    <span
+                      className={cn(
+                        "min-w-16 border px-2 py-1 text-center text-xs font-black",
+                        isSelected ? "border-white/40" : "border-border"
+                      )}
+                    >
+                      {booth}
+                    </span>
+                  </span>
+                </button>
+              </li>
+            );
+          })}
+        </ul>
+      </div>
+    </>
+  );
+
+  // 선택 출판사 상세 — 데스크톱 aside와 모바일 시트 상세 뷰에서 공유
+  const detailContent = selected ? (
+        <div className="bg-brand-green p-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <p className="inline-flex border border-border bg-brand-ink px-3 py-1 text-sm font-black text-white">
+                {selectedBooth}
+              </p>
+              <h2 className="mt-3 text-xl font-black">{getDisplayName(selected)}</h2>
+              {selected.nameEn ? <p className="text-sm font-bold text-brand-green-deep">{selected.nameEn}</p> : null}
+              {selected.categories?.length ? (
+                <div className="mt-2 flex flex-wrap gap-1">
+                  {selected.categories.slice(0, 5).map((category) => (
+                    <span
+                      key={category}
+                      className="border border-border/60 bg-brand-panel px-1.5 py-0.5 text-[11px] font-black text-brand-subtle"
+                    >
+                      {category}
+                    </span>
+                  ))}
+                </div>
+              ) : null}
+              {selected.instagramUrl || selected.homepageUrl ? (
+                <div className="mt-2.5 flex flex-wrap gap-1.5">
+                  {selected.instagramUrl ? (
+                    <Button
+                      asChild
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
+                    >
+                      <a href={selected.instagramUrl} target="_blank" rel="noreferrer">
+                        <Instagram />
+                        Instagram
+                      </a>
+                    </Button>
+                  ) : null}
+                  {selected.homepageUrl ? (
+                    <Button
+                      asChild
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-7 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
+                    >
+                      <a href={selected.homepageUrl} target="_blank" rel="noreferrer">
+                        <ExternalLink />
+                        Homepage
+                      </a>
+                    </Button>
+                  ) : null}
+                </div>
+              ) : null}
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                onClick={() => toggleFavorite(selectedBooth)}
+                aria-label="부스 찜하기"
+                className="border-border bg-white hover:bg-brand-yellow"
+              >
+                <Heart
+                  className={cn(
+                    "h-4 w-4",
+                    favoriteSet.has(selectedBooth) && "fill-brand-coral text-brand-coral"
+                  )}
+                />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="icon"
+                onClick={() => {
+                  setIsEventPanelOpen(true);
+                }}
+                aria-label="출판사 상세 패널 열기"
+                className="rounded-none border border-border bg-brand-yellow hover:bg-white"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+          </div>
+
+          <div className="mt-4 border border-border bg-white">
+            <div className="border-b border-border px-3 py-2">
+              <p className="text-xs font-black text-brand-muted">
+                이벤트 <span className="font-bold">({selectedBoothEvents.length}개 예정)</span>
+              </p>
+            </div>
+            <ul>
+              {selectedBoothEvents.slice(0, 3).map((event) => (
+                <li
+                  key={`${getEventScheduleLabel(event)}-${event.title}`}
+                  className="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-3 border-b border-border/20 px-3 py-2 text-sm leading-4 last:border-b-0"
+                >
+                  <span className="font-mono text-xs leading-4 font-black text-brand-coral-deep">
+                    {getEventScheduleLabel(event)}
+                  </span>
+                  <span className="truncate leading-4 font-black">{event.title}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      ) : null;
+
+  // 이벤트 상세 — 데스크톱은 플로팅 aside, 모바일은 시트 안 뷰로 공유
+  const eventContent = selected ? (
+    <>
+      <div className="flex items-start justify-between gap-3 border-b border-border bg-brand-yellow p-4">
+        <div className="min-w-0">
+          <p className="inline-flex border border-border bg-brand-ink px-2 py-1 text-xs font-black text-white">
+            {selectedBooth}
+          </p>
+          <h3 className="mt-2 truncate text-lg font-black">{getDisplayName(selected)}</h3>
+          {selected.introduction ? (
+            <div className="mt-3">
+              <p
+                className={cn(
+                  "text-xs font-bold leading-5 text-brand-green-ink",
+                  !isIntroductionExpanded && "line-clamp-3"
+                )}
+              >
+                {selected.introduction}
+              </p>
+              <button
+                type="button"
+                onClick={() => setIsIntroductionExpanded((current) => !current)}
+                className="mt-2 cursor-pointer border border-border bg-white px-2 py-1 text-xs font-black hover:bg-brand-green"
+              >
+                {isIntroductionExpanded ? "접기" : "더보기"}
+              </button>
+            </div>
+          ) : null}
+        </div>
+        {!isMobile && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon-sm"
+            onClick={() => setIsEventPanelOpen(false)}
+            aria-label="부스 이벤트 패널 닫기"
+            className="shrink-0 rounded-none border-border bg-white"
+          >
+            <X className="h-4 w-4" />
+          </Button>
+        )}
+      </div>
+      <div className="min-h-0 flex-1 overflow-y-auto p-3">
+        <div className="mb-3 flex items-center justify-between border border-border bg-white px-3 py-2">
+          <span className="text-xs font-black text-brand-muted">이벤트</span>
+          <strong className="text-sm font-black">{selectedBoothEvents.length}개</strong>
+        </div>
+        <ul className="space-y-3">
+          {selectedBoothEvents.map((event) => (
+            <li
+              key={`${getEventScheduleLabel(event)}-${event.title}`}
+              className="overflow-hidden border border-border bg-white"
+            >
+              {event.imageUrl ? (
+                <div
+                  className="aspect-[4/3] border-b border-border bg-brand-surface bg-cover bg-center"
+                  style={{ backgroundImage: `url(${event.imageUrl})` }}
+                />
+              ) : null}
+              <div className="p-3">
+                <div className="flex items-center justify-between gap-3">
+                  <span className="font-mono text-sm font-black text-brand-coral-deep">
+                    {getEventScheduleLabel(event)}
+                  </span>
+                  <div className="flex shrink-0 items-center gap-1">
+                    {event.period ? (
+                      <span className="border border-border bg-brand-yellow px-2 py-1 text-xs font-black">
+                        기간 이벤트
+                      </span>
+                    ) : null}
+                    <span className="border border-border bg-brand-green px-2 py-1 text-xs font-black">
+                      {event.category}
+                    </span>
+                  </div>
+                </div>
+                <h4 className="mt-3 text-base font-black leading-5">{event.title}</h4>
+                <p className="mt-2 whitespace-pre-line text-sm font-bold leading-5 text-brand-subtle">
+                  {event.content}
+                </p>
+                <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/20 pt-3">
+                  <span className="min-w-0 truncate text-xs font-black text-brand-muted">
+                    출처 {event.sourceName}
+                  </span>
+                  {event.instagramUrl ? (
+                    <Button
+                      asChild
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      className="h-8 rounded-none border-border bg-brand-panel px-2 text-xs font-black hover:bg-brand-yellow"
+                    >
+                      <a href={event.instagramUrl} target="_blank" rel="noreferrer">
+                        <Instagram className="h-4 w-4" />
+                        원문
+                      </a>
+                    </Button>
+                  ) : null}
+                </div>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <div className="border-t border-border bg-white px-4 py-3 text-xs font-bold text-brand-muted">
+        <CalendarDays className="mr-1 inline h-4 w-4 align-[-3px]" />
+        실제 이벤트 데이터 연결 전 레이아웃 골격입니다.
+      </div>
+    </>
+  ) : null;
+
   return (
     <div className="h-full min-h-[calc(100vh-125px)] bg-background text-foreground lg:min-h-[calc(100vh-81px)]">
       <section className="grid h-full min-h-[calc(100vh-125px)] grid-cols-1 lg:min-h-[calc(100vh-81px)] lg:grid-cols-[390px_minmax(0,1fr)]">
-        <aside className="flex min-h-0 flex-col border-b border-border bg-brand-panel lg:h-[calc(100vh-81px)] lg:border-r lg:border-b-0">
-          <div className="border-b border-border p-4">
-            <div className="flex items-center gap-2 border border-border bg-white px-3">
-              <Search className="h-4 w-4 shrink-0" />
-              <Input
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-                placeholder="출판사, 부스, 국가 검색"
-                className="h-11 border-0 px-0 shadow-none focus-visible:ring-0"
-              />
-              {query ? (
-                <button
-                  type="button"
-                  aria-label="검색어 지우기"
-                  onClick={() => setQuery("")}
-                  className="inline-flex h-7 w-7 items-center justify-center"
-                >
-                  <X className="h-4 w-4" />
-                </button>
-              ) : null}
-            </div>
-            <div className="mt-2 flex items-center justify-between text-xs font-bold text-brand-muted">
-              <span>표시 {filteredExhibitors.length}개</span>
-              <span>전체 {exhibitors.length}개</span>
-            </div>
-            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-              {categoryOptions.map((category) => (
-                <button
-                  key={category}
-                  type="button"
-                  onClick={() => setSelectedCategory(category)}
-                  className={cn(
-                    "shrink-0 border border-border px-3 py-1.5 text-xs font-black",
-                    selectedCategory === category ? "bg-brand-ink text-white" : "bg-white hover:bg-brand-yellow"
-                  )}
-                >
-                  {category}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          <div className="max-h-[40vh] min-h-[230px] flex-1 overflow-y-auto border-b border-border p-3 lg:max-h-none lg:min-h-0">
-            <ul className="space-y-1">
-              {filteredExhibitors.map((exhibitor) => {
-                const booth = boothForMap(exhibitor);
-                const isSelected = exhibitor.no === selected?.no;
-                const isFavorite = favoriteSet.has(booth);
-
-                return (
-                  <li key={exhibitor.no}>
-                    <button
-                      type="button"
-                      onClick={() => selectExhibitor(exhibitor)}
-                      className={cn(
-                        "grid w-full grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2 text-left transition",
-                        isSelected
-                          ? "bg-brand-ink text-white"
-                          : "hover:bg-brand-hover focus-visible:bg-brand-hover"
-                      )}
-                    >
-                      <span className="min-w-0">
-                        <span className="block truncate text-sm font-extrabold">
-                          {getDisplayName(exhibitor)}
-                        </span>
-                        <span
-                          className={cn(
-                            "block truncate text-xs",
-                            isSelected ? "text-white/70" : "text-brand-muted"
-                          )}
-                        >
-                          {exhibitor.nameEn || exhibitor.countryEn || "Seoul International Book Fair"}
-                        </span>
-                      </span>
-                      <span className="inline-flex items-center gap-2">
-                        {isFavorite ? <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" /> : null}
-                        <span
-                          className={cn(
-                            "min-w-16 border px-2 py-1 text-center text-xs font-black",
-                            isSelected ? "border-white/40" : "border-border"
-                          )}
-                        >
-                          {booth}
-                        </span>
-                      </span>
-                    </button>
-                  </li>
-                );
-              })}
-            </ul>
-          </div>
-
-          {selected ? (
-            <div className="bg-brand-green p-4">
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <p className="inline-flex border border-border bg-brand-ink px-3 py-1 text-sm font-black text-white">
-                    {selectedBooth}
-                  </p>
-                  <h2 className="mt-3 text-xl font-black">{getDisplayName(selected)}</h2>
-                  {selected.nameEn ? <p className="text-sm font-bold text-brand-green-deep">{selected.nameEn}</p> : null}
-                  {selected.categories?.length ? (
-                    <div className="mt-2 flex flex-wrap gap-1">
-                      {selected.categories.slice(0, 5).map((category) => (
-                        <span
-                          key={category}
-                          className="border border-border/60 bg-brand-panel px-1.5 py-0.5 text-[11px] font-black text-brand-subtle"
-                        >
-                          {category}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                  {selected.instagramUrl || selected.homepageUrl ? (
-                    <div className="mt-2.5 flex flex-wrap gap-1.5">
-                      {selected.instagramUrl ? (
-                        <Button
-                          asChild
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-7 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
-                        >
-                          <a href={selected.instagramUrl} target="_blank" rel="noreferrer">
-                            <Instagram />
-                            Instagram
-                          </a>
-                        </Button>
-                      ) : null}
-                      {selected.homepageUrl ? (
-                        <Button
-                          asChild
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-7 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
-                        >
-                          <a href={selected.homepageUrl} target="_blank" rel="noreferrer">
-                            <ExternalLink />
-                            Homepage
-                          </a>
-                        </Button>
-                      ) : null}
-                    </div>
-                  ) : null}
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={() => toggleFavorite(selectedBooth)}
-                    aria-label="부스 찜하기"
-                    className="border-border bg-white hover:bg-brand-yellow"
-                  >
-                    <Heart
-                      className={cn(
-                        "h-4 w-4",
-                        favoriteSet.has(selectedBooth) && "fill-brand-coral text-brand-coral"
-                      )}
-                    />
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => setIsEventPanelOpen(true)}
-                    aria-label="출판사 상세 패널 열기"
-                    className="rounded-none border border-border bg-brand-yellow hover:bg-white"
-                  >
-                    <ChevronRight className="h-5 w-5" />
-                  </Button>
-                </div>
-              </div>
-
-              <div className="mt-4 border border-border bg-white">
-                <div className="border-b border-border px-3 py-2">
-                  <p className="text-xs font-black text-brand-muted">
-                    이벤트 <span className="font-bold">({selectedBoothEvents.length}개 예정)</span>
-                  </p>
-                </div>
-                <ul>
-                  {selectedBoothEvents.slice(0, 3).map((event) => (
-                    <li
-                      key={`${getEventScheduleLabel(event)}-${event.title}`}
-                      className="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-3 border-b border-border/20 px-3 py-2 text-sm leading-4 last:border-b-0"
-                    >
-                      <span className="font-mono text-xs leading-4 font-black text-brand-coral-deep">
-                        {getEventScheduleLabel(event)}
-                      </span>
-                      <span className="truncate leading-4 font-black">{event.title}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-            </div>
-          ) : null}
+        {/* 데스크톱 전용 사이드바 — 모바일에서는 hidden, 내용은 아래 바텀시트와 공유 */}
+        <aside className="hidden min-h-0 flex-col border-b border-border bg-brand-panel lg:flex lg:h-[calc(100vh-81px)] lg:border-r lg:border-b-0">
+          {listContent}
+          {detailContent}
         </aside>
 
-        <section className="flex min-h-[70vh] flex-col bg-brand-surface lg:h-[calc(100vh-81px)]">
+        <section className="flex h-[calc(100vh-125px)] min-h-[calc(100vh-125px)] flex-col bg-brand-surface lg:h-[calc(100vh-81px)] lg:min-h-0">
           <div className="flex items-center justify-between gap-3 border-b border-border bg-brand-panel px-4 py-3">
             <div className="flex items-center gap-3">
-              <LocateFixed className="h-5 w-5" />
-              <p className="text-sm font-black">Floor Plan</p>
+              <span className="text-sm font-black">*</span>
+              <p className="text-xs font-bold text-brand-subtle">휠 확대/축소 · 드래그 이동</p>
             </div>
             <div className="flex items-center gap-2">
-              <div className="hidden items-center gap-2 text-xs font-bold text-brand-subtle sm:flex">
-                <span>{exhibitors.length} entries</span>
-                <span className="h-1 w-1 rounded-full bg-brand-subtle" />
-                <span>{shapes.length} shapes</span>
-              </div>
               <div className="flex items-center border border-border bg-white">
                 <Button
                   type="button"
@@ -578,9 +788,6 @@ export function BookFairMap() {
               isDragging ? "cursor-grabbing" : "cursor-grab"
             )}
           >
-            <div className="pointer-events-none absolute top-4 left-4 z-30 border border-border bg-brand-panel/95 px-3 py-2 text-xs font-bold shadow-brutal-sm">
-              휠 확대/축소 · 드래그 이동
-            </div>
             <div
               className="absolute top-0 left-0 overflow-hidden border border-border bg-white shadow-brutal will-change-transform"
               style={{
@@ -618,7 +825,7 @@ export function BookFairMap() {
                     onPointerDown={(event) => event.stopPropagation()}
                     onClick={() => selectExhibitor(boothItems[0])}
                     className={cn(
-                      "absolute transition focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-brand-coral",
+                      "absolute cursor-pointer transition focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-brand-coral",
                       isSelected ? "z-30" : isFavorite ? "z-20" : "z-10",
                       isSelected && "bg-brand-green/45 ring-4 ring-brand-green",
                       isFavorite && !isSelected && "bg-brand-coral/25 ring-2 ring-brand-coral",
@@ -675,126 +882,27 @@ export function BookFairMap() {
               </div>
             ))}
 
-            {isEventPanelOpen && selected ? (
+            {/* 데스크톱 전용 플로팅 이벤트 패널 — 모바일은 바텀시트 안 뷰로 표시 */}
+            {!isMobile && isEventPanelOpen && selected ? (
               <aside
                 onPointerDown={(event) => event.stopPropagation()}
-                className="absolute inset-x-4 top-16 bottom-4 z-50 flex flex-col border border-border bg-brand-panel shadow-brutal sm:inset-x-auto sm:right-4 sm:w-[360px]"
+                className="absolute inset-x-4 top-16 bottom-4 z-[60] flex flex-col border border-border bg-brand-panel shadow-brutal sm:inset-x-auto sm:right-4 sm:w-[360px]"
               >
-                <div className="flex items-start justify-between gap-3 border-b border-border bg-brand-yellow p-4">
-                  <div className="min-w-0">
-                    <p className="inline-flex border border-border bg-brand-ink px-2 py-1 text-xs font-black text-white">
-                      {selectedBooth}
-                    </p>
-                    <h3 className="mt-2 truncate text-lg font-black">{getDisplayName(selected)}</h3>
-                    {selected.introduction ? (
-                      <div className="mt-3">
-                        <p
-                          className={cn(
-                            "text-xs font-bold leading-5 text-brand-green-ink",
-                            !isIntroductionExpanded && "line-clamp-3"
-                          )}
-                        >
-                          {selected.introduction}
-                        </p>
-                        <button
-                          type="button"
-                          onClick={() => setIsIntroductionExpanded((current) => !current)}
-                          className="mt-2 border border-border bg-white px-2 py-1 text-xs font-black hover:bg-brand-green"
-                        >
-                          {isIntroductionExpanded ? "접기" : "더보기"}
-                        </button>
-                      </div>
-                    ) : null}
-                  </div>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon-sm"
-                    onClick={() => setIsEventPanelOpen(false)}
-                    aria-label="부스 이벤트 패널 닫기"
-                    className="shrink-0 rounded-none border-border bg-white"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                <div className="min-h-0 flex-1 overflow-y-auto p-3">
-                  <div className="mb-3 flex items-center justify-between border border-border bg-white px-3 py-2">
-                    <span className="text-xs font-black text-brand-muted">이벤트</span>
-                    <strong className="text-sm font-black">{selectedBoothEvents.length}개</strong>
-                  </div>
-                  <ul className="space-y-3">
-                    {selectedBoothEvents.map((event) => (
-                      <li
-                        key={`${getEventScheduleLabel(event)}-${event.title}`}
-                        className="overflow-hidden border border-border bg-white"
-                      >
-                        {event.imageUrl ? (
-                          <div
-                            className="aspect-[4/3] border-b border-border bg-brand-surface bg-cover bg-center"
-                            style={{ backgroundImage: `url(${event.imageUrl})` }}
-                          />
-                        ) : null}
-                        <div className="p-3">
-                          <div className="flex items-center justify-between gap-3">
-                            <span className="font-mono text-sm font-black text-brand-coral-deep">
-                              {getEventScheduleLabel(event)}
-                            </span>
-                            <div className="flex shrink-0 items-center gap-1">
-                              {event.period ? (
-                                <span className="border border-border bg-brand-yellow px-2 py-1 text-xs font-black">
-                                  기간 이벤트
-                                </span>
-                              ) : null}
-                              <span className="border border-border bg-brand-green px-2 py-1 text-xs font-black">
-                                {event.category}
-                              </span>
-                            </div>
-                          </div>
-                          <h4 className="mt-3 text-base font-black leading-5">{event.title}</h4>
-                          <p className="mt-2 whitespace-pre-line text-sm font-bold leading-5 text-brand-subtle">
-                            {event.content}
-                          </p>
-                          <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/20 pt-3">
-                            <span className="min-w-0 truncate text-xs font-black text-brand-muted">
-                              출처 {event.sourceName}
-                            </span>
-                            {event.instagramUrl ? (
-                              <Button
-                                asChild
-                                type="button"
-                                variant="outline"
-                                size="sm"
-                                className="h-8 rounded-none border-border bg-brand-panel px-2 text-xs font-black hover:bg-brand-yellow"
-                              >
-                                <a href={event.instagramUrl} target="_blank" rel="noreferrer">
-                                  <Instagram className="h-4 w-4" />
-                                  원문
-                                </a>
-                              </Button>
-                            ) : null}
-                          </div>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-                <div className="border-t border-border bg-white px-4 py-3 text-xs font-bold text-brand-muted">
-                  <CalendarDays className="mr-1 inline h-4 w-4 align-[-3px]" />
-                  실제 이벤트 데이터 연결 전 레이아웃 골격입니다.
-                </div>
+                {eventContent}
               </aside>
             ) : null}
           </div>
 
+          {/* 찜 목록 바 — 모바일에서는 바텀시트 peek과 겹치므로 데스크톱 전용 */}
           {favoriteItems.length ? (
-            <div className="border-t border-border bg-brand-panel px-4 py-3">
+            <div className="hidden border-t border-border bg-brand-panel px-4 py-3 lg:block">
               <div className="flex gap-2 overflow-x-auto">
                 {favoriteItems.map((item) => (
                   <button
                     key={boothForMap(item)}
                     type="button"
                     onClick={() => selectExhibitor(item)}
-                    className="inline-flex shrink-0 items-center gap-2 border border-border bg-white px-3 py-2 text-sm font-black hover:bg-brand-yellow"
+                    className="inline-flex shrink-0 cursor-pointer items-center gap-2 border border-border bg-white px-3 py-2 text-sm font-black hover:bg-brand-yellow"
                   >
                     <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" />
                     {boothForMap(item)} {getDisplayName(item)}
@@ -805,6 +913,71 @@ export function BookFairMap() {
           ) : null}
         </section>
       </section>
+
+      {/* 모바일 전용 바텀시트 — non-modal(오버레이 없음, 지도 인터랙션 유지)
+          높이 90vh 고정 + translateY(sheetOffset)로 노출 높이 조절.
+          데스크톱에서는 lg:hidden으로 숨김 */}
+      {isMobile ? (
+        <div
+          className="fixed inset-x-0 bottom-0 z-50 flex flex-col border-t border-border bg-brand-panel lg:hidden"
+          style={{
+            height: `${SHEET_HEIGHT_RATIO * 100}vh`,
+            transform: `translate3d(0, ${sheetOffset}px, 0)`,
+            transition: isSheetDragging ? "none" : "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+          }}
+        >
+          {/* 드래그 핸들 — pointer capture로 핸들 밖으로 나가도 이벤트 추적 */}
+          <div
+            role="separator"
+            aria-label="바텀시트 드래그 핸들"
+            className="flex cursor-grab touch-none items-center justify-center pb-2 pt-3 active:cursor-grabbing"
+            onPointerDown={handleSheetPointerDown}
+            onPointerMove={handleSheetPointerMove}
+            onPointerUp={handleSheetPointerUp}
+            onPointerCancel={handleSheetPointerUp}
+          >
+            <div className="h-1.5 w-12 rounded-full bg-brand-surface" />
+          </div>
+          <h2 className="sr-only">출판사 검색 및 목록</h2>
+          {isEventPanelOpen && selected ? (
+            <div className="flex min-h-0 flex-1 flex-col">
+              <button
+                type="button"
+                onClick={() => setIsEventPanelOpen(false)}
+                className="flex shrink-0 cursor-pointer items-center gap-1.5 border-b border-border px-4 py-2.5 text-sm font-black hover:bg-brand-hover"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                출판사로
+              </button>
+              <div
+                className="min-h-0 flex-1 overflow-y-auto"
+                style={{ paddingBottom: scrollPaddingBottom }}
+              >
+                {eventContent}
+              </div>
+            </div>
+          ) : isMobileDetailOpen ? (
+            <div className="flex min-h-0 flex-1 flex-col">
+              <button
+                type="button"
+                onClick={() => setIsMobileDetailOpen(false)}
+                className="flex shrink-0 cursor-pointer items-center gap-1.5 border-b border-border px-4 py-2.5 text-sm font-black hover:bg-brand-hover"
+              >
+                <ChevronLeft className="h-4 w-4" />
+                목록으로
+              </button>
+              <div
+                className="min-h-0 flex-1 overflow-y-auto"
+                style={{ paddingBottom: scrollPaddingBottom }}
+              >
+                {detailContent}
+              </div>
+            </div>
+          ) : (
+            <div className="flex min-h-0 flex-1 flex-col">{listContent}</div>
+          )}
+        </div>
+      ) : null}
     </div>
   );
 }
