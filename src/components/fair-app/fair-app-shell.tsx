@@ -120,7 +120,7 @@ export function FairAppShell() {
       <Tabs defaultValue="map" className="min-h-screen gap-0">
         <header className="sticky top-0 z-50 border-b border-border bg-brand-panel">
           <div className="flex flex-col gap-3 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex items-center justify-between gap-4">
               <div className="min-w-0">
                 <p className="text-xs font-bold tracking-[0.28em] text-brand-rust uppercase">SIBF 2026</p>
                 <h1 className="mt-1 text-2xl font-black tracking-normal">서울국제도서전 맵</h1>
@@ -130,7 +130,7 @@ export function FairAppShell() {
                   <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" />
                   {favorites.length}
                 </div>
-                <Button type="button" variant="outline" size="sm" className="border-border bg-white">
+                <Button type="button" variant="outline" size="sm" className="h-9 border-border bg-white">
                   <LogIn className="h-4 w-4" />
                   로그인
                 </Button>

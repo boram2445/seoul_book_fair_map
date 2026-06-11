@@ -30,24 +30,77 @@ const MAP_HEIGHT = 3650;
 const MIN_SCALE = 0.16;
 const MAX_SCALE = 2.4;
 
-function getBoothEvents(booth: string) {
+type BoothEvent = {
+  time?: string;
+  period?: string;
+  category: string;
+  title: string;
+  content: string;
+  sourceName: string;
+  instagramUrl?: string;
+  imageUrl?: string;
+};
+
+function getBoothEvents(booth: string): BoothEvent[] {
+  if (booth === "A1703") {
+    return [
+      {
+        period: "06.01-06.14",
+        category: "댓글이벤트",
+        title: "[#서울국제도서전] 티켓 증정 댓글이벤트",
+        content: `올해 예스24 부스 컨셉은 YES24 BASE CAMP입니다.
+
+예스24 부스 방문 전, 꿀팁 3가지 확인하고 서울국제도서전 티켓 받아가세요. 지금 댓글로 참여하세요.
+
+참여 방법
+1. 예스24(@yes24_official) 팔로우
+2. 도서전 함께 가고 싶은 친구 태그
+3. 예스24 부스 방문의 기대감을 이모지로 댓글 작성
+
+이벤트 정보
+참여 기간: 2026년 6월 1일 ~ 6월 14일
+당첨 인원: 30명
+당첨 경품: 서울국제도서전 티켓 1인 1매 제공
+당첨자 발표: 6월 15일
+초대권 발송: 6월 19일, 카카오톡 알림톡 발송
+
+#예스24 #예스24베이스캠프 #리딩런`,
+        sourceName: "YES24 Instagram",
+        instagramUrl: "https://www.instagram.com/yes24_official/",
+      },
+    ];
+  }
+
   return [
     {
       time: "10:30-11:00",
       category: "사인회",
       title: `${booth} 작가 사인회`,
+      content: "부스에서 신간 구매자를 대상으로 진행되는 현장 사인회입니다. 대기 상황에 따라 조기 마감될 수 있습니다.",
+      sourceName: "Instagram",
+      instagramUrl: "https://www.instagram.com/ghost__books/",
     },
     {
       time: "13:20-14:00",
       category: "토크",
       title: "오늘의 책을 고르는 대화",
+      content: "출판사가 고른 대표 도서와 제작 이야기를 짧게 나누는 미니 토크입니다.",
+      sourceName: "Instagram",
+      instagramUrl: "https://www.instagram.com/ghost__books/",
     },
     {
       time: "16:00-16:30",
       category: "이벤트",
       title: "현장 한정 굿즈 증정",
+      content: "부스 방문 및 SNS 팔로우 인증 시 한정 수량 굿즈를 증정합니다.",
+      sourceName: "Instagram",
+      instagramUrl: "https://www.instagram.com/ghost__books/",
     },
-  ];
+  ] satisfies BoothEvent[];
+}
+
+function getEventScheduleLabel(event: BoothEvent) {
+  return event.period ?? event.time ?? "상시";
 }
 
 function clamp(value: number, min: number, max: number) {
@@ -56,11 +109,13 @@ function clamp(value: number, min: number, max: number) {
 
 export function BookFairMap() {
   const [query, setQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState("전체");
   const [selectedNo, setSelectedNo] = useState<number>(4);
   const [transform, setTransform] = useState({ scale: 0.28, x: 56, y: 18 });
   const [isDragging, setIsDragging] = useState(false);
   const [hoveredBooth, setHoveredBooth] = useState("");
   const [isEventPanelOpen, setIsEventPanelOpen] = useState(false);
+  const [isIntroductionExpanded, setIsIntroductionExpanded] = useState(false);
   const { favorites, toggleFavorite } = useFavorites();
   const viewportRef = useRef<HTMLDivElement | null>(null);
   const dragRef = useRef({
@@ -88,15 +143,33 @@ export function BookFairMap() {
   const selectedBooth = selected ? boothForMap(selected) : "";
   const selectedShape = selected ? shapesByBooth.get(selectedBooth) : undefined;
   const selectedBoothEvents = selectedBooth ? getBoothEvents(selectedBooth) : [];
+  const categoryOptions = useMemo(() => {
+    const categoryCounts = exhibitors.reduce<Record<string, number>>((acc, exhibitor) => {
+      for (const category of exhibitor.categories ?? []) {
+        acc[category] = (acc[category] ?? 0) + 1;
+      }
+      return acc;
+    }, {});
+
+    return [
+      "전체",
+      ...Object.entries(categoryCounts)
+        .sort((first, second) => second[1] - first[1] || first[0].localeCompare(second[0], "ko"))
+        .slice(0, 10)
+        .map(([category]) => category),
+    ];
+  }, []);
 
   const filteredExhibitors = useMemo(() => {
     const normalized = query.trim().toLowerCase();
-    return normalized
-      ? exhibitors.filter((exhibitor) => getSearchText(exhibitor).includes(normalized))
-      : exhibitors;
-  }, [query]);
+    return exhibitors.filter((exhibitor) => {
+      const matchesQuery = normalized ? getSearchText(exhibitor).includes(normalized) : true;
+      const matchesCategory =
+        selectedCategory === "전체" ? true : (exhibitor.categories ?? []).includes(selectedCategory);
+      return matchesQuery && matchesCategory;
+    });
+  }, [query, selectedCategory]);
 
-  const selectedBoothItems = selected ? exhibitorsByBooth[selectedBooth] ?? [selected] : [];
   const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
   const favoriteItems = useMemo(() => {
     return favorites
@@ -179,6 +252,7 @@ export function BookFairMap() {
 
   function selectExhibitor(exhibitor: MapExhibitor) {
     setSelectedNo(exhibitor.no);
+    setIsIntroductionExpanded(false);
     centerBooth(boothForMap(exhibitor));
   }
 
@@ -266,6 +340,21 @@ export function BookFairMap() {
               <span>표시 {filteredExhibitors.length}개</span>
               <span>전체 {exhibitors.length}개</span>
             </div>
+            <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
+              {categoryOptions.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => setSelectedCategory(category)}
+                  className={cn(
+                    "shrink-0 border border-border px-3 py-1.5 text-xs font-black",
+                    selectedCategory === category ? "bg-brand-ink text-white" : "bg-white hover:bg-brand-yellow"
+                  )}
+                >
+                  {category}
+                </button>
+              ))}
+            </div>
           </div>
 
           <div className="min-h-[230px] flex-1 overflow-y-auto border-b border-border p-3 lg:min-h-0">
@@ -327,100 +416,101 @@ export function BookFairMap() {
                   </p>
                   <h2 className="mt-3 text-xl font-black">{getDisplayName(selected)}</h2>
                   {selected.nameEn ? <p className="text-sm font-bold text-brand-green-deep">{selected.nameEn}</p> : null}
-                  {selected.instagramUrl || selected.websiteUrl ? (
-                    <div className="mt-3 flex flex-wrap gap-2">
+                  {selected.categories?.length ? (
+                    <div className="mt-2 flex flex-wrap gap-1">
+                      {selected.categories.slice(0, 5).map((category) => (
+                        <span
+                          key={category}
+                          className="border border-border/60 bg-brand-panel px-1.5 py-0.5 text-[11px] font-black text-brand-subtle"
+                        >
+                          {category}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                  {selected.instagramUrl || selected.homepageUrl ? (
+                    <div className="mt-2.5 flex flex-wrap gap-1.5">
                       {selected.instagramUrl ? (
                         <Button
                           asChild
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-8 rounded-none border-border bg-white px-2 text-xs font-black hover:bg-brand-yellow"
+                          className="h-7 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
                         >
                           <a href={selected.instagramUrl} target="_blank" rel="noreferrer">
-                            <Instagram className="h-4 w-4" />
+                            <Instagram />
                             Instagram
                           </a>
                         </Button>
                       ) : null}
-                      {selected.websiteUrl ? (
+                      {selected.homepageUrl ? (
                         <Button
                           asChild
                           type="button"
                           variant="outline"
                           size="sm"
-                          className="h-8 rounded-none border-border bg-white px-2 text-xs font-black hover:bg-brand-yellow"
+                          className="h-7 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
                         >
-                          <a href={selected.websiteUrl} target="_blank" rel="noreferrer">
-                            <ExternalLink className="h-4 w-4" />
-                            Website
+                          <a href={selected.homepageUrl} target="_blank" rel="noreferrer">
+                            <ExternalLink />
+                            Homepage
                           </a>
                         </Button>
                       ) : null}
                     </div>
                   ) : null}
                 </div>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => toggleFavorite(selectedBooth)}
-                  aria-label="부스 찜하기"
-                  className="border-border bg-white hover:bg-brand-yellow"
-                >
-                  <Heart
-                    className={cn(
-                      "h-4 w-4",
-                      favoriteSet.has(selectedBooth) && "fill-brand-coral text-brand-coral"
-                    )}
-                  />
-                </Button>
-              </div>
-
-              <div className="mt-4 border border-border bg-white">
-                <div className="flex items-center justify-between gap-3 border-b border-border px-3 py-2">
-                  <div className="min-w-0">
-                    <p className="text-xs font-black text-brand-muted">이벤트</p>
-                    <p className="truncate text-sm font-black">{selectedBoothEvents.length}개 예정</p>
-                  </div>
+                <div className="flex shrink-0 items-center gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="icon"
+                    onClick={() => toggleFavorite(selectedBooth)}
+                    aria-label="부스 찜하기"
+                    className="border-border bg-white hover:bg-brand-yellow"
+                  >
+                    <Heart
+                      className={cn(
+                        "h-4 w-4",
+                        favoriteSet.has(selectedBooth) && "fill-brand-coral text-brand-coral"
+                      )}
+                    />
+                  </Button>
                   <Button
                     type="button"
                     variant="ghost"
-                    size="icon-sm"
+                    size="icon"
                     onClick={() => setIsEventPanelOpen(true)}
-                    aria-label="부스 이벤트 패널 열기"
-                    className="shrink-0 rounded-none border border-border bg-brand-yellow hover:bg-brand-green"
+                    aria-label="출판사 상세 패널 열기"
+                    className="rounded-none border border-border bg-brand-yellow hover:bg-white"
                   >
-                    <ChevronRight className="h-4 w-4" />
+                    <ChevronRight className="h-5 w-5" />
                   </Button>
+                </div>
+              </div>
+
+              <div className="mt-4 border border-border bg-white">
+                <div className="border-b border-border px-3 py-2">
+                  <p className="text-xs font-black text-brand-muted">
+                    이벤트 <span className="font-bold">({selectedBoothEvents.length}개 예정)</span>
+                  </p>
                 </div>
                 <ul>
                   {selectedBoothEvents.slice(0, 3).map((event) => (
                     <li
-                      key={`${event.time}-${event.title}`}
-                      className="grid grid-cols-[86px_minmax(0,1fr)] gap-3 border-b border-border/20 px-3 py-2 text-sm last:border-b-0"
+                      key={`${getEventScheduleLabel(event)}-${event.title}`}
+                      className="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-3 border-b border-border/20 px-3 py-2 text-sm leading-4 last:border-b-0"
                     >
-                      <span className="font-mono text-xs font-black text-brand-coral-deep">{event.time}</span>
-                      <span className="truncate font-black">{event.title}</span>
+                      <span className="font-mono text-xs leading-4 font-black text-brand-coral-deep">
+                        {getEventScheduleLabel(event)}
+                      </span>
+                      <span className="truncate leading-4 font-black">{event.title}</span>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              {selectedBoothItems.length > 1 ? (
-                <div className="mt-3 max-h-28 overflow-y-auto border border-border bg-white">
-                  {selectedBoothItems.slice(0, 12).map((item) => (
-                    <button
-                      key={item.no}
-                      type="button"
-                      onClick={() => selectExhibitor(item)}
-                      className="block w-full border-b border-border/20 px-3 py-2 text-left text-sm font-bold last:border-b-0 hover:bg-brand-yellow"
-                    >
-                      {getDisplayName(item)}
-                    </button>
-                  ))}
-                </div>
-              ) : null}
             </div>
           ) : null}
         </aside>
@@ -594,9 +684,25 @@ export function BookFairMap() {
                       {selectedBooth}
                     </p>
                     <h3 className="mt-2 truncate text-lg font-black">{getDisplayName(selected)}</h3>
-                    <p className="mt-1 text-xs font-bold text-brand-subtle">
-                      이벤트 {selectedBoothEvents.length}개
-                    </p>
+                    {selected.introduction ? (
+                      <div className="mt-3">
+                        <p
+                          className={cn(
+                            "text-xs font-bold leading-5 text-brand-green-ink",
+                            !isIntroductionExpanded && "line-clamp-3"
+                          )}
+                        >
+                          {selected.introduction}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setIsIntroductionExpanded((current) => !current)}
+                          className="mt-2 border border-border bg-white px-2 py-1 text-xs font-black hover:bg-brand-green"
+                        >
+                          {isIntroductionExpanded ? "접기" : "더보기"}
+                        </button>
+                      </div>
+                    ) : null}
                   </div>
                   <Button
                     type="button"
@@ -610,16 +716,62 @@ export function BookFairMap() {
                   </Button>
                 </div>
                 <div className="min-h-0 flex-1 overflow-y-auto p-3">
-                  <ul className="space-y-2">
+                  <div className="mb-3 flex items-center justify-between border border-border bg-white px-3 py-2">
+                    <span className="text-xs font-black text-brand-muted">이벤트</span>
+                    <strong className="text-sm font-black">{selectedBoothEvents.length}개</strong>
+                  </div>
+                  <ul className="space-y-3">
                     {selectedBoothEvents.map((event) => (
-                      <li key={`${event.time}-${event.title}`} className="border border-border bg-white p-3">
-                        <div className="flex items-center justify-between gap-3">
-                          <span className="font-mono text-base font-black">{event.time}</span>
-                          <span className="border border-border bg-brand-green px-2 py-1 text-xs font-black">
-                            {event.category}
-                          </span>
+                      <li
+                        key={`${getEventScheduleLabel(event)}-${event.title}`}
+                        className="overflow-hidden border border-border bg-white"
+                      >
+                        {event.imageUrl ? (
+                          <div
+                            className="aspect-[4/3] border-b border-border bg-brand-surface bg-cover bg-center"
+                            style={{ backgroundImage: `url(${event.imageUrl})` }}
+                          />
+                        ) : null}
+                        <div className="p-3">
+                          <div className="flex items-center justify-between gap-3">
+                            <span className="font-mono text-sm font-black text-brand-coral-deep">
+                              {getEventScheduleLabel(event)}
+                            </span>
+                            <div className="flex shrink-0 items-center gap-1">
+                              {event.period ? (
+                                <span className="border border-border bg-brand-yellow px-2 py-1 text-xs font-black">
+                                  기간 이벤트
+                                </span>
+                              ) : null}
+                              <span className="border border-border bg-brand-green px-2 py-1 text-xs font-black">
+                                {event.category}
+                              </span>
+                            </div>
+                          </div>
+                          <h4 className="mt-3 text-base font-black leading-5">{event.title}</h4>
+                          <p className="mt-2 whitespace-pre-line text-sm font-bold leading-5 text-brand-subtle">
+                            {event.content}
+                          </p>
+                          <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/20 pt-3">
+                            <span className="min-w-0 truncate text-xs font-black text-brand-muted">
+                              출처 {event.sourceName}
+                            </span>
+                            {event.instagramUrl ? (
+                              <Button
+                                asChild
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                className="h-8 rounded-none border-border bg-brand-panel px-2 text-xs font-black hover:bg-brand-yellow"
+                              >
+                                <a href={event.instagramUrl} target="_blank" rel="noreferrer">
+                                  <Instagram className="h-4 w-4" />
+                                  원문
+                                </a>
+                              </Button>
+                            ) : null}
+                          </div>
                         </div>
-                        <p className="mt-3 text-sm font-black leading-5">{event.title}</p>
                       </li>
                     ))}
                   </ul>

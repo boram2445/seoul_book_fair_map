@@ -17,6 +17,8 @@ export type MapExhibitor = {
   countryKo: string;
   countryEn: string;
   special: boolean;
+  categories?: string[];
+  introduction?: string;
   instagramUrl?: string;
-  websiteUrl?: string;
+  homepageUrl?: string;
 };
