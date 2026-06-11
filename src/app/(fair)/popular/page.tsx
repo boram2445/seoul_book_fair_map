@@ -6,7 +6,7 @@ import { PopularList } from "@/app/(fair)/popular/_components/popular-list";
 export default function PopularPage() {
   return (
     <div className="bg-brand-surface">
-      <Panel title="인기" icon={Trophy}>
+      <Panel title="인기 순위" icon={Trophy}>
         <PopularList />
       </Panel>
     </div>

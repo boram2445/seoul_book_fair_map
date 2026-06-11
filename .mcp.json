@@ -3,6 +3,10 @@
     "context7": {
       "type": "http",
       "url": "https://mcp.context7.com/mcp"
+    },
+    "supabase": {
+      "type": "http",
+      "url": "https://mcp.supabase.com/mcp?project_ref=rjiemkyvbbocfusqfdwl&features=database%2Caccount%2Cdocs%2Cdebugging%2Cdevelopment"
     }
   }
 }
