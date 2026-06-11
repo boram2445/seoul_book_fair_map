@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 
 import { boothForMap, exhibitors, getDisplayName, getSearchText, shapes } from "./map-data";
+import { ExportFavoritesButton } from "./favorites-pdf/index";
 import type { MapExhibitor } from "./types";
 import { useFavorites } from "./use-favorites";
 
@@ -357,7 +358,7 @@ export function BookFairMap() {
             </div>
           </div>
 
-          <div className="min-h-[230px] flex-1 overflow-y-auto border-b border-border p-3 lg:min-h-0">
+          <div className="max-h-[40vh] min-h-[230px] flex-1 overflow-y-auto border-b border-border p-3 lg:max-h-none lg:min-h-0">
             <ul className="space-y-1">
               {filteredExhibitors.map((exhibitor) => {
                 const booth = boothForMap(exhibitor);
@@ -562,6 +563,7 @@ export function BookFairMap() {
                   <RotateCcw className="h-4 w-4" />
                 </Button>
               </div>
+              <ExportFavoritesButton booths={favorites} />
             </div>
           </div>
 
