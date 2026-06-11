@@ -110,9 +110,10 @@ export function ReviewComposeForm({
             />
           </div>
 
-          <ReviewPhotoField />
-
-          <div className="flex justify-end">{reviewSubmitButton}</div>
+          <div className="flex items-end justify-between gap-2">
+            <ReviewPhotoField />
+            {reviewSubmitButton}
+          </div>
         </form>
       </section>
     );
@@ -143,9 +144,10 @@ export function ReviewComposeForm({
               />
             </div>
 
-            <ReviewPhotoField />
-
-            <div className="flex justify-end">{reviewSubmitButton}</div>
+            <div className="flex items-end justify-between gap-2">
+              <ReviewPhotoField />
+              {reviewSubmitButton}
+            </div>
           </form>
         </TabsContent>
 
@@ -208,9 +210,10 @@ export function ReviewComposeForm({
               />
             </div>
 
-            <ReviewPhotoField />
-
-            <div className="flex justify-end">{reviewSubmitButton}</div>
+            <div className="flex items-end justify-between gap-2">
+              <ReviewPhotoField />
+              {reviewSubmitButton}
+            </div>
           </form>
         </TabsContent>
       </Tabs>

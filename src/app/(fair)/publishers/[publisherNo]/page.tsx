@@ -29,9 +29,6 @@ const mockEventRows = [
   },
 ];
 
-function getReviewTagClass() {
-  return "border border-border bg-brand-green px-2 py-1 text-xs font-black text-brand-green-ink";
-}
 
 export default async function PublisherDetailPage({
   params,
@@ -173,22 +170,15 @@ export default async function PublisherDetailPage({
               <div className="grid gap-0">
                 {publisherReviews.map((review) => (
                   <article key={review.id} className="border-b border-border/20 p-4 last:border-b-0">
-                    <div className="flex flex-wrap items-center justify-between gap-2">
-                      <Link
-                        href={getPublisherHrefForReview(review) ?? `/publishers/${publisher.no}`}
-                        className={cn(getReviewTagClass(), "hover:bg-brand-yellow")}
-                      >
-                        {review.target}
-                      </Link>
-                      <span className="text-xs font-black text-brand-muted">{review.time}</span>
-                    </div>
-                    <p className="mt-3 text-sm font-bold leading-6 text-brand-subtle">{review.body}</p>
+                    <p className="text-sm font-bold leading-6 text-brand-subtle">{review.body}</p>
                     <div className="mt-3 flex items-center gap-2">
                       <Avatar size="sm" className="border border-border">
                         <AvatarImage src={review.authorAvatarUrl} alt={`${review.author} 프로필`} />
                         <AvatarFallback>{review.author.slice(0, 1)}</AvatarFallback>
                       </Avatar>
                       <p className="text-xs font-black text-brand-muted">{review.author}</p>
+                      <span className="text-xs text-brand-muted">·</span>
+                      <span className="text-xs font-black text-brand-muted">{review.time}</span>
                     </div>
                   </article>
                 ))}
