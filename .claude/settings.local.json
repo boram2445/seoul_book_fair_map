@@ -1,6 +1,6 @@
 {
   "permissions": {
-    "allow": ["WebSearch", "Bash", "WebFetch"],
+    "allow": ["WebSearch", "Bash", "WebFetch", "mcp__supabase"],
     "defaultMode": "plan",
     "language": "korean"
   },
