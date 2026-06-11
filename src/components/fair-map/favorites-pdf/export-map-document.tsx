@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { boothForMap, exhibitors, getDisplayName, shapes as allShapes } from "../map-data";
+import { boothForMap, exhibitorByFavoriteKey, getDisplayName, shapes as allShapes } from "../map-data";
 import type { BoothShape } from "../types";
 
 export const MAP_EXPORT_WIDTH = 3230;
@@ -22,24 +22,22 @@ export const C = {
 } as const;
 
 export interface FavoriteExportItem {
+  favKey: string;
   booth: string;
   name: string;
   shape: BoothShape;
 }
 
-/** Resolves booth numbers → shapes + display names, silently drops any unmatched entries. */
-export function buildFavoriteItems(booths: string[]): FavoriteExportItem[] {
+/** Resolves favorite keys (exhibitor.no strings) → shapes + display names, silently drops unmatched. */
+export function buildFavoriteItems(favKeys: string[]): FavoriteExportItem[] {
   const shapeMap = new Map(allShapes.map((s) => [s.boothNumber, s]));
-  const firstExhibitorByBooth: Record<string, (typeof exhibitors)[0]> = {};
-  for (const ex of exhibitors) {
-    const key = boothForMap(ex);
-    firstExhibitorByBooth[key] ??= ex;
-  }
-  return booths.flatMap((booth) => {
+  return favKeys.flatMap((favKey) => {
+    const ex = exhibitorByFavoriteKey.get(favKey);
+    if (!ex) return [];
+    const booth = boothForMap(ex);
     const shape = shapeMap.get(booth);
-    const ex = firstExhibitorByBooth[booth];
-    if (!shape || !ex) return [];
-    return [{ booth, name: getDisplayName(ex), shape }];
+    if (!shape) return [];
+    return [{ favKey, booth, name: getDisplayName(ex), shape }];
   });
 }
 
@@ -83,7 +81,18 @@ export function ExportMapPage({ items, ref }: ExportMapPageProps) {
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
         />
 
-        {items.map(({ booth, name, shape }) => (
+        {/* Group by booth so the same booth with multiple favorites renders one overlay */}
+        {Array.from(
+          items.reduce<Map<string, { booth: string; names: string[]; shape: BoothShape }>>(
+            (map, { booth, name, shape }) => {
+              const entry = map.get(booth);
+              if (entry) entry.names.push(name);
+              else map.set(booth, { booth, names: [name], shape });
+              return map;
+            },
+            new Map()
+          ).values()
+        ).map(({ booth, names, shape }) => (
           <div key={booth}>
             {/* Coral fill + ring — mirrors book-fair-map.tsx "isFavorite" styles */}
             <div
@@ -119,7 +128,9 @@ export function ExportMapPage({ items, ref }: ExportMapPageProps) {
                 pointerEvents: "none",
               }}
             >
-              {name}
+              {names.map((n, i) => (
+                <span key={i} style={{ display: "block" }}>{n}</span>
+              ))}
             </div>
           </div>
         ))}
@@ -172,9 +183,9 @@ export function ExportListPage({ items, ref }: ExportListPageProps) {
 
         {/* Numbered rows: [index] [부스배지] 출판사명 */}
         <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
-          {items.map(({ booth, name }, index) => (
+          {items.map(({ favKey, booth, name }, index) => (
             <li
-              key={booth}
+              key={favKey}
               style={{
                 display: "flex",
                 alignItems: "center",

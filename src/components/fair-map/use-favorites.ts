@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-const FAVORITES_KEY = "sibf-map-favorites";
+const FAVORITES_KEY = "sibf-map-favorites-v2";
 const FAVORITES_EVENT = "sibf-favorites-change";
 const SERVER_SNAPSHOT: string[] = [];
 

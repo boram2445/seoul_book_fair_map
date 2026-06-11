@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { CalendarDays, ExternalLink, Heart, Instagram, Search } from "lucide-react";
 
 import { getMockHeartCount } from "@/app/(fair)/_lib/publisher-stats";
-import { boothForMap, exhibitors, getDisplayName, getSearchText } from "@/components/fair-map/map-data";
+import { boothForMap, exhibitors, getFavoriteKey, getDisplayName, getSearchText } from "@/components/fair-map/map-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFavorites } from "@/components/fair-map/use-favorites";
@@ -54,8 +54,8 @@ export function PopularList() {
           .includes(normalizedQuery);
       })
       .sort((first, second) => {
-        const firstHeartCount = getMockHeartCount(first.no) + (favoriteSet.has(boothForMap(first)) ? 1 : 0);
-        const secondHeartCount = getMockHeartCount(second.no) + (favoriteSet.has(boothForMap(second)) ? 1 : 0);
+        const firstHeartCount = getMockHeartCount(first.no) + (favoriteSet.has(getFavoriteKey(first)) ? 1 : 0);
+        const secondHeartCount = getMockHeartCount(second.no) + (favoriteSet.has(getFavoriteKey(second)) ? 1 : 0);
 
         return (
           secondHeartCount - firstHeartCount ||
@@ -86,7 +86,8 @@ export function PopularList() {
       <section className="grid gap-3">
         {filteredItems.map((item) => {
           const booth = boothForMap(item);
-          const isFavorite = favoriteSet.has(booth);
+          const favKey = getFavoriteKey(item);
+          const isFavorite = favoriteSet.has(favKey);
           const heartCount = getMockHeartCount(item.no) + (isFavorite ? 1 : 0);
           const categories = item.categories ?? [];
           const publisherHref = `/publishers/${item.no}`;
@@ -150,7 +151,7 @@ export function PopularList() {
                     )}
                     onClick={(event) => {
                       event.stopPropagation();
-                      toggleFavorite(booth);
+                      toggleFavorite(favKey);
                     }}
                   >
                     <Heart className={cn("h-4 w-4", isFavorite ? "fill-white text-white" : "text-brand-coral")} />

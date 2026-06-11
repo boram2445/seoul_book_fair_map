@@ -75,3 +75,11 @@ export function getSearchText(exhibitor: MapExhibitor) {
 export function boothForMap(exhibitor: MapExhibitor) {
   return exhibitor.origBooth || exhibitor.booth;
 }
+
+export function getFavoriteKey(exhibitor: MapExhibitor): string {
+  return String(exhibitor.no);
+}
+
+export const exhibitorByFavoriteKey: Map<string, MapExhibitor> = new Map(
+  exhibitors.map((ex) => [getFavoriteKey(ex), ex])
+);

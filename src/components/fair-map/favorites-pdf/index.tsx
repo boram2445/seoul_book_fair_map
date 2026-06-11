@@ -8,8 +8,8 @@ import { buildFavoriteItems, ExportListPage, ExportMapPage } from "./export-map-
 import { useExportFavoritesPdf } from "./use-export-favorites-pdf";
 
 interface ExportFavoritesButtonProps {
-  /** Booth numbers to include — passed from the parent's useFavorites() result. */
-  booths: string[];
+  /** Favorite keys (exhibitor.no strings) — passed from the parent's useFavorites() result. */
+  favKeys: string[];
 }
 
 /**
@@ -17,8 +17,8 @@ interface ExportFavoritesButtonProps {
  * for export. The nodes are hidden via position: fixed / left: -99999px so they
  * do not affect the visible layout.
  */
-export function ExportFavoritesButton({ booths }: ExportFavoritesButtonProps) {
-  const items = buildFavoriteItems(booths);
+export function ExportFavoritesButton({ favKeys }: ExportFavoritesButtonProps) {
+  const items = buildFavoriteItems(favKeys);
   const { mapRef, listRef, exportPdf, isExporting } = useExportFavoritesPdf();
 
   return (

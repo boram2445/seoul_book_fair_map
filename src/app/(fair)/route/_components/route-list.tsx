@@ -20,7 +20,7 @@ import { CalendarDays, GripVertical, Heart, Instagram, MapPinned, NotebookPen } 
 
 import { getMockHeartCount } from "@/app/(fair)/_lib/publisher-stats";
 import { getBoothEvents, getEventScheduleLabel } from "@/components/fair-map/booth-events";
-import { boothForMap, exhibitors, getDisplayName } from "@/components/fair-map/map-data";
+import { boothForMap, exhibitorByFavoriteKey, exhibitors, getDisplayName } from "@/components/fair-map/map-data";
 import { useFavorites } from "@/components/fair-map/use-favorites";
 import { useBoothMemo } from "@/components/fair-map/use-booth-memo";
 import { Button } from "@/components/ui/button";
@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
 type ExhibitorItem = (typeof exhibitors)[number];
 
 function SortableBoothCard({
+  favKey,
   booth,
   exhibitor,
   index,
@@ -38,12 +39,13 @@ function SortableBoothCard({
   onMemoChange,
   onFavoriteToggle,
 }: {
+  favKey: string;
   booth: string;
   exhibitor: ExhibitorItem;
   index: number;
   memo: string;
   onMemoChange: (booth: string, text: string) => void;
-  onFavoriteToggle: (booth: string) => void;
+  onFavoriteToggle: (favKey: string) => void;
 }) {
   // 마운트 시 초기값으로만 사용, 변경은 onBlur 저장
   const [localMemo, setLocalMemo] = useState(memo);
@@ -51,7 +53,7 @@ function SortableBoothCard({
   const heartCount = getMockHeartCount(exhibitor.no) + 1;
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: booth });
+    useSortable({ id: favKey });
 
   const style = { transform: CSS.Transform.toString(transform), transition };
 
@@ -111,7 +113,7 @@ function SortableBoothCard({
                 size="icon"
                 aria-label="찜 해제"
                 className="rounded-none border-border bg-white hover:bg-brand-yellow"
-                onClick={() => onFavoriteToggle(booth)}
+                onClick={() => onFavoriteToggle(favKey)}
               >
                 <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" />
               </Button>
@@ -190,12 +192,12 @@ export function RouteList() {
 
   const favoriteItems = useMemo(() => {
     return favorites
-      .map((booth) => {
-        const exhibitor = exhibitors.find((e) => boothForMap(e) === booth);
-        return exhibitor ? { booth, exhibitor } : null;
+      .map((key) => {
+        const exhibitor = exhibitorByFavoriteKey.get(key);
+        return exhibitor ? { favKey: key, booth: boothForMap(exhibitor), exhibitor } : null;
       })
       .filter(
-        (item): item is { booth: string; exhibitor: ExhibitorItem } => Boolean(item),
+        (item): item is { favKey: string; booth: string; exhibitor: ExhibitorItem } => Boolean(item),
       );
   }, [favorites]);
 
@@ -232,9 +234,10 @@ export function RouteList() {
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={favorites} strategy={verticalListSortingStrategy}>
           <ol className="grid gap-3">
-            {favoriteItems.map(({ booth, exhibitor }, index) => (
+            {favoriteItems.map(({ favKey, booth, exhibitor }, index) => (
               <SortableBoothCard
-                key={booth}
+                key={favKey}
+                favKey={favKey}
                 booth={booth}
                 exhibitor={exhibitor as ExhibitorItem}
                 index={index}

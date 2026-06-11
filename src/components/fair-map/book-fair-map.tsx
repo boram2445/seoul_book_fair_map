@@ -1,6 +1,6 @@
-"use client";
+'use client';
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   DndContext,
   type DragEndEvent,
@@ -8,14 +8,14 @@ import {
   closestCenter,
   useSensor,
   useSensors,
-} from "@dnd-kit/core";
+} from '@dnd-kit/core';
 import {
   SortableContext,
   arrayMove,
   horizontalListSortingStrategy,
   useSortable,
-} from "@dnd-kit/sortable";
-import { CSS } from "@dnd-kit/utilities";
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import {
   CalendarDays,
   ChevronLeft,
@@ -32,20 +32,20 @@ import {
   Search,
   Star,
   X,
-} from "lucide-react";
-import Image from "next/image";
+} from 'lucide-react';
+import Image from 'next/image';
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { cn } from "@/lib/utils";
-import { useIsMobile } from "@/hooks/use-mobile";
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { cn } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/use-mobile';
 
-import { getBoothEvents, getEventScheduleLabel } from "./booth-events";
-import { boothForMap, exhibitors, getDisplayName, getSearchText, shapes } from "./map-data";
-import { ExportFavoritesButton } from "./favorites-pdf/index";
-import { buildRoute, MAP_HEIGHT, MAP_WIDTH } from "./route-path";
-import type { BoothShape, MapExhibitor } from "./types";
-import { useFavorites } from "./use-favorites";
+import { getBoothEvents, getEventScheduleLabel } from './booth-events';
+import { boothForMap, exhibitorByFavoriteKey, exhibitors, getFavoriteKey, getDisplayName, getSearchText, shapes } from './map-data';
+import { ExportFavoritesButton } from './favorites-pdf/index';
+import { buildRoute, MAP_HEIGHT, MAP_WIDTH } from './route-path';
+import type { BoothShape, MapExhibitor } from './types';
+import { useFavorites } from './use-favorites';
 
 const MIN_SCALE = 0.16;
 const MAX_SCALE = 2.4;
@@ -71,18 +71,19 @@ function clamp(value: number, min: number, max: number) {
 // ─── 찜 목록 바 — 드래그 정렬 칩 ────────────────────────────────────────────
 
 function SortableFavoriteChip({
-  booth,
+  favKey,
   label,
   onSelect,
   onRemove,
 }: {
-  booth: string;
+  favKey: string;
   label: string;
   onSelect: () => void;
   onRemove: () => void;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: booth });
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
+    id: favKey,
+  });
 
   const style = { transform: CSS.Transform.toString(transform), transition };
 
@@ -92,8 +93,8 @@ function SortableFavoriteChip({
       style={style}
       {...attributes}
       className={cn(
-        "inline-flex shrink-0 items-stretch border border-border bg-white text-sm font-black transition",
-        isDragging && "opacity-50 shadow-lg"
+        'inline-flex shrink-0 items-stretch border border-border bg-white text-sm font-black transition',
+        isDragging && 'opacity-50 shadow-lg',
       )}
     >
       <button
@@ -113,8 +114,16 @@ function SortableFavoriteChip({
           role="button"
           aria-label="찜 해제"
           tabIndex={0}
-          onClick={(e) => { e.stopPropagation(); onRemove(); }}
-          onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); onRemove(); } }}
+          onClick={(e) => {
+            e.stopPropagation();
+            onRemove();
+          }}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.stopPropagation();
+              onRemove();
+            }
+          }}
           onPointerDown={(e) => e.stopPropagation()}
           className="inline-flex cursor-pointer items-center [&:hover>svg]:fill-brand-coral/40 [&:hover>svg]:text-brand-coral/40"
         >
@@ -127,12 +136,12 @@ function SortableFavoriteChip({
 }
 
 export function BookFairMap() {
-  const [query, setQuery] = useState("");
-  const [selectedCategory, setSelectedCategory] = useState("전체");
+  const [query, setQuery] = useState('');
+  const [selectedCategory, setSelectedCategory] = useState('전체');
   const [selectedNo, setSelectedNo] = useState<number>(4);
   const [transform, setTransform] = useState({ scale: 0.28, x: 56, y: 18 });
   const [isDragging, setIsDragging] = useState(false);
-  const [hoveredBooth, setHoveredBooth] = useState("");
+  const [hoveredBooth, setHoveredBooth] = useState('');
   const [isEventPanelOpen, setIsEventPanelOpen] = useState(false);
   const [isIntroductionExpanded, setIsIntroductionExpanded] = useState(false);
   const { favorites, toggleFavorite, reorderFavorites } = useFavorites();
@@ -150,7 +159,7 @@ export function BookFairMap() {
   }
   /** 시트 translateY 오프셋(px). 0 = 완전 확장(90vh 노출), 클수록 아래로 밀림. 첫 진입 = 절반 */
   const [sheetOffset, setSheetOffset] = useState(() => {
-    if (typeof window === "undefined") return 0;
+    if (typeof window === 'undefined') return 0;
     return computeSnapOffsets(window.innerHeight).half;
   });
   const [isSheetDragging, setIsSheetDragging] = useState(false);
@@ -172,16 +181,30 @@ export function BookFairMap() {
     return new Map(shapes.map((shape) => [shape.boothNumber, shape]));
   }, []);
 
+  /** 경로·순번 배지용 — 출판사 단위 찜을 부스 단위로 중복 제거(순서 유지) */
+  const favoriteBooths = useMemo(() => {
+    const seen = new Set<string>();
+    return favorites
+      .map((key) => exhibitorByFavoriteKey.get(key))
+      .filter((ex): ex is MapExhibitor => Boolean(ex))
+      .map((ex) => boothForMap(ex))
+      .filter((booth) => {
+        if (seen.has(booth)) return false;
+        seen.add(booth);
+        return true;
+      });
+  }, [favorites]);
+
   /** A* 경로 꺾은선 — SVG polyline points */
   const routePath = useMemo(() => {
-    if (!isRouteVisible || favorites.length < 2) return [];
-    return buildRoute(favorites);
-  }, [isRouteVisible, favorites]);
+    if (!isRouteVisible || favoriteBooths.length < 2) return [];
+    return buildRoute(favoriteBooths);
+  }, [isRouteVisible, favoriteBooths]);
 
   /** 순번 배지 위치 — 각 찜 부스의 중심 */
   const routeBadges = useMemo(() => {
-    if (!isRouteVisible || favorites.length < 2) return [];
-    return favorites
+    if (!isRouteVisible || favoriteBooths.length < 2) return [];
+    return favoriteBooths
       .map((booth) => shapesByBooth.get(booth))
       .filter((shape): shape is BoothShape => Boolean(shape))
       .map((shape, index) => ({
@@ -190,7 +213,7 @@ export function BookFairMap() {
         boothNumber: shape.boothNumber,
         index,
       }));
-  }, [isRouteVisible, favorites, shapesByBooth]);
+  }, [isRouteVisible, favoriteBooths, shapesByBooth]);
 
   const exhibitorsByBooth = useMemo(() => {
     return exhibitors.reduce<Record<string, MapExhibitor[]>>((acc, exhibitor) => {
@@ -202,7 +225,7 @@ export function BookFairMap() {
   }, []);
 
   const selected = exhibitors.find((exhibitor) => exhibitor.no === selectedNo) ?? exhibitors[0];
-  const selectedBooth = selected ? boothForMap(selected) : "";
+  const selectedBooth = selected ? boothForMap(selected) : '';
   const selectedShape = selected ? shapesByBooth.get(selectedBooth) : undefined;
   const selectedBoothEvents = selectedBooth ? getBoothEvents(selectedBooth) : [];
   const categoryOptions = useMemo(() => {
@@ -214,9 +237,9 @@ export function BookFairMap() {
     }, {});
 
     return [
-      "전체",
+      '전체',
       ...Object.entries(categoryCounts)
-        .sort((first, second) => second[1] - first[1] || first[0].localeCompare(second[0], "ko"))
+        .sort((first, second) => second[1] - first[1] || first[0].localeCompare(second[0], 'ko'))
         .slice(0, 10)
         .map(([category]) => category),
     ];
@@ -227,7 +250,9 @@ export function BookFairMap() {
     return exhibitors.filter((exhibitor) => {
       const matchesQuery = normalized ? getSearchText(exhibitor).includes(normalized) : true;
       const matchesCategory =
-        selectedCategory === "전체" ? true : (exhibitor.categories ?? []).includes(selectedCategory);
+        selectedCategory === '전체'
+          ? true
+          : (exhibitor.categories ?? []).includes(selectedCategory);
       return matchesQuery && matchesCategory;
     });
   }, [query, selectedCategory]);
@@ -235,31 +260,25 @@ export function BookFairMap() {
   const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
   const favoriteItems = useMemo(() => {
     return favorites
-      .map((booth) => exhibitorsByBooth[booth]?.[0])
+      .map((key) => exhibitorByFavoriteKey.get(key))
       .filter((exhibitor): exhibitor is MapExhibitor => Boolean(exhibitor));
-  }, [exhibitorsByBooth, favorites]);
+  }, [favorites]);
 
   const activeMapLabels = shapes.flatMap((shape) => {
     const boothItems = exhibitorsByBooth[shape.boothNumber] ?? [];
     if (!boothItems.length) return [];
 
     const isSelected = shape.boothNumber === selectedBooth;
-    const isFavorite = favoriteSet.has(shape.boothNumber);
+    const favoritedItems = boothItems.filter((item) => favoriteSet.has(getFavoriteKey(item)));
+    const isFavorite = favoritedItems.length > 0;
     const isHovered = hoveredBooth === shape.boothNumber;
     if (!isSelected && !isFavorite && !isHovered) return [];
 
-    const primaryName = getDisplayName(boothItems[0]);
-    const label = boothItems.length > 1 ? `${primaryName} 외 ${boothItems.length - 1}` : primaryName;
+    // 찜 전용 상태(선택·호버 아님)이면 찜한 출판사만, 그 외엔 부스 전체 표시
+    const displayItems = isFavorite && !isSelected && !isHovered ? favoritedItems : boothItems;
+    const names = displayItems.map(getDisplayName);
 
-    return [
-      {
-        boothNumber: shape.boothNumber,
-        label,
-        shape,
-        isSelected,
-        isFavorite,
-      },
-    ];
+    return [{ boothNumber: shape.boothNumber, names, shape, isSelected, isFavorite }];
   });
 
   useEffect(() => {
@@ -289,10 +308,10 @@ export function BookFairMap() {
       });
     }
 
-    viewport.addEventListener("wheel", handleNativeWheel, { passive: false });
+    viewport.addEventListener('wheel', handleNativeWheel, { passive: false });
 
     return () => {
-      viewport.removeEventListener("wheel", handleNativeWheel);
+      viewport.removeEventListener('wheel', handleNativeWheel);
     };
   }, []);
 
@@ -418,7 +437,7 @@ export function BookFairMap() {
     const snapValues = [offsets.expanded, offsets.half, offsets.peek];
     const current = sheetDragRef.current.currentOffset;
     const nearest = snapValues.reduce((a, b) =>
-      Math.abs(a - current) <= Math.abs(b - current) ? a : b
+      Math.abs(a - current) <= Math.abs(b - current) ? a : b,
     );
     setSheetOffset(nearest);
   }
@@ -429,11 +448,11 @@ export function BookFairMap() {
       const offsets = computeSnapOffsets(window.innerHeight);
       const snapValues = [offsets.expanded, offsets.half, offsets.peek];
       setSheetOffset((current) =>
-        snapValues.reduce((a, b) => (Math.abs(a - current) <= Math.abs(b - current) ? a : b))
+        snapValues.reduce((a, b) => (Math.abs(a - current) <= Math.abs(b - current) ? a : b)),
       );
     }
-    window.addEventListener("resize", onResize);
-    return () => window.removeEventListener("resize", onResize);
+    window.addEventListener('resize', onResize);
+    return () => window.removeEventListener('resize', onResize);
   }, []);
 
   // 모바일: 시트가 아래로 밀린 sheetOffset만큼 스크롤 컨테이너 바닥이 fold 아래에 있어
@@ -450,14 +469,15 @@ export function BookFairMap() {
       <SortableContext items={favorites} strategy={horizontalListSortingStrategy}>
         <div className="flex gap-2 overflow-x-auto px-4 py-3">
           {favoriteItems.map((item) => {
+            const favKey = getFavoriteKey(item);
             const booth = boothForMap(item);
             return (
               <SortableFavoriteChip
-                key={booth}
-                booth={booth}
+                key={favKey}
+                favKey={favKey}
                 label={`${booth} ${getDisplayName(item)}`}
                 onSelect={() => selectExhibitor(item)}
-                onRemove={() => toggleFavorite(booth)}
+                onRemove={() => toggleFavorite(favKey)}
               />
             );
           })}
@@ -482,7 +502,7 @@ export function BookFairMap() {
             <button
               type="button"
               aria-label="검색어 지우기"
-              onClick={() => setQuery("")}
+              onClick={() => setQuery('')}
               className="inline-flex h-7 w-7 cursor-pointer items-center justify-center"
             >
               <X className="h-4 w-4" />
@@ -500,8 +520,10 @@ export function BookFairMap() {
               type="button"
               onClick={() => setSelectedCategory(category)}
               className={cn(
-                "shrink-0 cursor-pointer border border-border px-3 py-1.5 text-xs font-black",
-                selectedCategory === category ? "bg-brand-ink text-white" : "bg-white hover:bg-brand-yellow"
+                'shrink-0 cursor-pointer border border-border px-3 py-1.5 text-xs font-black',
+                selectedCategory === category
+                  ? 'bg-brand-ink text-white'
+                  : 'bg-white hover:bg-brand-yellow',
               )}
             >
               {category}
@@ -517,8 +539,9 @@ export function BookFairMap() {
         <ul className="space-y-1">
           {filteredExhibitors.map((exhibitor) => {
             const booth = boothForMap(exhibitor);
+            const favKey = getFavoriteKey(exhibitor);
             const isSelected = exhibitor.no === selected?.no;
-            const isFavorite = favoriteSet.has(booth);
+            const isFavorite = favoriteSet.has(favKey);
 
             return (
               <li key={exhibitor.no}>
@@ -526,10 +549,10 @@ export function BookFairMap() {
                   type="button"
                   onClick={() => selectExhibitor(exhibitor)}
                   className={cn(
-                    "grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2 text-left transition",
+                    'grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2 text-left transition',
                     isSelected
-                      ? "bg-brand-ink text-white"
-                      : "hover:bg-brand-hover focus-visible:bg-brand-hover"
+                      ? 'bg-brand-ink text-white'
+                      : 'hover:bg-brand-hover focus-visible:bg-brand-hover',
                   )}
                 >
                   <span className="min-w-0">
@@ -538,11 +561,11 @@ export function BookFairMap() {
                     </span>
                     <span
                       className={cn(
-                        "block truncate text-xs",
-                        isSelected ? "text-white/70" : "text-brand-muted"
+                        'block truncate text-xs',
+                        isSelected ? 'text-white/70' : 'text-brand-muted',
                       )}
                     >
-                      {exhibitor.nameEn || exhibitor.countryEn || "Seoul International Book Fair"}
+                      {exhibitor.nameEn || exhibitor.countryEn || 'Seoul International Book Fair'}
                     </span>
                   </span>
                   <span className="inline-flex items-center gap-2">
@@ -551,8 +574,16 @@ export function BookFairMap() {
                         role="button"
                         aria-label="찜 해제"
                         tabIndex={0}
-                        onClick={(e) => { e.stopPropagation(); toggleFavorite(booth); }}
-                        onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.stopPropagation(); toggleFavorite(booth); } }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleFavorite(favKey);
+                        }}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.stopPropagation();
+                            toggleFavorite(favKey);
+                          }
+                        }}
                         className="inline-flex cursor-pointer items-center [&:hover>svg]:fill-brand-coral/40 [&:hover>svg]:text-brand-coral/40"
                       >
                         <Heart className="h-4 w-4 fill-brand-coral text-brand-coral transition-colors" />
@@ -560,8 +591,8 @@ export function BookFairMap() {
                     ) : null}
                     <span
                       className={cn(
-                        "min-w-16 border px-2 py-1 text-center text-xs font-black",
-                        isSelected ? "border-white/40" : "border-border"
+                        'min-w-16 border px-2 py-1 text-center text-xs font-black',
+                        isSelected ? 'border-white/40' : 'border-border',
                       )}
                     >
                       {booth}
@@ -578,112 +609,114 @@ export function BookFairMap() {
 
   // 선택 출판사 상세 — 데스크톱 aside와 모바일 시트 상세 뷰에서 공유
   const detailContent = selected ? (
-        <div className="bg-brand-green p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="inline-flex border border-border bg-brand-ink px-3 py-1 text-sm font-black text-white">
-                {selectedBooth}
-              </p>
-              <h2 className="mt-3 text-xl font-black">{getDisplayName(selected)}</h2>
-              {selected.nameEn ? <p className="text-sm font-bold text-brand-green-deep">{selected.nameEn}</p> : null}
-              {selected.categories?.length ? (
-                <div className="mt-2 flex flex-wrap gap-1">
-                  {selected.categories.slice(0, 5).map((category) => (
-                    <span
-                      key={category}
-                      className="border border-border/60 bg-brand-panel px-1.5 py-0.5 text-[11px] font-black text-brand-subtle"
-                    >
-                      {category}
-                    </span>
-                  ))}
-                </div>
-              ) : null}
-              {selected.instagramUrl || selected.homepageUrl ? (
-                <div className="mt-2.5 flex flex-wrap gap-1.5">
-                  {selected.instagramUrl ? (
-                    <Button
-                      asChild
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-7 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
-                    >
-                      <a href={selected.instagramUrl} target="_blank" rel="noreferrer">
-                        <Instagram />
-                        Instagram
-                      </a>
-                    </Button>
-                  ) : null}
-                  {selected.homepageUrl ? (
-                    <Button
-                      asChild
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-7 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
-                    >
-                      <a href={selected.homepageUrl} target="_blank" rel="noreferrer">
-                        <ExternalLink />
-                        Homepage
-                      </a>
-                    </Button>
-                  ) : null}
-                </div>
-              ) : null}
-            </div>
-            <div className="flex shrink-0 items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                onClick={() => toggleFavorite(selectedBooth)}
-                aria-label="부스 찜하기"
-                className="border-border bg-white hover:bg-brand-yellow"
-              >
-                <Heart
-                  className={cn(
-                    "h-4 w-4",
-                    favoriteSet.has(selectedBooth) && "fill-brand-coral text-brand-coral"
-                  )}
-                />
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                onClick={() => {
-                  setIsEventPanelOpen(true);
-                }}
-                aria-label="출판사 상세 패널 열기"
-                className="rounded-none border border-border bg-brand-yellow hover:bg-white"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </Button>
-            </div>
-          </div>
-
-          <div className="mt-4 border border-border bg-white">
-            <div className="border-b border-border px-3 py-2">
-              <p className="text-xs font-black text-brand-muted">
-                이벤트 <span className="font-bold">({selectedBoothEvents.length}개 예정)</span>
-              </p>
-            </div>
-            <ul>
-              {selectedBoothEvents.slice(0, 3).map((event) => (
-                <li
-                  key={`${getEventScheduleLabel(event)}-${event.title}`}
-                  className="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-3 border-b border-border/20 px-3 py-2 text-sm leading-4 last:border-b-0"
+    <div className="bg-brand-green p-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <p className="inline-flex border border-border bg-brand-ink px-3 py-1 text-sm font-black text-white">
+            {selectedBooth}
+          </p>
+          <h2 className="mt-3 text-xl font-black">{getDisplayName(selected)}</h2>
+          {selected.nameEn ? (
+            <p className="text-sm font-bold text-brand-green-deep">{selected.nameEn}</p>
+          ) : null}
+          {selected.categories?.length ? (
+            <div className="mt-2 flex flex-wrap gap-1">
+              {selected.categories.slice(0, 5).map((category) => (
+                <span
+                  key={category}
+                  className="border border-border/60 bg-brand-panel px-1.5 py-0.5 text-[11px] font-black text-brand-subtle"
                 >
-                  <span className="font-mono text-xs leading-4 font-black text-brand-coral-deep">
-                    {getEventScheduleLabel(event)}
-                  </span>
-                  <span className="truncate leading-4 font-black">{event.title}</span>
-                </li>
+                  {category}
+                </span>
               ))}
-            </ul>
-          </div>
+            </div>
+          ) : null}
+          {selected.instagramUrl || selected.homepageUrl ? (
+            <div className="mt-2.5 flex flex-wrap gap-1.5">
+              {selected.instagramUrl ? (
+                <Button
+                  asChild
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
+                >
+                  <a href={selected.instagramUrl} target="_blank" rel="noreferrer">
+                    <Instagram />
+                    Instagram
+                  </a>
+                </Button>
+              ) : null}
+              {selected.homepageUrl ? (
+                <Button
+                  asChild
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="h-7 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
+                >
+                  <a href={selected.homepageUrl} target="_blank" rel="noreferrer">
+                    <ExternalLink />
+                    Homepage
+                  </a>
+                </Button>
+              ) : null}
+            </div>
+          ) : null}
         </div>
-      ) : null;
+        <div className="flex shrink-0 items-center gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => selected && toggleFavorite(getFavoriteKey(selected))}
+            aria-label="부스 찜하기"
+            className="border-border bg-white hover:bg-brand-yellow"
+          >
+            <Heart
+              className={cn(
+                'h-4 w-4',
+                selected && favoriteSet.has(getFavoriteKey(selected)) && 'fill-brand-coral text-brand-coral',
+              )}
+            />
+          </Button>
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={() => {
+              setIsEventPanelOpen(true);
+            }}
+            aria-label="출판사 상세 패널 열기"
+            className="rounded-none border border-border bg-brand-yellow hover:bg-white"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </Button>
+        </div>
+      </div>
+
+      <div className="mt-4 border border-border bg-white">
+        <div className="border-b border-border px-3 py-2">
+          <p className="text-xs font-black text-brand-muted">
+            이벤트 <span className="font-bold">({selectedBoothEvents.length}개 예정)</span>
+          </p>
+        </div>
+        <ul>
+          {selectedBoothEvents.slice(0, 3).map((event) => (
+            <li
+              key={`${getEventScheduleLabel(event)}-${event.title}`}
+              className="grid grid-cols-[92px_minmax(0,1fr)] items-center gap-3 border-b border-border/20 px-3 py-2 text-sm leading-4 last:border-b-0"
+            >
+              <span className="font-mono text-xs leading-4 font-black text-brand-coral-deep">
+                {getEventScheduleLabel(event)}
+              </span>
+              <span className="truncate leading-4 font-black">{event.title}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+  ) : null;
 
   // 이벤트 상세 — 데스크톱은 플로팅 aside, 모바일은 시트 안 뷰로 공유
   const eventContent = selected ? (
@@ -698,8 +731,8 @@ export function BookFairMap() {
             <div className="mt-3">
               <p
                 className={cn(
-                  "text-xs font-bold leading-5 text-brand-green-ink",
-                  !isIntroductionExpanded && "line-clamp-3"
+                  'text-xs font-bold leading-5 text-brand-green-ink',
+                  !isIntroductionExpanded && 'line-clamp-3',
                 )}
               >
                 {selected.introduction}
@@ -709,7 +742,7 @@ export function BookFairMap() {
                 onClick={() => setIsIntroductionExpanded((current) => !current)}
                 className="mt-2 cursor-pointer border border-border bg-white px-2 py-1 text-xs font-black hover:bg-brand-green"
               >
-                {isIntroductionExpanded ? "접기" : "더보기"}
+                {isIntroductionExpanded ? '접기' : '더보기'}
               </button>
             </div>
           ) : null}
@@ -809,8 +842,12 @@ export function BookFairMap() {
             <div className="flex min-w-0 items-center gap-3">
               <Info className="h-4 w-4 shrink-0 text-brand-subtle" />
               <div className="grid min-w-0 gap-0.5">
-                <p className="truncate text-xs font-bold text-brand-subtle">서울국제도서전 비공식 프로젝트입니다.</p>
-                <p className="truncate text-xs font-bold text-brand-subtle">부스 및 참가사 정보는 서울국제도서전 공식 홈페이지를 기반으로 제작되었습니다.</p>
+                <p className="truncate text-xs font-bold text-brand-subtle">
+                  서울국제도서전 비공식 프로젝트입니다.
+                </p>
+                <p className="truncate text-xs font-bold text-brand-subtle">
+                  부스 및 참가사 정보는 서울국제도서전 공식 홈페이지를 기반으로 제작되었습니다.
+                </p>
               </div>
             </div>
             <div className="flex items-center gap-2">
@@ -819,19 +856,19 @@ export function BookFairMap() {
                 variant="outline"
                 size="sm"
                 onClick={() => setIsRouteVisible((v) => !v)}
-                disabled={favorites.length < 2}
+                disabled={favoriteBooths.length < 2}
                 aria-label="경로 표시 토글"
                 className={cn(
-                  "rounded-none border-border",
+                  'rounded-none border-border',
                   isRouteVisible
-                    ? "bg-brand-coral text-white hover:bg-brand-coral hover:text-white"
-                    : "bg-white"
+                    ? 'bg-brand-coral text-white hover:bg-brand-coral hover:text-white'
+                    : 'bg-white',
                 )}
               >
                 <Route className="h-4 w-4" />
                 경로
               </Button>
-              <ExportFavoritesButton booths={favorites} />
+              <ExportFavoritesButton favKeys={favorites} />
             </div>
           </div>
 
@@ -842,8 +879,8 @@ export function BookFairMap() {
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
             className={cn(
-              "relative flex-1 overflow-hidden bg-brand-map touch-none select-none",
-              isDragging ? "cursor-grabbing" : "cursor-grab"
+              'relative flex-1 overflow-hidden bg-brand-map touch-none select-none',
+              isDragging ? 'cursor-grabbing' : 'cursor-grab',
             )}
           >
             <div
@@ -852,7 +889,7 @@ export function BookFairMap() {
                 width: MAP_WIDTH,
                 height: MAP_HEIGHT,
                 transform: `translate3d(${transform.x}px, ${transform.y}px, 0) scale(${transform.scale})`,
-                transformOrigin: "0 0",
+                transformOrigin: '0 0',
               }}
             >
               <Image
@@ -870,24 +907,28 @@ export function BookFairMap() {
                 if (!boothItems.length) return null;
 
                 const isSelected = shape.boothNumber === selectedBooth;
-                const isFavorite = favoriteSet.has(shape.boothNumber);
+                const isFavorite = boothItems.some((item) => favoriteSet.has(getFavoriteKey(item)));
 
                 return (
                   <button
                     key={shape.boothNumber}
                     type="button"
-                    aria-label={`${shape.boothNumber} ${boothItems.map(getDisplayName).join(", ")}`}
-                    title={`${shape.boothNumber} ${boothItems.map(getDisplayName).join(", ")}`}
+                    aria-label={`${shape.boothNumber} ${boothItems.map(getDisplayName).join(', ')}`}
+                    title={`${shape.boothNumber} ${boothItems.map(getDisplayName).join(', ')}`}
                     onPointerEnter={() => setHoveredBooth(shape.boothNumber)}
-                    onPointerLeave={() => setHoveredBooth((current) => (current === shape.boothNumber ? "" : current))}
+                    onPointerLeave={() =>
+                      setHoveredBooth((current) => (current === shape.boothNumber ? '' : current))
+                    }
                     onPointerDown={(event) => event.stopPropagation()}
                     onClick={() => selectExhibitor(boothItems[0])}
                     className={cn(
-                      "absolute cursor-pointer transition focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-brand-coral",
-                      isSelected ? "z-30" : isFavorite ? "z-20" : "z-10",
-                      isSelected && "bg-brand-green/45 ring-4 ring-brand-green",
-                      isFavorite && !isSelected && "bg-brand-coral/25 ring-2 ring-brand-coral",
-                      !isSelected && !isFavorite && "hover:bg-brand-yellow/35 hover:ring-2 hover:ring-brand-ink"
+                      'absolute cursor-pointer transition focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-brand-coral',
+                      isSelected ? 'z-30' : isFavorite ? 'z-20' : 'z-10',
+                      isSelected && 'bg-brand-green/45 ring-4 ring-brand-green',
+                      isFavorite && !isSelected && 'bg-brand-coral/25 ring-2 ring-brand-coral',
+                      !isSelected &&
+                        !isFavorite &&
+                        'hover:bg-brand-yellow/35 hover:ring-2 hover:ring-brand-ink',
                     )}
                     style={{
                       left: shape.x,
@@ -925,7 +966,7 @@ export function BookFairMap() {
                 >
                   {/* A* 통로 경로 꺾은선 */}
                   <polyline
-                    points={routePath.map((p) => `${p.x},${p.y}`).join(" ")}
+                    points={routePath.map((p) => `${p.x},${p.y}`).join(' ')}
                     fill="none"
                     stroke="var(--color-brand-coral)"
                     strokeWidth={8}
@@ -1002,13 +1043,13 @@ export function BookFairMap() {
               </Button>
             </div>
 
-            {activeMapLabels.map(({ boothNumber, label, shape, isSelected, isFavorite }) => (
+            {activeMapLabels.map(({ boothNumber, names, shape, isSelected, isFavorite }) => (
               <div
                 key={boothNumber}
                 className={cn(
-                  "pointer-events-none absolute z-40 max-w-[220px] text-center text-xs font-black leading-tight text-foreground",
-                  isSelected && "text-brand-green-ink",
-                  isFavorite && !isSelected && "text-brand-coral-deep"
+                  'pointer-events-none absolute z-40 max-w-[220px] text-center text-xs font-black leading-tight text-foreground',
+                  isSelected && 'text-brand-green-ink',
+                  isFavorite && !isSelected && 'text-brand-coral-deep',
                 )}
                 style={{
                   left: transform.x + (shape.x + shape.width / 2) * transform.scale,
@@ -1016,13 +1057,17 @@ export function BookFairMap() {
                   width: 156,
                   fontSize: 12,
                   textShadow:
-                    "0 1px 0 var(--color-brand-panel), 1px 0 0 var(--color-brand-panel), 0 -1px 0 var(--color-brand-panel), -1px 0 0 var(--color-brand-panel)",
-                  transform: "translate(-50%, -100%)",
-                  wordBreak: "keep-all",
-                  overflowWrap: "anywhere",
+                    '0 1px 0 var(--color-brand-panel), 1px 0 0 var(--color-brand-panel), 0 -1px 0 var(--color-brand-panel), -1px 0 0 var(--color-brand-panel)',
+                  transform: 'translate(-50%, -100%)',
+                  wordBreak: 'keep-all',
+                  overflowWrap: 'anywhere',
                 }}
               >
-                {label}
+                {names.map((name, index) => (
+                  <span key={index} className="block">
+                    {name}
+                  </span>
+                ))}
               </div>
             ))}
 
@@ -1055,7 +1100,7 @@ export function BookFairMap() {
           style={{
             height: `${SHEET_HEIGHT_RATIO * 100}vh`,
             transform: `translate3d(0, ${sheetOffset}px, 0)`,
-            transition: isSheetDragging ? "none" : "transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)",
+            transition: isSheetDragging ? 'none' : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
           }}
         >
           {/* 드래그 핸들 — pointer capture로 핸들 밖으로 나가도 이벤트 추적 */}
@@ -1108,9 +1153,7 @@ export function BookFairMap() {
           ) : (
             <div className="flex min-h-0 flex-1 flex-col">
               {favoriteItems.length ? (
-                <div className="shrink-0 border-b border-border bg-brand-panel">
-                  {favoritesBar}
-                </div>
+                <div className="shrink-0 border-b border-border bg-brand-panel">{favoritesBar}</div>
               ) : null}
               {listContent}
             </div>

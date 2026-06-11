@@ -14,6 +14,38 @@ export const MAP_HEIGHT = 3650;
 const CELL = 15;
 const COLS = Math.ceil(MAP_WIDTH / CELL);
 const ROWS = Math.ceil(MAP_HEIGHT / CELL);
+const BOOTH_BUFFER = CELL * 0.75;
+const WALL_BUFFER = CELL * 0.75;
+
+type Rect = {
+  x: number;
+  y: number;
+  width: number;
+  height: number;
+};
+
+type WallSegment = {
+  x1: number;
+  y1: number;
+  x2: number;
+  y2: number;
+};
+
+/**
+ * 배경 SVG의 Hall A/B 외곽선(Subtract path) 중 통행을 막는 실제 벽 구간.
+ * 부스 데이터에는 없는 선이라 경로 탐색용 장애물로 별도 반영한다.
+ */
+const wallSegments: WallSegment[] = [
+  { x1: 1228, y1: 470, x2: 1228, y2: 1394 },
+  { x1: 1228, y1: 1394, x2: 1602, y2: 1394 },
+  { x1: 1602, y1: 1394, x2: 1602, y2: 1894 },
+  { x1: 120, y1: 1893, x2: 1602, y2: 1893 },
+  { x1: 2470, y1: 1393, x2: 2957, y2: 1393 },
+  { x1: 2470, y1: 1393, x2: 2470, y2: 1750 },
+  { x1: 2344, y1: 1750, x2: 2470, y2: 1750 },
+  { x1: 2344, y1: 1750, x2: 2344, y2: 1894 },
+  { x1: 2344, y1: 1893, x2: 2907, y2: 1893 },
+];
 
 /**
  * 셀 막힘 여부 — 셀 중심이 부스 안이면 1(blocked).
@@ -21,21 +53,115 @@ const ROWS = Math.ceil(MAP_HEIGHT / CELL);
  */
 const blocked = new Uint8Array(COLS * ROWS);
 
+function getShapeObstacleRect(shape: Rect): Rect {
+  return {
+    x: shape.x - BOOTH_BUFFER,
+    y: shape.y - BOOTH_BUFFER,
+    width: shape.width + BOOTH_BUFFER * 2,
+    height: shape.height + BOOTH_BUFFER * 2,
+  };
+}
+
 for (const shape of shapes) {
-  const c0 = Math.max(0, Math.floor(shape.x / CELL));
-  const c1 = Math.min(COLS - 1, Math.ceil((shape.x + shape.width) / CELL));
-  const r0 = Math.max(0, Math.floor(shape.y / CELL));
-  const r1 = Math.min(ROWS - 1, Math.ceil((shape.y + shape.height) / CELL));
+  const obstacle = getShapeObstacleRect(shape);
+  const c0 = Math.max(0, Math.floor(obstacle.x / CELL));
+  const c1 = Math.min(COLS - 1, Math.ceil((obstacle.x + obstacle.width) / CELL));
+  const r0 = Math.max(0, Math.floor(obstacle.y / CELL));
+  const r1 = Math.min(ROWS - 1, Math.ceil((obstacle.y + obstacle.height) / CELL));
   for (let r = r0; r <= r1; r++) {
     for (let c = c0; c <= c1; c++) {
       const cx = c * CELL + CELL / 2;
       const cy = r * CELL + CELL / 2;
       if (
-        cx >= shape.x &&
-        cx < shape.x + shape.width &&
-        cy >= shape.y &&
-        cy < shape.y + shape.height
+        cx >= obstacle.x &&
+        cx < obstacle.x + obstacle.width &&
+        cy >= obstacle.y &&
+        cy < obstacle.y + obstacle.height
       ) {
+        blocked[r * COLS + c] = 1;
+      }
+    }
+  }
+}
+
+function distanceToSegment(px: number, py: number, segment: WallSegment): number {
+  const vx = segment.x2 - segment.x1;
+  const vy = segment.y2 - segment.y1;
+  const wx = px - segment.x1;
+  const wy = py - segment.y1;
+  const lenSq = vx * vx + vy * vy;
+  const t = lenSq === 0 ? 0 : clamp((wx * vx + wy * vy) / lenSq, 0, 1);
+  const x = segment.x1 + vx * t;
+  const y = segment.y1 + vy * t;
+  return Math.hypot(px - x, py - y);
+}
+
+function pointInRect(px: number, py: number, rect: Rect): boolean {
+  return px >= rect.x && px <= rect.x + rect.width && py >= rect.y && py <= rect.y + rect.height;
+}
+
+function orientation(ax: number, ay: number, bx: number, by: number, cx: number, cy: number): number {
+  return (by - ay) * (cx - bx) - (bx - ax) * (cy - by);
+}
+
+function onSegment(ax: number, ay: number, bx: number, by: number, cx: number, cy: number): boolean {
+  return (
+    bx >= Math.min(ax, cx) &&
+    bx <= Math.max(ax, cx) &&
+    by >= Math.min(ay, cy) &&
+    by <= Math.max(ay, cy)
+  );
+}
+
+function segmentsIntersect(
+  a: { x: number; y: number },
+  b: { x: number; y: number },
+  c: { x: number; y: number },
+  d: { x: number; y: number },
+): boolean {
+  const o1 = orientation(a.x, a.y, b.x, b.y, c.x, c.y);
+  const o2 = orientation(a.x, a.y, b.x, b.y, d.x, d.y);
+  const o3 = orientation(c.x, c.y, d.x, d.y, a.x, a.y);
+  const o4 = orientation(c.x, c.y, d.x, d.y, b.x, b.y);
+
+  if (o1 === 0 && onSegment(a.x, a.y, c.x, c.y, b.x, b.y)) return true;
+  if (o2 === 0 && onSegment(a.x, a.y, d.x, d.y, b.x, b.y)) return true;
+  if (o3 === 0 && onSegment(c.x, c.y, a.x, a.y, d.x, d.y)) return true;
+  if (o4 === 0 && onSegment(c.x, c.y, b.x, b.y, d.x, d.y)) return true;
+
+  return (o1 > 0) !== (o2 > 0) && (o3 > 0) !== (o4 > 0);
+}
+
+function segmentIntersectsRect(a: { x: number; y: number }, b: { x: number; y: number }, rect: Rect): boolean {
+  if (pointInRect(a.x, a.y, rect) || pointInRect(b.x, b.y, rect)) return true;
+
+  const topLeft = { x: rect.x, y: rect.y };
+  const topRight = { x: rect.x + rect.width, y: rect.y };
+  const bottomRight = { x: rect.x + rect.width, y: rect.y + rect.height };
+  const bottomLeft = { x: rect.x, y: rect.y + rect.height };
+
+  return (
+    segmentsIntersect(a, b, topLeft, topRight) ||
+    segmentsIntersect(a, b, topRight, bottomRight) ||
+    segmentsIntersect(a, b, bottomRight, bottomLeft) ||
+    segmentsIntersect(a, b, bottomLeft, topLeft)
+  );
+}
+
+for (const segment of wallSegments) {
+  const minX = Math.min(segment.x1, segment.x2) - WALL_BUFFER;
+  const maxX = Math.max(segment.x1, segment.x2) + WALL_BUFFER;
+  const minY = Math.min(segment.y1, segment.y2) - WALL_BUFFER;
+  const maxY = Math.max(segment.y1, segment.y2) + WALL_BUFFER;
+  const c0 = Math.max(0, Math.floor(minX / CELL));
+  const c1 = Math.min(COLS - 1, Math.ceil(maxX / CELL));
+  const r0 = Math.max(0, Math.floor(minY / CELL));
+  const r1 = Math.min(ROWS - 1, Math.ceil(maxY / CELL));
+  for (let r = r0; r <= r1; r++) {
+    for (let c = c0; c <= c1; c++) {
+      const cx = c * CELL + CELL / 2;
+      const cy = r * CELL + CELL / 2;
+      if (distanceToSegment(cx, cy, segment) <= WALL_BUFFER) {
         blocked[r * COLS + c] = 1;
       }
     }
@@ -147,9 +273,9 @@ function getNeighbors(i: number): [number, number][] {
   for (const [dc, dr, cost] of DIRS) {
     const nc = c + dc;
     const nr = r + dr;
-    if (nc >= 0 && nc < COLS && nr >= 0 && nr < ROWS && !blocked[gi(nc, nr)]) {
-      result.push([gi(nc, nr), cost]);
-    }
+    if (nc < 0 || nc >= COLS || nr < 0 || nr >= ROWS || blocked[gi(nc, nr)]) continue;
+    if (dc !== 0 && dr !== 0 && (blocked[gi(c + dc, r)] || blocked[gi(c, r + dr)])) continue;
+    result.push([gi(nc, nr), cost]);
   }
   return result;
 }
@@ -213,6 +339,13 @@ function hasLOS(aI: number, bI: number): boolean {
     const r = Math.round(ar + (dr * t) / steps);
     if (blocked[gi(c, r)]) return false;
   }
+
+  const a = cellCenter(aI);
+  const b = cellCenter(bI);
+  for (const shape of shapes) {
+    if (segmentIntersectsRect(a, b, getShapeObstacleRect(shape))) return false;
+  }
+
   return true;
 }
 
@@ -268,8 +401,8 @@ export function buildRoute(boothSequence: string[]): { x: number; y: number }[] 
     }
 
     const simplified = stringPull(rawPath);
-    // 첫 점은 이미 추가됨, 중간 꺾임점 추가, 마지막은 실제 부스 중심으로 교체
-    for (let j = 1; j < simplified.length - 1; j++) {
+    // 실제 부스 중심 전후에 스냅 지점을 포함해 중심선이 벽을 가로지르지 않게 한다.
+    for (let j = 0; j < simplified.length; j++) {
       all.push(cellCenter(simplified[j]));
     }
     all.push(centers[i + 1]);
