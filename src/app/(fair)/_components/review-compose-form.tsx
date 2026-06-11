@@ -13,6 +13,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { createClient } from "@/lib/supabase/client";
 import { cn } from "@/lib/utils";
 
+import { ReviewPhotoField } from "./review-photo-field";
+
 const targetOptions = exhibitors
   .slice()
   .sort((a, b) => boothForMap(a).localeCompare(boothForMap(b), "ko"))
@@ -108,6 +110,8 @@ export function ReviewComposeForm({
             />
           </div>
 
+          <ReviewPhotoField />
+
           <div className="flex justify-end">{reviewSubmitButton}</div>
         </form>
       </section>
@@ -138,6 +142,8 @@ export function ReviewComposeForm({
                 className="min-h-32 resize-none rounded-none border-border bg-white font-bold shadow-none"
               />
             </div>
+
+            <ReviewPhotoField />
 
             <div className="flex justify-end">{reviewSubmitButton}</div>
           </form>
@@ -201,6 +207,8 @@ export function ReviewComposeForm({
                 className="min-h-32 resize-none rounded-none border-border bg-white font-bold shadow-none"
               />
             </div>
+
+            <ReviewPhotoField />
 
             <div className="flex justify-end">{reviewSubmitButton}</div>
           </form>
