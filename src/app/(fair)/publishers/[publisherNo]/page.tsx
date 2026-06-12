@@ -4,10 +4,10 @@ import { ArrowLeft, CalendarDays, ExternalLink, Heart, Instagram, MessageSquareT
 
 import { GetPublisherByExhibitorNo } from "@/api/fair-map/fair-map";
 import { ReviewComposeForm } from "@/app/(fair)/_components/review-compose-form";
-import { getReviewsForPublisher } from "@/app/(fair)/_lib/review-data";
+import { ReviewFeed } from "@/app/(fair)/_components/review-feed";
+import { PublisherReviewHeader } from "./_components/publisher-review-header";
 import { Panel } from "@/components/fair-app/panel";
 import { boothForMap, getDisplayName } from "@/components/fair-map/map-data";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
@@ -50,8 +50,6 @@ export default async function PublisherDetailPage({
   const displayName = getDisplayName(publisher);
   const heartCount = publisher.favoriteCount;
   const categories = publisher.categories ?? [];
-  const publisherReviews = getReviewsForPublisher(booth, displayName);
-
   return (
     <div className="bg-brand-surface">
       <Panel
@@ -166,35 +164,13 @@ export default async function PublisherDetailPage({
           </article>
 
           <section className="border border-border bg-white">
-            <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <p className="text-sm font-black">후기</p>
-              <span className="text-xs font-black text-brand-muted">{publisherReviews.length}개</span>
+            <div className="border-b border-border px-4 py-3">
+              <PublisherReviewHeader exhibitorNo={publisher.no} />
             </div>
-            {publisherReviews.length ? (
-              <div className="grid gap-0">
-                {publisherReviews.map((review) => (
-                  <article key={review.id} className="border-b border-border/20 p-4 last:border-b-0">
-                    <p className="text-sm font-bold leading-6 text-brand-subtle">{review.body}</p>
-                    <div className="mt-3 flex items-center gap-2">
-                      <Avatar size="sm" className="border border-border">
-                        <AvatarImage src={review.authorAvatarUrl} alt={`${review.author} 프로필`} />
-                        <AvatarFallback>{review.author.slice(0, 1)}</AvatarFallback>
-                      </Avatar>
-                      <p className="text-xs font-black text-brand-muted">{review.author}</p>
-                      <span className="text-xs text-brand-muted">·</span>
-                      <span className="text-xs font-black text-brand-muted">{review.time}</span>
-                    </div>
-                  </article>
-                ))}
-              </div>
-            ) : (
-              <div className="p-4">
-                <p className="text-sm font-bold leading-6 text-brand-muted">아직 이 출판사에 작성된 후기가 없습니다.</p>
-              </div>
-            )}
+            <ReviewFeed exhibitorNo={publisher.no} hideTag />
           </section>
 
-          <ReviewComposeForm defaultScope="booth" defaultPublisherNo={publisher.no} variant="publisher" />
+          <ReviewComposeForm defaultPublisherNo={publisher.no} variant="publisher" />
         </div>
       </Panel>
     </div>

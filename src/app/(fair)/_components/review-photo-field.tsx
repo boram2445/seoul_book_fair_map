@@ -1,13 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useImperativeHandle, useRef, useState, forwardRef } from "react";
 import imageCompression from "browser-image-compression";
 import { ImagePlus, Loader2, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 
 export const MAX_PHOTOS = 4;
+const MAX_FILE_MB = 1;
 
 type PhotoPreview = {
   file: File;
@@ -15,28 +17,46 @@ type PhotoPreview = {
 };
 
 const COMPRESSION_OPTIONS = {
-  maxSizeMB: 1,
+  maxSizeMB: MAX_FILE_MB,
   maxWidthOrHeight: 1920,
   useWebWorker: true,
 };
 
-export function ReviewPhotoField() {
+export type ReviewPhotoFieldHandle = {
+  getFiles: () => File[];
+  reset: () => void;
+};
+
+type ReviewPhotoFieldProps = {
+  onChange?: (files: File[]) => void;
+};
+
+export const ReviewPhotoField = forwardRef<ReviewPhotoFieldHandle, ReviewPhotoFieldProps>(
+  function ReviewPhotoField({ onChange }, ref) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [photos, setPhotos] = useState<PhotoPreview[]>([]);
   const [isCompressing, setIsCompressing] = useState(false);
 
-  // Ref keeps the latest photos array accessible in the unmount cleanup,
-  // avoiding stale closure issues with useEffect's dependency array.
   const photosRef = useRef<PhotoPreview[]>([]);
   useEffect(() => {
     photosRef.current = photos;
-  }, [photos]);
+    onChange?.(photos.map((p) => p.file));
+  }, [photos, onChange]);
 
   useEffect(() => {
     return () => {
       photosRef.current.forEach((p) => URL.revokeObjectURL(p.url));
     };
   }, []);
+
+  useImperativeHandle(ref, () => ({
+    getFiles: () => photosRef.current.map((p) => p.file),
+    reset: () => {
+      photosRef.current.forEach((p) => URL.revokeObjectURL(p.url));
+      setPhotos([]);
+      if (inputRef.current) inputRef.current.value = "";
+    },
+  }));
 
   async function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const files = event.target.files;
@@ -48,18 +68,24 @@ export function ReviewPhotoField() {
     setIsCompressing(true);
     const candidates = Array.from(files).slice(0, remaining);
 
-    const next: PhotoPreview[] = await Promise.all(
+    const results = await Promise.all(
       candidates.map(async (file) => {
         try {
           const compressed = await imageCompression(file, COMPRESSION_OPTIONS);
+          // 압축 후에도 1MB 초과 시 업로드 불가
+          if (compressed.size > MAX_FILE_MB * 1024 * 1024) {
+            toast.error(`${file.name}: 압축 후에도 ${MAX_FILE_MB}MB를 초과해 첨부할 수 없습니다.`);
+            return null;
+          }
           return { file: compressed, url: URL.createObjectURL(compressed) };
         } catch {
-          // Fallback to original file if compression fails
-          return { file, url: URL.createObjectURL(file) };
+          toast.error(`${file.name}: 압축에 실패했습니다.`);
+          return null;
         }
       })
     );
 
+    const next = results.filter((r): r is PhotoPreview => r !== null);
     setPhotos((prev) => [...prev, ...next]);
     setIsCompressing(false);
   }
@@ -132,4 +158,4 @@ export function ReviewPhotoField() {
       </Button>
     </div>
   );
-}
+});

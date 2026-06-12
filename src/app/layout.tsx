@@ -14,9 +14,41 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}` : undefined) ??
+  (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:3000');
+
+const title = '서울국제도서전 맵';
+const description = '2026 서울국제도서전 부스 배치도와 참가사 탐색 지도';
+const thumbnail = '/images/link-thumbnail.png';
+
 export const metadata: Metadata = {
-  title: '서울국제도서전 맵',
-  description: '2026 서울국제도서전 부스 배치도와 참가사 탐색 지도',
+  metadataBase: new URL(siteUrl),
+  title,
+  description,
+  openGraph: {
+    title,
+    description,
+    url: '/',
+    siteName: title,
+    locale: 'ko_KR',
+    type: 'website',
+    images: [
+      {
+        url: thumbnail,
+        width: 1672,
+        height: 941,
+        alt: title,
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title,
+    description,
+    images: [thumbnail],
+  },
 };
 
 export default function RootLayout({
