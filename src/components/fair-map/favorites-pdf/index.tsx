@@ -4,12 +4,20 @@ import { Download, Loader2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
-import { buildFavoriteItems, ExportListPage, ExportMapPage } from "./export-map-document";
+import {
+  buildFavoriteItems,
+  ExportListPage,
+  ExportMapPage,
+  type ExportRouteBadge,
+  type ExportRoutePoint,
+} from "./export-map-document";
 import { useExportFavoritesPdf } from "./use-export-favorites-pdf";
 
 interface ExportFavoritesButtonProps {
   /** Favorite keys (exhibitor.no strings) — passed from the parent's useFavorites() result. */
   favKeys: string[];
+  routePath?: ExportRoutePoint[];
+  routeBadges?: ExportRouteBadge[];
 }
 
 /**
@@ -17,7 +25,11 @@ interface ExportFavoritesButtonProps {
  * for export. The nodes are hidden via position: fixed / left: -99999px so they
  * do not affect the visible layout.
  */
-export function ExportFavoritesButton({ favKeys }: ExportFavoritesButtonProps) {
+export function ExportFavoritesButton({
+  favKeys,
+  routePath = [],
+  routeBadges = [],
+}: ExportFavoritesButtonProps) {
   const items = buildFavoriteItems(favKeys);
   const { mapRef, listRef, exportPdf, isExporting } = useExportFavoritesPdf();
 
@@ -40,7 +52,7 @@ export function ExportFavoritesButton({ favKeys }: ExportFavoritesButtonProps) {
       </Button>
 
       {/* Off-screen capture nodes — not visible to the user */}
-      <ExportMapPage ref={mapRef} items={items} />
+      <ExportMapPage ref={mapRef} items={items} routePath={routePath} routeBadges={routeBadges} />
       <ExportListPage ref={listRef} items={items} />
     </>
   );

@@ -28,6 +28,16 @@ export interface FavoriteExportItem {
   shape: BoothShape;
 }
 
+export type ExportRoutePoint = {
+  x: number;
+  y: number;
+};
+
+export type ExportRouteBadge = ExportRoutePoint & {
+  boothNumber: string;
+  index: number;
+};
+
 /** Resolves favorite keys (exhibitor.no strings) → shapes + display names, silently drops unmatched. */
 export function buildFavoriteItems(favKeys: string[]): FavoriteExportItem[] {
   const shapeMap = new Map(allShapes.map((s) => [s.boothNumber, s]));
@@ -45,6 +55,8 @@ export function buildFavoriteItems(favKeys: string[]): FavoriteExportItem[] {
 
 interface ExportMapPageProps {
   items: FavoriteExportItem[];
+  routePath: ExportRoutePoint[];
+  routeBadges: ExportRouteBadge[];
   ref?: React.Ref<HTMLDivElement>;
 }
 
@@ -56,7 +68,7 @@ interface ExportMapPageProps {
  * only. The ref points to the INNER node which has no position offset, so
  * html-to-image captures it at coordinates (0,0) rather than (-99999px, 0).
  */
-export function ExportMapPage({ items, ref }: ExportMapPageProps) {
+export function ExportMapPage({ items, routePath, routeBadges, ref }: ExportMapPageProps) {
   return (
     // Outer wrapper: off-screen, never captured
     <div
@@ -80,6 +92,56 @@ export function ExportMapPage({ items, ref }: ExportMapPageProps) {
           alt=""
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
         />
+
+        {routePath.length >= 2 ? (
+          <svg
+            aria-hidden
+            viewBox={`0 0 ${MAP_EXPORT_WIDTH} ${MAP_EXPORT_HEIGHT}`}
+            style={{
+              position: "absolute",
+              inset: 0,
+              width: "100%",
+              height: "100%",
+              overflow: "visible",
+              zIndex: 30,
+              pointerEvents: "none",
+            }}
+          >
+            <polyline
+              points={routePath.map((p) => `${p.x},${p.y}`).join(" ")}
+              fill="none"
+              stroke={C.coral}
+              strokeWidth={8}
+              strokeDasharray="20 8"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity={0.85}
+            />
+            {routeBadges.map((badge) => (
+              <g key={badge.boothNumber}>
+                <circle
+                  cx={badge.x}
+                  cy={badge.y}
+                  r={26}
+                  fill={C.coral}
+                  stroke="#fff"
+                  strokeWidth={5}
+                />
+                <text
+                  x={badge.x}
+                  y={badge.y + 9}
+                  textAnchor="middle"
+                  fill="#fff"
+                  fontSize={24}
+                  fontWeight={900}
+                  fontFamily="system-ui, sans-serif"
+                >
+                  {badge.index + 1}
+                </text>
+              </g>
+            ))}
+          </svg>
+        ) : null}
 
         {/* Group by booth so the same booth with multiple favorites renders one overlay */}
         {Array.from(

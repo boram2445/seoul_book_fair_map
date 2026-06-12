@@ -6,7 +6,8 @@ import { MAP_EXPORT_HEIGHT, MAP_EXPORT_WIDTH } from "./export-map-document";
 // A4 portrait dimensions in points (72 pt = 1 inch)
 const A4_W = 595.28;
 const A4_H = 841.89;
-const MARGIN = 24; // pt
+const MAP_MARGIN = 8; // pt
+const LIST_MARGIN = 24; // pt
 
 /**
  * Orchestrates the two-step PDF export:
@@ -63,20 +64,18 @@ export function useExportFavoritesPdf() {
       const doc = new jsPDF({ orientation: "portrait", unit: "pt", format: "a4" });
 
       // ── Page 1: Map ────────────────────────────────────────────────
-      // Fit map width in A4; height follows the map's 3230 ∶ 3650 aspect ratio.
-      // Result ≈ 547 × 618 pt — shorter than A4, so we centre it vertically.
-      const mapImgW = A4_W - MARGIN * 2;
+      // Keep the full map visible, but use a tighter page margin than the list page.
+      const mapImgW = A4_W - MAP_MARGIN * 2;
       const mapImgH = mapImgW * (MAP_EXPORT_HEIGHT / MAP_EXPORT_WIDTH);
-      const mapY = Math.max(MARGIN, (A4_H - mapImgH) / 2);
-      doc.addImage(mapDataUrl, "PNG", MARGIN, mapY, mapImgW, mapImgH);
+      doc.addImage(mapDataUrl, "PNG", MAP_MARGIN, MAP_MARGIN, mapImgW, mapImgH);
 
       // ── Page 2: List ───────────────────────────────────────────────
       // Use a dynamic page height so a long favourites list is never clipped.
-      const listImgW = A4_W - MARGIN * 2;
+      const listImgW = A4_W - LIST_MARGIN * 2;
       const listImgH = listImgW * (listNode.offsetHeight / listNode.offsetWidth);
-      const listPageH = Math.max(A4_H, listImgH + MARGIN * 2);
+      const listPageH = Math.max(A4_H, listImgH + LIST_MARGIN * 2);
       doc.addPage([A4_W, listPageH]);
-      doc.addImage(listDataUrl, "PNG", MARGIN, MARGIN, listImgW, listImgH);
+      doc.addImage(listDataUrl, "PNG", LIST_MARGIN, LIST_MARGIN, listImgW, listImgH);
 
       doc.save("서울국제도서전-찜부스-2026.pdf");
     } catch {

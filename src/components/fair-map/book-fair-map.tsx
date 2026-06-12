@@ -167,6 +167,8 @@ export function BookFairMap() {
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
   const sheetDragRef = useRef({ pointerId: -1, startY: 0, startOffset: 0, currentOffset: 0 });
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  /** exhibitor.no → <li> DOM 노드 맵. 선택 변화 시 scrollIntoView에 사용. */
+  const listItemRefsRef = useRef<Map<number, HTMLLIElement>>(new Map());
   const dragRef = useRef({
     pointerId: 0,
     startX: 0,
@@ -455,6 +457,10 @@ export function BookFairMap() {
     return () => window.removeEventListener('resize', onResize);
   }, []);
 
+  useEffect(() => {
+    listItemRefsRef.current.get(selectedNo)?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+  }, [selectedNo]);
+
   // 모바일: 시트가 아래로 밀린 sheetOffset만큼 스크롤 컨테이너 바닥이 fold 아래에 있어
   // 끝까지 스크롤하려면 동일한 패딩이 필요하다. 데스크톱은 0.
   const scrollPaddingBottom = isMobile ? sheetOffset : 0;
@@ -544,7 +550,13 @@ export function BookFairMap() {
             const isFavorite = favoriteSet.has(favKey);
 
             return (
-              <li key={exhibitor.no}>
+              <li
+                key={exhibitor.no}
+                ref={(node) => {
+                  if (node) listItemRefsRef.current.set(exhibitor.no, node);
+                  else listItemRefsRef.current.delete(exhibitor.no);
+                }}
+              >
                 <button
                   type="button"
                   onClick={() => selectExhibitor(exhibitor)}
@@ -868,7 +880,11 @@ export function BookFairMap() {
                 <Route className="h-4 w-4" />
                 경로
               </Button>
-              <ExportFavoritesButton favKeys={favorites} />
+              <ExportFavoritesButton
+                favKeys={favorites}
+                routePath={routePath}
+                routeBadges={routeBadges}
+              />
             </div>
           </div>
 
@@ -981,18 +997,18 @@ export function BookFairMap() {
                       <circle
                         cx={badge.x}
                         cy={badge.y}
-                        r={20}
+                        r={24}
                         fill="var(--color-brand-coral)"
                         stroke="white"
-                        strokeWidth={4}
+                        strokeWidth={5}
                       />
                       <text
                         x={badge.x}
-                        y={badge.y + 7}
+                        y={badge.y + 8}
                         textAnchor="middle"
                         fill="white"
-                        fontSize={18}
-                        fontWeight="bold"
+                        fontSize={22}
+                        fontWeight={800}
                         fontFamily="system-ui, sans-serif"
                       >
                         {badge.index + 1}
