@@ -26,10 +26,19 @@ const Toaster = ({ ...props }: ToasterProps) => {
       }}
       style={
         {
-          "--normal-bg": "var(--popover)",
-          "--normal-text": "var(--popover-foreground)",
-          "--normal-border": "var(--border)",
-          "--border-radius": "var(--radius)",
+          "--border-radius": "0px",
+          "--normal-bg":      "var(--brand-panel)",
+          "--normal-text":    "var(--brand-ink)",
+          "--normal-border":  "var(--brand-ink)",
+          "--success-bg":     "var(--brand-green)",
+          "--success-text":   "var(--brand-green-ink)",
+          "--success-border": "var(--brand-ink)",
+          "--error-bg":       "var(--brand-coral)",
+          "--error-text":     "var(--brand-panel)",
+          "--error-border":   "var(--brand-ink)",
+          "--info-bg":        "var(--brand-yellow)",
+          "--info-text":      "var(--brand-ink)",
+          "--info-border":    "var(--brand-ink)",
         } as React.CSSProperties
       }
       {...props}

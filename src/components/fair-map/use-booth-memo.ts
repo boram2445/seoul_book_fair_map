@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
 
+import { createClient } from "@/lib/supabase/client";
+
 const MEMO_KEY = "sibf-route-memos";
 const MEMO_EVENT = "sibf-memos-change";
 const SERVER_SNAPSHOT: Record<string, string> = {};
@@ -49,6 +51,14 @@ export function useBoothMemo() {
     cache = null;
     window.localStorage.setItem(MEMO_KEY, JSON.stringify(next));
     notifyChange();
+
+    // fire-and-forget: 로그인 시 DB 영속화 (auth.uid() null이면 RPC가 no-op)
+    const supabase = createClient();
+    supabase
+      .rpc("set_visit_memo", { p_exhibitor_no: Number(booth), p_memo: text })
+      .then(({ error }) => {
+        if (error) console.warn("[booth-memo] set_visit_memo failed:", error.message);
+      });
   }
 
   return { memos, updateMemo };

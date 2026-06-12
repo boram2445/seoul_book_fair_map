@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { toast } from "sonner";
 import {
   DndContext,
   type DragEndEvent,
@@ -141,7 +142,11 @@ function SortableBoothCard({
               <textarea
                 value={localMemo}
                 onChange={(e) => setLocalMemo(e.target.value)}
-                onBlur={(e) => onMemoChange(booth, e.target.value)}
+                onBlur={(e) => {
+                  if (e.target.value === memo) return;
+                  onMemoChange(favKey, e.target.value);
+                  toast.success("메모가 저장되었습니다.");
+                }}
                 placeholder="구매할 책, 사인회 시간, 들를 이유를 적어두세요"
                 rows={4}
                 className="min-h-24 w-full resize-none border border-border bg-white px-3 py-2 text-sm font-bold leading-6 text-foreground placeholder:text-brand-muted focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
@@ -244,7 +249,7 @@ export function RouteList({ publishers }: { publishers: FairMapPublisher[] }) {
                 booth={booth}
                 exhibitor={exhibitor}
                 index={index}
-                memo={memos[booth] ?? ""}
+                memo={memos[favKey] ?? ""}
                 onMemoChange={updateMemo}
                 onFavoriteToggle={toggleFavorite}
               />
