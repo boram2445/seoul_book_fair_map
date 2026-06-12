@@ -18,17 +18,15 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { CalendarDays, GripVertical, Heart, Instagram, MapPinned, NotebookPen } from "lucide-react";
 
-import { getMockHeartCount } from "@/app/(fair)/_lib/publisher-stats";
 import { getBoothEvents, getEventScheduleLabel } from "@/components/fair-map/booth-events";
-import { boothForMap, exhibitorByFavoriteKey, exhibitors, getDisplayName } from "@/components/fair-map/map-data";
+import { boothForMap, getFavoriteKey, getDisplayName } from "@/components/fair-map/map-data";
 import { useFavorites } from "@/components/fair-map/use-favorites";
 import { useBoothMemo } from "@/components/fair-map/use-booth-memo";
+import type { FairMapPublisher } from "@/lib/types/fair-map/type";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 // ─── 개별 카드 ────────────────────────────────────────────────────────────────
-
-type ExhibitorItem = (typeof exhibitors)[number];
 
 function SortableBoothCard({
   favKey,
@@ -41,7 +39,7 @@ function SortableBoothCard({
 }: {
   favKey: string;
   booth: string;
-  exhibitor: ExhibitorItem;
+  exhibitor: FairMapPublisher;
   index: number;
   memo: string;
   onMemoChange: (booth: string, text: string) => void;
@@ -50,7 +48,7 @@ function SortableBoothCard({
   // 마운트 시 초기값으로만 사용, 변경은 onBlur 저장
   const [localMemo, setLocalMemo] = useState(memo);
   const events = getBoothEvents(booth);
-  const heartCount = getMockHeartCount(exhibitor.no) + 1;
+  const heartCount = exhibitor.favoriteCount + 1;
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
     useSortable({ id: favKey });
@@ -186,20 +184,25 @@ function SortableBoothCard({
 
 // ─── 메인 리스트 ──────────────────────────────────────────────────────────────
 
-export function RouteList() {
+export function RouteList({ publishers }: { publishers: FairMapPublisher[] }) {
   const { favorites, reorderFavorites, toggleFavorite } = useFavorites();
   const { memos, updateMemo } = useBoothMemo();
+
+  const publisherByKey = useMemo(
+    () => new Map(publishers.map((p) => [getFavoriteKey(p), p])),
+    [publishers],
+  );
 
   const favoriteItems = useMemo(() => {
     return favorites
       .map((key) => {
-        const exhibitor = exhibitorByFavoriteKey.get(key);
+        const exhibitor = publisherByKey.get(key);
         return exhibitor ? { favKey: key, booth: boothForMap(exhibitor), exhibitor } : null;
       })
       .filter(
-        (item): item is { favKey: string; booth: string; exhibitor: ExhibitorItem } => Boolean(item),
+        (item): item is { favKey: string; booth: string; exhibitor: FairMapPublisher } => Boolean(item),
       );
-  }, [favorites]);
+  }, [favorites, publisherByKey]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -239,7 +242,7 @@ export function RouteList() {
                 key={favKey}
                 favKey={favKey}
                 booth={booth}
-                exhibitor={exhibitor as ExhibitorItem}
+                exhibitor={exhibitor}
                 index={index}
                 memo={memos[booth] ?? ""}
                 onMemoChange={updateMemo}

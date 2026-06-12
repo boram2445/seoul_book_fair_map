@@ -41,7 +41,7 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 import { getBoothEvents, getEventScheduleLabel } from './booth-events';
-import { boothForMap, exhibitorByFavoriteKey, exhibitors, getFavoriteKey, getDisplayName, getSearchText, shapes } from './map-data';
+import { boothForMap, getFavoriteKey, getDisplayName, getSearchText } from './map-data';
 import { ExportFavoritesButton } from './favorites-pdf/index';
 import { buildRoute, MAP_HEIGHT, MAP_WIDTH } from './route-path';
 import type { BoothShape, MapExhibitor } from './types';
@@ -135,7 +135,12 @@ function SortableFavoriteChip({
   );
 }
 
-export function BookFairMap() {
+interface BookFairMapProps {
+  exhibitors: MapExhibitor[];
+  shapes: BoothShape[];
+}
+
+export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   const [query, setQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [selectedNo, setSelectedNo] = useState<number>(4);
@@ -181,7 +186,11 @@ export function BookFairMap() {
 
   const shapesByBooth = useMemo(() => {
     return new Map(shapes.map((shape) => [shape.boothNumber, shape]));
-  }, []);
+  }, [shapes]);
+
+  const exhibitorByFavoriteKey = useMemo(() => {
+    return new Map(exhibitors.map((exhibitor) => [getFavoriteKey(exhibitor), exhibitor]));
+  }, [exhibitors]);
 
   /** 경로·순번 배지용 — 출판사 단위 찜을 부스 단위로 중복 제거(순서 유지) */
   const favoriteBooths = useMemo(() => {
@@ -195,7 +204,7 @@ export function BookFairMap() {
         seen.add(booth);
         return true;
       });
-  }, [favorites]);
+  }, [exhibitorByFavoriteKey, favorites]);
 
   /** A* 경로 꺾은선 — SVG polyline points */
   const routePath = useMemo(() => {
@@ -224,7 +233,7 @@ export function BookFairMap() {
       acc[booth].push(exhibitor);
       return acc;
     }, {});
-  }, []);
+  }, [exhibitors]);
 
   const selected = exhibitors.find((exhibitor) => exhibitor.no === selectedNo) ?? exhibitors[0];
   const selectedBooth = selected ? boothForMap(selected) : '';
@@ -245,7 +254,7 @@ export function BookFairMap() {
         .slice(0, 10)
         .map(([category]) => category),
     ];
-  }, []);
+  }, [exhibitors]);
 
   const filteredExhibitors = useMemo(() => {
     const normalized = query.trim().toLowerCase();
@@ -257,14 +266,14 @@ export function BookFairMap() {
           : (exhibitor.categories ?? []).includes(selectedCategory);
       return matchesQuery && matchesCategory;
     });
-  }, [query, selectedCategory]);
+  }, [exhibitors, query, selectedCategory]);
 
   const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
   const favoriteItems = useMemo(() => {
     return favorites
       .map((key) => exhibitorByFavoriteKey.get(key))
       .filter((exhibitor): exhibitor is MapExhibitor => Boolean(exhibitor));
-  }, [favorites]);
+  }, [exhibitorByFavoriteKey, favorites]);
 
   const activeMapLabels = shapes.flatMap((shape) => {
     const boothItems = exhibitorsByBooth[shape.boothNumber] ?? [];
@@ -858,7 +867,16 @@ export function BookFairMap() {
                   서울국제도서전 비공식 프로젝트입니다.
                 </p>
                 <p className="truncate text-xs font-bold text-brand-subtle">
-                  부스 및 참가사 정보는 서울국제도서전 공식 홈페이지를 기반으로 제작되었습니다.
+                  부스 및 참가사 정보는{' '}
+                  <a
+                    href="https://sibf.kr/"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="hover:underline"
+                  >
+                    서울국제도서전 공식 홈페이지
+                  </a>
+                  를 기반으로 제작되었습니다.
                 </p>
               </div>
             </div>

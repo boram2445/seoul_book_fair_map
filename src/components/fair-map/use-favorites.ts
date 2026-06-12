@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
 
+import { createBrowserClient } from "@supabase/ssr";
+
 const FAVORITES_KEY = "sibf-map-favorites-v2";
 const FAVORITES_EVENT = "sibf-favorites-change";
 const SERVER_SNAPSHOT: string[] = [];
@@ -37,12 +39,27 @@ export function useFavorites() {
 
   function toggleFavorite(booth: string) {
     const current = readStorage();
-    const next = current.includes(booth)
+    const isRemoving = current.includes(booth);
+    const next = isRemoving
       ? current.filter((item) => item !== booth)
       : [...current, booth];
     cache = null;
     window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
     notifyChange();
+
+    // 찜 카운트를 DB에 반영 (익명·로그인 공용, fire-and-forget)
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
+    );
+    supabase
+      .rpc("bump_favorite_count", {
+        p_exhibitor_no: Number(booth),
+        p_delta: isRemoving ? -1 : 1,
+      })
+      .then(({ error }) => {
+        if (error) console.warn("[favorites] bump_favorite_count failed:", error.message);
+      });
   }
 
   function reorderFavorites(newOrder: string[]) {

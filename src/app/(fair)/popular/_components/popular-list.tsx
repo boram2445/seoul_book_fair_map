@@ -4,11 +4,11 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarDays, ExternalLink, Heart, Instagram, Search } from "lucide-react";
 
-import { getMockHeartCount } from "@/app/(fair)/_lib/publisher-stats";
-import { boothForMap, exhibitors, getFavoriteKey, getDisplayName, getSearchText } from "@/components/fair-map/map-data";
+import { boothForMap, getFavoriteKey, getDisplayName, getSearchText } from "@/components/fair-map/map-data";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFavorites } from "@/components/fair-map/use-favorites";
+import type { FairMapPublisher } from "@/lib/types/fair-map/type";
 import { cn } from "@/lib/utils";
 
 const mockEventRows = [
@@ -29,7 +29,11 @@ const mockEventRows = [
   },
 ];
 
-export function PopularList() {
+interface PopularListProps {
+  publishers: FairMapPublisher[];
+}
+
+export function PopularList({ publishers }: PopularListProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
   const { favorites, toggleFavorite } = useFavorites();
@@ -38,7 +42,7 @@ export function PopularList() {
   const filteredItems = useMemo(() => {
     const normalizedQuery = query.trim().toLowerCase();
 
-    return [...exhibitors]
+    return [...publishers]
       .filter((item) => {
         if (!normalizedQuery) return true;
 
@@ -54,8 +58,8 @@ export function PopularList() {
           .includes(normalizedQuery);
       })
       .sort((first, second) => {
-        const firstHeartCount = getMockHeartCount(first.no) + (favoriteSet.has(getFavoriteKey(first)) ? 1 : 0);
-        const secondHeartCount = getMockHeartCount(second.no) + (favoriteSet.has(getFavoriteKey(second)) ? 1 : 0);
+        const firstHeartCount = first.favoriteCount + (favoriteSet.has(getFavoriteKey(first)) ? 1 : 0);
+        const secondHeartCount = second.favoriteCount + (favoriteSet.has(getFavoriteKey(second)) ? 1 : 0);
 
         return (
           secondHeartCount - firstHeartCount ||
@@ -63,7 +67,7 @@ export function PopularList() {
           first.no - second.no
         );
       });
-  }, [favoriteSet, query]);
+  }, [favoriteSet, publishers, query]);
 
   return (
     <div className="grid gap-4">
@@ -79,7 +83,7 @@ export function PopularList() {
         </div>
         <div className="mt-3 flex items-center justify-between text-xs font-black text-brand-muted">
           <span>검색 결과 {filteredItems.length}개</span>
-          <span>전체 {exhibitors.length}개</span>
+          <span>전체 {publishers.length}개</span>
         </div>
       </section>
 
@@ -88,7 +92,7 @@ export function PopularList() {
           const booth = boothForMap(item);
           const favKey = getFavoriteKey(item);
           const isFavorite = favoriteSet.has(favKey);
-          const heartCount = getMockHeartCount(item.no) + (isFavorite ? 1 : 0);
+          const heartCount = item.favoriteCount + (isFavorite ? 1 : 0);
           const categories = item.categories ?? [];
           const publisherHref = `/publishers/${item.no}`;
 

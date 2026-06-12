@@ -2,11 +2,11 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, CalendarDays, ExternalLink, Heart, Instagram, MessageSquareText } from "lucide-react";
 
+import { GetPublisherByExhibitorNo } from "@/api/fair-map/fair-map";
 import { ReviewComposeForm } from "@/app/(fair)/_components/review-compose-form";
-import { getMockHeartCount } from "@/app/(fair)/_lib/publisher-stats";
-import { getPublisherHrefForReview, getReviewsForPublisher } from "@/app/(fair)/_lib/review-data";
+import { getReviewsForPublisher } from "@/app/(fair)/_lib/review-data";
 import { Panel } from "@/components/fair-app/panel";
-import { boothForMap, exhibitors, getDisplayName } from "@/components/fair-map/map-data";
+import { boothForMap, getDisplayName } from "@/components/fair-map/map-data";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -36,7 +36,11 @@ export default async function PublisherDetailPage({
   params: Promise<{ publisherNo: string }>;
 }) {
   const { publisherNo } = await params;
-  const publisher = exhibitors.find((item) => item.no === Number(publisherNo));
+  const no = Number(publisherNo);
+  if (!Number.isInteger(no)) {
+    notFound();
+  }
+  const publisher = await GetPublisherByExhibitorNo({ no });
 
   if (!publisher) {
     notFound();
@@ -44,7 +48,7 @@ export default async function PublisherDetailPage({
 
   const booth = boothForMap(publisher);
   const displayName = getDisplayName(publisher);
-  const heartCount = getMockHeartCount(publisher.no);
+  const heartCount = publisher.favoriteCount;
   const categories = publisher.categories ?? [];
   const publisherReviews = getReviewsForPublisher(booth, displayName);
 
