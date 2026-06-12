@@ -72,8 +72,19 @@ function SortableBoothCard({
         >
           <GripVertical className="h-4 w-4" />
         </button>
-        <article>
-          <div className="grid gap-3 border-b border-border p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+        <article className="relative">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            aria-label="찜 해제"
+            className="absolute top-3 right-3 z-10 rounded-none border-border bg-white shadow-brutal-sm hover:bg-brand-yellow"
+            onClick={() => onFavoriteToggle(favKey)}
+          >
+            <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" />
+          </Button>
+
+          <div className="grid gap-3 border-b border-border p-4 pr-16 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="border border-border bg-brand-green px-2 py-1 text-xs font-black text-brand-green-ink">
@@ -105,27 +116,17 @@ function SortableBoothCard({
               ) : null}
             </div>
 
-            <div className="flex flex-wrap gap-2 md:justify-end">
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                aria-label="찜 해제"
-                className="rounded-none border-border bg-white hover:bg-brand-yellow"
-                onClick={() => onFavoriteToggle(favKey)}
-              >
-                <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" />
-              </Button>
+            <div className="flex flex-wrap gap-2 md:justify-end md:pr-12">
               {exhibitor.instagramUrl ? (
                 <Button
                   asChild
                   type="button"
                   variant="outline"
                   size="sm"
-                  className="rounded-none border-border bg-brand-panel font-black hover:bg-brand-yellow"
+                  className="h-8 rounded-none border-border bg-brand-panel px-2 text-xs font-black hover:bg-brand-yellow md:h-9 md:px-3 md:text-sm"
                 >
                   <a href={exhibitor.instagramUrl} target="_blank" rel="noreferrer">
-                    <Instagram className="h-4 w-4" />
+                    <Instagram className="h-3.5 w-3.5 md:h-4 md:w-4" />
                     Instagram
                   </a>
                 </Button>

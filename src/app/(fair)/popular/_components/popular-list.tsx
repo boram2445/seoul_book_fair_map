@@ -107,9 +107,28 @@ export function PopularList({ publishers }: PopularListProps) {
                 event.preventDefault();
                 router.push(publisherHref);
               }}
-              className="cursor-pointer border border-border bg-white transition-colors hover:bg-brand-panel focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink"
+              className="relative cursor-pointer border border-border bg-white transition-colors hover:bg-brand-panel focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink"
             >
-              <div className="grid gap-3 border-b border-border p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+              <Button
+                type="button"
+                variant="outline"
+                size="icon"
+                aria-label={isFavorite ? "찜 해제" : "찜하기"}
+                className={cn(
+                  "absolute top-3 right-3 z-10 rounded-none border-border shadow-brutal-sm",
+                  isFavorite
+                    ? "border-brand-coral bg-brand-coral text-white hover:bg-brand-coral/90 hover:text-white"
+                    : "bg-brand-panel hover:bg-brand-yellow"
+                )}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  toggleFavorite(favKey);
+                }}
+              >
+                <Heart className={cn("h-4 w-4", isFavorite ? "fill-white text-white" : "text-brand-coral")} />
+              </Button>
+
+              <div className="grid gap-3 border-b border-border p-4 pr-16 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="border border-border bg-brand-yellow px-2 py-1 text-xs font-black text-brand-rust">
@@ -142,32 +161,14 @@ export function PopularList({ publishers }: PopularListProps) {
                   ) : null}
                 </div>
 
-                <div className="flex flex-wrap gap-2 md:justify-end">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className={cn(
-                      "rounded-none border-border font-black",
-                      isFavorite
-                        ? "bg-brand-coral text-white hover:bg-brand-coral/90 border-brand-coral"
-                        : "bg-brand-panel hover:bg-brand-yellow"
-                    )}
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      toggleFavorite(favKey);
-                    }}
-                  >
-                    <Heart className={cn("h-4 w-4", isFavorite ? "fill-white text-white" : "text-brand-coral")} />
-                    {isFavorite ? "찜 해제" : "찜하기"}
-                  </Button>
+                <div className="flex flex-wrap gap-2 md:justify-end md:pr-12">
                   {item.instagramUrl ? (
                     <Button
                       asChild
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="rounded-none border-border bg-brand-panel font-black hover:bg-brand-yellow"
+                      className="h-8 rounded-none border-border bg-brand-panel px-2 text-xs font-black hover:bg-brand-yellow md:h-9 md:px-3 md:text-sm"
                     >
                       <a
                         href={item.instagramUrl}
@@ -175,7 +176,7 @@ export function PopularList({ publishers }: PopularListProps) {
                         rel="noreferrer"
                         onClick={(event) => event.stopPropagation()}
                       >
-                        <Instagram className="h-4 w-4" />
+                        <Instagram className="h-3.5 w-3.5 md:h-4 md:w-4" />
                         Instagram
                       </a>
                     </Button>
@@ -186,7 +187,7 @@ export function PopularList({ publishers }: PopularListProps) {
                       type="button"
                       variant="outline"
                       size="sm"
-                      className="rounded-none border-border bg-brand-panel font-black hover:bg-brand-yellow"
+                      className="h-8 rounded-none border-border bg-brand-panel px-2 text-xs font-black hover:bg-brand-yellow md:h-9 md:px-3 md:text-sm"
                     >
                       <a
                         href={item.homepageUrl}
@@ -194,7 +195,7 @@ export function PopularList({ publishers }: PopularListProps) {
                         rel="noreferrer"
                         onClick={(event) => event.stopPropagation()}
                       >
-                        <ExternalLink className="h-4 w-4" />
+                        <ExternalLink className="h-3.5 w-3.5 md:h-4 md:w-4" />
                         Homepage
                       </a>
                     </Button>

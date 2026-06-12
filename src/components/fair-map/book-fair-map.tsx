@@ -18,8 +18,10 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import {
   CalendarDays,
+  ChevronDown,
   ChevronLeft,
   ChevronRight,
+  ChevronUp,
   ExternalLink,
   GripVertical,
   Heart,
@@ -50,22 +52,41 @@ import { useFavorites } from './use-favorites';
 const MIN_SCALE = 0.16;
 const MAX_SCALE = 2.4;
 
-const SHEET_HEIGHT_RATIO = 0.9; // 시트 최대 높이 = 뷰포트의 90%
-const SHEET_PEEK_PX = 120; // peek 스냅: 최소 노출 높이(px)
+const TOP_PANEL_HEIGHT_RATIO = 0.5;
+const TOP_PANEL_COLLAPSED_PX = 50;
 
-/** 뷰포트 높이(vh)로부터 스냅 3종의 translateY 오프셋을 계산한다.
- *  offset 0 = 완전 확장(90vh 노출), 클수록 아래로 밀려 덜 보임. */
-function computeSnapOffsets(vh: number) {
-  const sheetHeight = vh * SHEET_HEIGHT_RATIO;
+function getViewportHeight() {
+  if (typeof window === 'undefined') return 0;
+  return window.innerHeight;
+}
+
+/** offset 0 = 중간 펼침, 음수 = 상단으로 접힘 */
+function computeSnapOffsets(panelHeight: number) {
   return {
-    expanded: 0, // 90vh 전체 노출
-    half: sheetHeight - vh * 0.5, // 50vh 노출 (= 40vh 밀어내림)
-    peek: sheetHeight - SHEET_PEEK_PX, // 120px만 노출
+    expanded: 0,
+    collapsed: -(panelHeight - TOP_PANEL_COLLAPSED_PX),
   };
 }
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function distanceBetween(
+  first: { x: number; y: number },
+  second: { x: number; y: number },
+) {
+  return Math.hypot(first.x - second.x, first.y - second.y);
+}
+
+function centerBetween(
+  first: { x: number; y: number },
+  second: { x: number; y: number },
+) {
+  return {
+    x: (first.x + second.x) / 2,
+    y: (first.y + second.y) / 2,
+  };
 }
 
 // ─── 찜 목록 바 — 드래그 정렬 칩 ────────────────────────────────────────────
@@ -162,18 +183,32 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     const newIndex = favorites.indexOf(String(over.id));
     reorderFavorites(arrayMove(favorites, oldIndex, newIndex));
   }
-  /** 시트 translateY 오프셋(px). 0 = 완전 확장(90vh 노출), 클수록 아래로 밀림. 첫 진입 = 절반 */
+  /** 모바일 상단 패널 translateY 오프셋(px). 0 = 중간 펼침, 음수 = 접힘 */
   const [sheetOffset, setSheetOffset] = useState(() => {
     if (typeof window === 'undefined') return 0;
-    return computeSnapOffsets(window.innerHeight).half;
+    return computeSnapOffsets(getViewportHeight() * TOP_PANEL_HEIGHT_RATIO).collapsed;
   });
+  const [topPanelHeight, setTopPanelHeight] = useState(0);
   const [isSheetDragging, setIsSheetDragging] = useState(false);
   /** 모바일 시트 내부 뷰 상태: false = 리스트, true = 상세 */
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
-  const sheetDragRef = useRef({ pointerId: -1, startY: 0, startOffset: 0, currentOffset: 0 });
+  const sheetDragRef = useRef({
+    pointerId: -1,
+    startY: 0,
+    startOffset: 0,
+    currentOffset: 0,
+    lastY: 0,
+    lastTime: 0,
+    velocity: 0,
+    didDrag: false,
+  });
   const viewportRef = useRef<HTMLDivElement | null>(null);
+  const topPanelRef = useRef<HTMLDivElement | null>(null);
   /** exhibitor.no → <li> DOM 노드 맵. 선택 변화 시 scrollIntoView에 사용. */
   const listItemRefsRef = useRef<Map<number, HTMLLIElement>>(new Map());
+  const lastSheetToggleTimeRef = useRef(0);
+  const transformRef = useRef(transform);
+  const activePointersRef = useRef(new Map<number, { x: number; y: number }>());
   const dragRef = useRef({
     pointerId: 0,
     startX: 0,
@@ -181,8 +216,22 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     originX: 0,
     originY: 0,
   });
+  const pinchRef = useRef({
+    startDistance: 0,
+    startScale: transform.scale,
+    worldX: 0,
+    worldY: 0,
+  });
 
   const [isRouteVisible, setIsRouteVisible] = useState(false);
+
+  useEffect(() => {
+    transformRef.current = transform;
+  }, [transform]);
+
+  function getTopPanelHeight() {
+    return topPanelHeight || getViewportHeight() * TOP_PANEL_HEIGHT_RATIO;
+  }
 
   const shapesByBooth = useMemo(() => {
     return new Map(shapes.map((shape) => [shape.boothNumber, shape]));
@@ -274,6 +323,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
       .map((key) => exhibitorByFavoriteKey.get(key))
       .filter((exhibitor): exhibitor is MapExhibitor => Boolean(exhibitor));
   }, [exhibitorByFavoriteKey, favorites]);
+  const isTopPanelExpanded = sheetOffset > -1;
 
   const activeMapLabels = shapes.flatMap((shape) => {
     const boothItems = exhibitorsByBooth[shape.boothNumber] ?? [];
@@ -336,13 +386,14 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     const centerX = shape.x + shape.width / 2;
     const centerY = shape.y + shape.height / 2;
 
-    // 모바일: 시트가 가리는 높이를 빼고 가시 영역 상단 1/3에 부스를 맞춘다.
+    // 모바일: 상단 패널이 가린 영역 아래쪽의 가시 영역 중앙에 부스를 맞춘다.
     // 데스크톱: 뷰포트 정중앙 그대로 (기존 동작 불변).
     let targetY: number;
     if (isMobile) {
-      const visibleSheetHeight = Math.max(0, window.innerHeight * SHEET_HEIGHT_RATIO - sheetOffset);
-      const visibleAreaHeight = rect.height - visibleSheetHeight;
-      targetY = visibleAreaHeight / 3;
+      const panelHeight = getViewportHeight() * TOP_PANEL_HEIGHT_RATIO;
+      const coveredHeight = Math.max(TOP_PANEL_COLLAPSED_PX, panelHeight + sheetOffset);
+      const visibleAreaHeight = Math.max(1, rect.height - coveredHeight);
+      targetY = coveredHeight + visibleAreaHeight * (2 / 3);
     } else {
       targetY = rect.height / 2;
     }
@@ -358,8 +409,10 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     setSelectedNo(exhibitor.no);
     setIsIntroductionExpanded(false);
     centerBooth(boothForMap(exhibitor));
-    // 모바일에서 선택 시 상세 뷰로 전환 (시트 높이는 그대로 유지)
-    if (isMobile) setIsMobileDetailOpen(true);
+    if (isMobile) {
+      setSheetOffset(computeSnapOffsets(getTopPanelHeight()).expanded);
+      setIsMobileDetailOpen(true);
+    }
   }
 
   function zoomBy(delta: number) {
@@ -385,21 +438,79 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     setTransform({ scale: 0.28, x: 56, y: 18 });
   }
 
+  function startPan(pointerId: number, point: { x: number; y: number }) {
+    dragRef.current = {
+      pointerId,
+      startX: point.x,
+      startY: point.y,
+      originX: transformRef.current.x,
+      originY: transformRef.current.y,
+    };
+  }
+
+  function startPinch(points: { x: number; y: number }[]) {
+    const viewport = viewportRef.current;
+    if (!viewport || points.length < 2) return;
+
+    const rect = viewport.getBoundingClientRect();
+    const center = centerBetween(points[0], points[1]);
+    const anchorX = center.x - rect.left;
+    const anchorY = center.y - rect.top;
+    const current = transformRef.current;
+
+    pinchRef.current = {
+      startDistance: distanceBetween(points[0], points[1]),
+      startScale: current.scale,
+      worldX: (anchorX - current.x) / current.scale,
+      worldY: (anchorY - current.y) / current.scale,
+    };
+  }
+
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
     if (event.button !== 0) return;
 
     event.currentTarget.setPointerCapture(event.pointerId);
-    dragRef.current = {
-      pointerId: event.pointerId,
-      startX: event.clientX,
-      startY: event.clientY,
-      originX: transform.x,
-      originY: transform.y,
-    };
+    activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    const points = Array.from(activePointersRef.current.values());
+    if (points.length >= 2) {
+      startPinch(points);
+      setIsDragging(false);
+      return;
+    }
+
+    startPan(event.pointerId, { x: event.clientX, y: event.clientY });
     setIsDragging(true);
   }
 
   function handlePointerMove(event: React.PointerEvent<HTMLDivElement>) {
+    if (!activePointersRef.current.has(event.pointerId)) return;
+    activePointersRef.current.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+    const points = Array.from(activePointersRef.current.values());
+    if (points.length >= 2) {
+      const viewport = viewportRef.current;
+      if (!viewport || pinchRef.current.startDistance <= 0) return;
+
+      const rect = viewport.getBoundingClientRect();
+      const center = centerBetween(points[0], points[1]);
+      const anchorX = center.x - rect.left;
+      const anchorY = center.y - rect.top;
+      const nextScale = clamp(
+        pinchRef.current.startScale *
+          (distanceBetween(points[0], points[1]) / pinchRef.current.startDistance),
+        MIN_SCALE,
+        MAX_SCALE,
+      );
+
+      setTransform({
+        scale: nextScale,
+        x: anchorX - pinchRef.current.worldX * nextScale,
+        y: anchorY - pinchRef.current.worldY * nextScale,
+      });
+      return;
+    }
+
     if (!isDragging || dragRef.current.pointerId !== event.pointerId) return;
 
     const dx = event.clientX - dragRef.current.startX;
@@ -413,29 +524,68 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   }
 
   function handlePointerUp(event: React.PointerEvent<HTMLDivElement>) {
-    if (dragRef.current.pointerId === event.pointerId) {
+    activePointersRef.current.delete(event.pointerId);
+
+    const points = Array.from(activePointersRef.current.entries());
+    if (points.length >= 2) {
+      startPinch(points.map(([, point]) => point));
+      return;
+    }
+
+    if (points.length === 1) {
+      const [pointerId, point] = points[0];
+      startPan(pointerId, point);
+      setIsDragging(true);
+      return;
+    }
+
+    if (dragRef.current.pointerId === event.pointerId || points.length === 0) {
       setIsDragging(false);
     }
   }
 
-  // ── 모바일 바텀시트 드래그 핸들러 (지도 pan/zoom과 동일한 pointer capture 패턴) ──
+  // ── 모바일 상단 패널 드래그 핸들러 (지도 pan/zoom과 동일한 pointer capture 패턴) ──
 
   function handleSheetPointerDown(event: React.PointerEvent<HTMLDivElement>) {
     event.currentTarget.setPointerCapture(event.pointerId);
+    const now = performance.now();
     sheetDragRef.current = {
       pointerId: event.pointerId,
       startY: event.clientY,
       startOffset: sheetOffset,
       currentOffset: sheetOffset,
+      lastY: event.clientY,
+      lastTime: now,
+      velocity: 0,
+      didDrag: false,
     };
     setIsSheetDragging(true);
   }
 
+  function toggleTopPanel() {
+    const now = performance.now();
+    if (now - lastSheetToggleTimeRef.current < 120) return;
+
+    lastSheetToggleTimeRef.current = now;
+    const offsets = computeSnapOffsets(getTopPanelHeight());
+    setSheetOffset((current) =>
+      Math.abs(current - offsets.expanded) < 1 ? offsets.collapsed : offsets.expanded,
+    );
+  }
+
   function handleSheetPointerMove(event: React.PointerEvent<HTMLDivElement>) {
     if (sheetDragRef.current.pointerId !== event.pointerId) return;
+
+    const now = performance.now();
+    const elapsed = Math.max(1, now - sheetDragRef.current.lastTime);
     const dy = event.clientY - sheetDragRef.current.startY;
-    const { expanded, peek } = computeSnapOffsets(window.innerHeight);
-    const newOffset = clamp(sheetDragRef.current.startOffset + dy, expanded, peek);
+    const { expanded, collapsed } = computeSnapOffsets(getTopPanelHeight());
+    const newOffset = clamp(sheetDragRef.current.startOffset + dy, collapsed, expanded);
+
+    sheetDragRef.current.didDrag = sheetDragRef.current.didDrag || Math.abs(dy) > 4;
+    sheetDragRef.current.velocity = (event.clientY - sheetDragRef.current.lastY) / elapsed;
+    sheetDragRef.current.lastY = event.clientY;
+    sheetDragRef.current.lastTime = now;
     sheetDragRef.current.currentOffset = newOffset;
     setSheetOffset(newOffset);
   }
@@ -443,36 +593,58 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   function handleSheetPointerUp(event: React.PointerEvent<HTMLDivElement>) {
     if (sheetDragRef.current.pointerId !== event.pointerId) return;
     setIsSheetDragging(false);
-    // stale closure 방지: ref에 저장된 마지막 offset으로 스냅 계산
-    const offsets = computeSnapOffsets(window.innerHeight);
-    const snapValues = [offsets.expanded, offsets.half, offsets.peek];
+
+    const offsets = computeSnapOffsets(getTopPanelHeight());
     const current = sheetDragRef.current.currentOffset;
-    const nearest = snapValues.reduce((a, b) =>
-      Math.abs(a - current) <= Math.abs(b - current) ? a : b,
-    );
-    setSheetOffset(nearest);
+    if (!sheetDragRef.current.didDrag) {
+      toggleTopPanel();
+      return;
+    }
+
+    const threshold = (offsets.expanded + offsets.collapsed) / 2;
+    const velocity = sheetDragRef.current.velocity;
+
+    if (velocity > 0.35) {
+      setSheetOffset(offsets.expanded);
+      return;
+    }
+
+    if (velocity < -0.35) {
+      setSheetOffset(offsets.collapsed);
+      return;
+    }
+
+    setSheetOffset(current > threshold ? offsets.expanded : offsets.collapsed);
   }
 
   // 화면 회전 시 스냅 오프셋 재클램프
   useEffect(() => {
-    function onResize() {
-      const offsets = computeSnapOffsets(window.innerHeight);
-      const snapValues = [offsets.expanded, offsets.half, offsets.peek];
+    function syncPanelSnap() {
+      const measuredHeight =
+        topPanelRef.current?.getBoundingClientRect().height ??
+        getViewportHeight() * TOP_PANEL_HEIGHT_RATIO;
+      setTopPanelHeight(measuredHeight);
+
+      const offsets = computeSnapOffsets(measuredHeight);
       setSheetOffset((current) =>
-        snapValues.reduce((a, b) => (Math.abs(a - current) <= Math.abs(b - current) ? a : b)),
+        current > (offsets.expanded + offsets.collapsed) / 2
+          ? offsets.expanded
+          : offsets.collapsed,
       );
     }
-    window.addEventListener('resize', onResize);
-    return () => window.removeEventListener('resize', onResize);
+
+    syncPanelSnap();
+    window.addEventListener('resize', syncPanelSnap);
+    return () => {
+      window.removeEventListener('resize', syncPanelSnap);
+    };
   }, []);
 
   useEffect(() => {
     listItemRefsRef.current.get(selectedNo)?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
   }, [selectedNo]);
 
-  // 모바일: 시트가 아래로 밀린 sheetOffset만큼 스크롤 컨테이너 바닥이 fold 아래에 있어
-  // 끝까지 스크롤하려면 동일한 패딩이 필요하다. 데스크톱은 0.
-  const scrollPaddingBottom = isMobile ? sheetOffset : 0;
+  const scrollPaddingBottom = 0;
 
   // 찜 바 — 데스크톱 하단과 모바일 드로어 최상단에서 공유
   const favoritesBar = favoriteItems.length ? (
@@ -504,14 +676,14 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   // 검색·필터·리스트 — 데스크톱 aside와 모바일 시트 리스트 뷰에서 공유
   const listContent = (
     <>
-      <div className="border-b border-border p-4">
-        <div className="flex items-center gap-2 border border-border bg-white px-3">
+      <div className="border-b border-border p-3 md:p-4">
+        <div className="flex items-center gap-2 border border-border bg-white px-2.5 md:px-3">
           <Search className="h-4 w-4 shrink-0" />
           <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="출판사, 부스, 국가 검색"
-            className="h-11 border-0 px-0 shadow-none focus-visible:ring-0"
+            className="h-9 border-0 px-0 text-sm shadow-none focus-visible:ring-0 md:h-11"
           />
           {query ? (
             <button
@@ -859,7 +1031,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
         </aside>
 
         <section className="flex h-full min-h-0 flex-col bg-brand-surface">
-          <div className="flex items-center justify-between gap-3 border-b border-border bg-brand-panel px-4 py-3">
+          <div className="hidden items-center justify-between gap-3 border-b border-border bg-brand-panel px-4 py-3 md:flex">
             <div className="flex min-w-0 items-center gap-3">
               <Info className="h-4 w-4 shrink-0 text-brand-subtle" />
               <div className="grid min-w-0 gap-0.5">
@@ -953,7 +1125,9 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                     onPointerLeave={() =>
                       setHoveredBooth((current) => (current === shape.boothNumber ? '' : current))
                     }
-                    onPointerDown={(event) => event.stopPropagation()}
+                    onPointerDown={(event) => {
+                      if (event.pointerType === 'mouse') event.stopPropagation();
+                    }}
                     onClick={() => selectExhibitor(boothItems[0])}
                     className={cn(
                       'absolute cursor-pointer transition focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-brand-coral',
@@ -1037,9 +1211,141 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
               ) : null}
             </div>
 
-            {/* 줌 컨트롤 — 지도 우측 상단 플로팅 */}
+            {isMobile ? (
+              <div
+                ref={topPanelRef}
+                className="absolute inset-x-0 top-0 z-50 flex flex-col border-b border-border/60 bg-brand-panel md:hidden"
+                onClick={(event) => event.stopPropagation()}
+                onPointerDown={(event) => event.stopPropagation()}
+                onPointerMove={(event) => event.stopPropagation()}
+                onPointerUp={(event) => event.stopPropagation()}
+                onTouchEnd={(event) => event.stopPropagation()}
+                style={{
+                  height: `${TOP_PANEL_HEIGHT_RATIO * 100}dvh`,
+                  transform: `translate3d(0, ${sheetOffset}px, 0)`,
+                  transition: isSheetDragging
+                    ? 'none'
+                    : 'transform 0.28s cubic-bezier(0.32, 0.72, 0, 1)',
+                }}
+              >
+                <h2 className="sr-only">출판사 검색 및 목록</h2>
+                <div className="min-h-0 flex-1 overflow-hidden">
+                  {isEventPanelOpen && selected ? (
+                    <div className="flex h-full min-h-0 flex-col">
+                      <button
+                        type="button"
+                        onClick={() => setIsEventPanelOpen(false)}
+                        className="flex shrink-0 cursor-pointer items-center gap-1.5 border-b border-border px-4 py-2.5 text-sm font-black hover:bg-brand-hover"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        출판사로
+                      </button>
+                      <div className="min-h-0 flex-1 overflow-y-auto">{eventContent}</div>
+                    </div>
+                  ) : isMobileDetailOpen ? (
+                    <div className="flex h-full min-h-0 flex-col">
+                      <button
+                        type="button"
+                        onClick={() => setIsMobileDetailOpen(false)}
+                        className="flex shrink-0 cursor-pointer items-center gap-1.5 border-b border-border px-4 py-2.5 text-sm font-black hover:bg-brand-hover"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                        목록으로
+                      </button>
+                      <div className="min-h-0 flex-1 overflow-y-auto">{detailContent}</div>
+                    </div>
+                  ) : (
+                    <div className="flex h-full min-h-0 flex-col">
+                      {favoriteItems.length ? (
+                        <div className="shrink-0 border-b border-border bg-brand-panel">
+                          {favoritesBar}
+                        </div>
+                      ) : null}
+                      {listContent}
+                    </div>
+                  )}
+                </div>
+                <div
+                  role="button"
+                  aria-label={isTopPanelExpanded ? '선택 패널 닫기' : '선택 패널 열기'}
+                  aria-expanded={isTopPanelExpanded}
+                  className="flex h-[50px] cursor-grab touch-none items-center justify-between gap-2 border-t border-border/60 bg-brand-yellow px-3 active:cursor-grabbing"
+                  onClick={() => {
+                    if (!sheetDragRef.current.didDrag) toggleTopPanel();
+                  }}
+                  onTouchEnd={() => {
+                    if (!sheetDragRef.current.didDrag) toggleTopPanel();
+                  }}
+                  onPointerDown={handleSheetPointerDown}
+                  onPointerMove={handleSheetPointerMove}
+                  onPointerUp={handleSheetPointerUp}
+                  onPointerCancel={handleSheetPointerUp}
+                >
+                  <div className="min-w-0">
+                    <p className="text-[11px] font-black text-brand-rust">선택</p>
+                    <p className="truncate text-sm font-black">
+                      {isEventPanelOpen
+                        ? '이벤트 보기'
+                        : isMobileDetailOpen && selected
+                          ? `${selectedBooth} ${getDisplayName(selected)}`
+                          : `출판사 ${filteredExhibitors.length}개`}
+                    </p>
+                  </div>
+                  <div className="flex shrink-0 items-center gap-1.5">
+                    <span className="inline-flex items-center gap-1 border border-border bg-white px-1.5 py-0.5 text-xs font-black">
+                      <Heart className="h-3.5 w-3.5 fill-brand-coral text-brand-coral" />
+                      {favoriteItems.length}
+                    </span>
+                    <span className="inline-flex items-center gap-1 border border-border bg-white px-1.5 py-0.5 text-xs font-black">
+                      {isTopPanelExpanded ? (
+                        <>
+                          <ChevronUp className="h-3.5 w-3.5" />
+                          닫기
+                        </>
+                      ) : (
+                        <>
+                          <ChevronDown className="h-3.5 w-3.5" />
+                          열기
+                        </>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : null}
+
+            {/* 모바일 액션 — 기존 줌 컨트롤 위치에 핵심 액션만 노출 */}
             <div
-              className="pointer-events-auto absolute top-3 right-4 z-50 flex items-center border border-border bg-white shadow-brutal-sm"
+              className="pointer-events-auto absolute top-[58px] right-2 z-40 flex items-center gap-1.5 md:hidden"
+              onPointerDown={(e) => e.stopPropagation()}
+            >
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsRouteVisible((v) => !v)}
+                disabled={favoriteBooths.length < 2}
+                aria-label="경로 표시 토글"
+                className={cn(
+                  'rounded-none border-border bg-white shadow-brutal-sm',
+                  isRouteVisible
+                    ? 'bg-brand-coral text-white hover:bg-brand-coral hover:text-white'
+                    : 'bg-white',
+                )}
+              >
+                <Route className="h-4 w-4" />
+                경로
+              </Button>
+              <ExportFavoritesButton
+                favKeys={favorites}
+                routePath={routePath}
+                routeBadges={routeBadges}
+              />
+            </div>
+
+            {/* 줌 컨트롤 — 데스크톱 지도 우측 상단 플로팅 */}
+            <div
+              className="pointer-events-auto absolute top-3 right-4 z-50 hidden items-center border border-border bg-white shadow-brutal-sm md:flex"
               onPointerDown={(e) => e.stopPropagation()}
             >
               <Button
@@ -1125,75 +1431,6 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
         </section>
       </section>
 
-      {/* 모바일 전용 바텀시트 — non-modal(오버레이 없음, 지도 인터랙션 유지)
-          높이 90vh 고정 + translateY(sheetOffset)로 노출 높이 조절.
-          데스크톱에서는 md:hidden으로 숨김 */}
-      {isMobile ? (
-        <div
-          className="fixed inset-x-0 bottom-0 z-50 flex flex-col border-t border-border bg-brand-panel md:hidden"
-          style={{
-            height: `${SHEET_HEIGHT_RATIO * 100}vh`,
-            transform: `translate3d(0, ${sheetOffset}px, 0)`,
-            transition: isSheetDragging ? 'none' : 'transform 0.3s cubic-bezier(0.32, 0.72, 0, 1)',
-          }}
-        >
-          {/* 드래그 핸들 — pointer capture로 핸들 밖으로 나가도 이벤트 추적 */}
-          <div
-            role="separator"
-            aria-label="바텀시트 드래그 핸들"
-            className="flex cursor-grab touch-none items-center justify-center pb-2 pt-3 active:cursor-grabbing"
-            onPointerDown={handleSheetPointerDown}
-            onPointerMove={handleSheetPointerMove}
-            onPointerUp={handleSheetPointerUp}
-            onPointerCancel={handleSheetPointerUp}
-          >
-            <div className="h-1.5 w-12 rounded-full bg-brand-surface" />
-          </div>
-          <h2 className="sr-only">출판사 검색 및 목록</h2>
-          {isEventPanelOpen && selected ? (
-            <div className="flex min-h-0 flex-1 flex-col">
-              <button
-                type="button"
-                onClick={() => setIsEventPanelOpen(false)}
-                className="flex shrink-0 cursor-pointer items-center gap-1.5 border-b border-border px-4 py-2.5 text-sm font-black hover:bg-brand-hover"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                출판사로
-              </button>
-              <div
-                className="min-h-0 flex-1 overflow-y-auto"
-                style={{ paddingBottom: scrollPaddingBottom }}
-              >
-                {eventContent}
-              </div>
-            </div>
-          ) : isMobileDetailOpen ? (
-            <div className="flex min-h-0 flex-1 flex-col">
-              <button
-                type="button"
-                onClick={() => setIsMobileDetailOpen(false)}
-                className="flex shrink-0 cursor-pointer items-center gap-1.5 border-b border-border px-4 py-2.5 text-sm font-black hover:bg-brand-hover"
-              >
-                <ChevronLeft className="h-4 w-4" />
-                목록으로
-              </button>
-              <div
-                className="min-h-0 flex-1 overflow-y-auto"
-                style={{ paddingBottom: scrollPaddingBottom }}
-              >
-                {detailContent}
-              </div>
-            </div>
-          ) : (
-            <div className="flex min-h-0 flex-1 flex-col">
-              {favoriteItems.length ? (
-                <div className="shrink-0 border-b border-border bg-brand-panel">{favoritesBar}</div>
-              ) : null}
-              {listContent}
-            </div>
-          )}
-        </div>
-      ) : null}
     </div>
   );
 }
