@@ -1,6 +1,6 @@
 import { useSyncExternalStore } from "react";
 
-import { createBrowserClient } from "@supabase/ssr";
+import { createClient } from "@/lib/supabase/client";
 
 const FAVORITES_KEY = "sibf-map-favorites-v2";
 const FAVORITES_EVENT = "sibf-favorites-change";
@@ -47,18 +47,18 @@ export function useFavorites() {
     window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
     notifyChange();
 
-    // 찜 카운트를 DB에 반영 (익명·로그인 공용, fire-and-forget)
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-    );
+    // fire-and-forget: 카운트 집계(익명 공용) + 로그인 시 찜 영속화
+    const supabase = createClient();
+    const no = Number(booth);
     supabase
-      .rpc("bump_favorite_count", {
-        p_exhibitor_no: Number(booth),
-        p_delta: isRemoving ? -1 : 1,
-      })
+      .rpc("bump_favorite_count", { p_exhibitor_no: no, p_delta: isRemoving ? -1 : 1 })
       .then(({ error }) => {
         if (error) console.warn("[favorites] bump_favorite_count failed:", error.message);
+      });
+    supabase
+      .rpc(isRemoving ? "remove_favorite" : "add_favorite", { p_exhibitor_no: no })
+      .then(({ error }) => {
+        if (error) console.warn("[favorites] add/remove_favorite failed:", error.message);
       });
   }
 
