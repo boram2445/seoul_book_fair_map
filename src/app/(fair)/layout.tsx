@@ -11,10 +11,10 @@ export default async function FairLayout({ children }: { children: ReactNode }) 
   } = await supabase.auth.getUser();
 
   return (
-    <main className="flex min-h-screen flex-col bg-background text-foreground">
+    <main className="flex h-dvh flex-col overflow-hidden bg-background text-foreground">
       <FairHeader user={user} />
       <FavoritesSync userId={user?.id ?? null} />
-      <div className="flex flex-1 flex-col bg-brand-surface [&>*]:flex [&>*]:flex-1 [&>*]:flex-col">
+      <div className="flex flex-1 min-h-0 flex-col overflow-y-auto bg-brand-surface [&>*]:flex [&>*]:flex-1 [&>*]:flex-col">
         {children}
       </div>
     </main>

@@ -850,15 +850,15 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   ) : null;
 
   return (
-    <div className="h-full min-h-[calc(100vh-125px)] bg-background text-foreground lg:min-h-[calc(100vh-81px)]">
-      <section className="grid h-full min-h-[calc(100vh-125px)] grid-cols-1 lg:min-h-[calc(100vh-81px)] md:grid-cols-[390px_minmax(0,1fr)]">
+    <div className="h-full bg-background text-foreground">
+      <section className="grid h-full grid-cols-1 md:grid-cols-[390px_minmax(0,1fr)]">
         {/* 사이드바 — 모바일(768px 미만)에서는 hidden, 내용은 아래 바텀시트와 공유 */}
-        <aside className="hidden min-h-0 flex-col border-b border-border bg-brand-panel md:flex md:h-[calc(100vh-125px)] md:border-r md:border-b-0 lg:h-[calc(100vh-81px)]">
+        <aside className="hidden h-full min-h-0 flex-col border-b border-border bg-brand-panel md:flex md:border-r md:border-b-0">
           {listContent}
           {detailContent}
         </aside>
 
-        <section className="flex h-[calc(100vh-125px)] min-h-[calc(100vh-125px)] flex-col bg-brand-surface lg:h-[calc(100vh-81px)] lg:min-h-0">
+        <section className="flex h-full min-h-0 flex-col bg-brand-surface">
           <div className="flex items-center justify-between gap-3 border-b border-border bg-brand-panel px-4 py-3">
             <div className="flex min-w-0 items-center gap-3">
               <Info className="h-4 w-4 shrink-0 text-brand-subtle" />
