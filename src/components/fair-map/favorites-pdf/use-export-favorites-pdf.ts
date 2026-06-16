@@ -12,7 +12,8 @@ const LANDSCAPE_H = A4_W; // 595.28
 const HALL_SIDE_M = 8;   // side/bottom margin pt
 const HALL_LABEL_H = 22; // height reserved for hall name label
 const HALL_TOP_M = HALL_SIDE_M + HALL_LABEL_H;
-const LIST_MARGIN = 24; // pt
+const HALL_GAP = 8;      // gap between table and map
+const LIST_MARGIN = 24;  // pt
 
 /**
  * Crops a rectangular region from a PNG data URL using an offscreen canvas.
@@ -53,23 +54,26 @@ function cropToDataUrl(
 
 /**
  * Orchestrates the three-page PDF export:
- *   1. Rasterise the off-screen map node → PNG via html-to-image
+ *   1. Rasterise all off-screen nodes (map, list, hall tables A & B)
  *   2. Canvas-crop Hall A and Hall B from the full-map PNG
- *   3. Rasterise the off-screen list node → PNG via html-to-image
- *   4. Compose: Hall A (landscape) · Hall B (landscape) · List (portrait)
+ *   3. Compose: Hall B (landscape) · Hall A (landscape) · List (portrait)
+ *      Each hall page = top band (table) + bottom band (map crop) + hall label
  *
- * Both heavy libraries are loaded lazily (dynamic import) so they are excluded
- * from the initial bundle and never execute on the server.
+ * Heavy libraries are loaded lazily so they are excluded from the initial bundle.
  */
 export function useExportFavoritesPdf() {
   const mapRef = useRef<HTMLDivElement | null>(null);
   const listRef = useRef<HTMLDivElement | null>(null);
+  const tableRefA = useRef<HTMLDivElement | null>(null);
+  const tableRefB = useRef<HTMLDivElement | null>(null);
   const [isExporting, setIsExporting] = useState(false);
 
   async function exportPdf() {
     const mapNode = mapRef.current;
     const listNode = listRef.current;
-    if (!mapNode || !listNode) return;
+    const tableANode = tableRefA.current;
+    const tableBNode = tableRefB.current;
+    if (!mapNode || !listNode || !tableANode || !tableBNode) return;
 
     setIsExporting(true);
     try {
@@ -95,11 +99,15 @@ export function useExportFavoritesPdf() {
         import("jspdf"),
       ]);
 
-      // Rasterise the full map (pixelRatio 1 → 3230 × 3650 px, 1:1 with map units).
-      // List at pixelRatio 2 gives crisp text at its smaller rendered size.
-      const [mapDataUrl, listDataUrl] = await Promise.all([
+      // Rasterise all nodes concurrently.
+      // Map at pixelRatio 1 → 3230×3650 px (1:1 with map units).
+      // Tables at 1.5 → crisp enough without blowing up memory.
+      // List at 2 → crisp text at its smaller rendered size.
+      const [mapDataUrl, listDataUrl, tableADataUrl, tableBDataUrl] = await Promise.all([
         toPng(mapNode, { pixelRatio: 1, cacheBust: false }),
         toPng(listNode, { pixelRatio: 2, cacheBust: false }),
+        toPng(tableANode, { pixelRatio: 1.5, cacheBust: false }),
+        toPng(tableBNode, { pixelRatio: 1.5, cacheBust: false }),
       ]);
 
       // Crop each hall from the full-map PNG
@@ -111,40 +119,60 @@ export function useExportFavoritesPdf() {
       // Create document with first page as landscape A4
       const doc = new jsPDF({ orientation: "landscape", unit: "pt", format: "a4" });
 
-      // Helper: fit a hall image into a landscape A4 page with a hall name label.
-      // Reserves HALL_LABEL_H pt at the top for the title text.
-      function placeHallImage(dataUrl: string, region: { width: number; height: number }, label: string) {
+      /**
+       * Places one hall page: table band at top + map crop band below + hall label.
+       * Table height is scaled to fit the available width, capped at 45% of content
+       * height so the map always has room.
+       */
+      function placeHallPage(
+        hallDataUrl: string,
+        hallRegion: { width: number; height: number },
+        tableDataUrl: string,
+        tableNode: HTMLDivElement,
+        label: string,
+      ) {
         const availW = LANDSCAPE_W - HALL_SIDE_M * 2;
-        const availH = LANDSCAPE_H - HALL_TOP_M - HALL_SIDE_M;
-        const aspect = region.width / region.height;
-        const pageAspect = availW / availH;
+        const contentH = LANDSCAPE_H - HALL_TOP_M - HALL_SIDE_M;
 
-        let imgW: number, imgH: number;
-        if (aspect >= pageAspect) {
-          imgW = availW;
-          imgH = availW / aspect;
+        // Table: fit to available width; if that exceeds 70% of content height,
+        // cap the height and shrink width proportionally (preserve aspect ratio).
+        // The map shows only booth numbers so it stays legible even when small;
+        // the table therefore gets the larger share of the page.
+        const tableAspect = tableNode.offsetWidth / tableNode.offsetHeight;
+        const naturalTableH = availW / tableAspect;
+        const tableImgH = Math.min(naturalTableH, contentH * 0.70);
+        const tableImgW = tableImgH * tableAspect;
+
+        // Map: remaining height
+        const mapAvailH = contentH - tableImgH - HALL_GAP;
+        const mapAvailW = availW;
+        const mapAspect = hallRegion.width / hallRegion.height;
+        const pageMapAspect = mapAvailW / mapAvailH;
+        let mapImgW: number, mapImgH: number;
+        if (mapAspect >= pageMapAspect) {
+          mapImgW = mapAvailW;
+          mapImgH = mapAvailW / mapAspect;
         } else {
-          imgH = availH;
-          imgW = availH * aspect;
+          mapImgH = mapAvailH;
+          mapImgW = mapAvailH * mapAspect;
         }
 
-        const offsetX = HALL_SIDE_M + (availW - imgW) / 2;
-        const offsetY = HALL_TOP_M + (availH - imgH) / 2;
-        doc.addImage(dataUrl, "PNG", offsetX, offsetY, imgW, imgH);
+        const tableX = HALL_SIDE_M + (availW - tableImgW) / 2;
+        const tableY = HALL_TOP_M;
+        doc.addImage(tableDataUrl, "PNG", tableX, tableY, tableImgW, tableImgH);
 
-        // Hall name label (coral, top-left)
-        doc.setFontSize(13);
-        doc.setFont("helvetica", "bold");
-        doc.setTextColor(23, 21, 17); // C.ink
-        doc.text(label, HALL_SIDE_M, HALL_SIDE_M + 14);
+        const mapX = HALL_SIDE_M + (mapAvailW - mapImgW) / 2;
+        const mapY = tableY + tableImgH + HALL_GAP;
+        doc.addImage(hallDataUrl, "PNG", mapX, mapY, mapImgW, mapImgH);
+
       }
 
       // ── Page 1: Hall B (landscape) ─────────────────────────────────
-      placeHallImage(hallBDataUrl, HALL_REGIONS.B, "Hall B");
+      placeHallPage(hallBDataUrl, HALL_REGIONS.B, tableBDataUrl, tableBNode, "Hall B");
 
       // ── Page 2: Hall A (landscape) ─────────────────────────────────
       doc.addPage([LANDSCAPE_W, LANDSCAPE_H]);
-      placeHallImage(hallADataUrl, HALL_REGIONS.A, "Hall A");
+      placeHallPage(hallADataUrl, HALL_REGIONS.A, tableADataUrl, tableANode, "Hall A");
 
       // ── Page 3: List (portrait) ────────────────────────────────────
       const listImgW = A4_W - LIST_MARGIN * 2;
@@ -161,5 +189,5 @@ export function useExportFavoritesPdf() {
     }
   }
 
-  return { mapRef, listRef, exportPdf, isExporting };
+  return { mapRef, listRef, tableRefA, tableRefB, exportPdf, isExporting };
 }

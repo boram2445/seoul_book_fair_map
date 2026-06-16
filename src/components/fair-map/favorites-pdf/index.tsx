@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 
 import {
   buildFavoriteItems,
+  ExportHallTable,
   ExportListPage,
   ExportMapPage,
   type ExportRouteBadge,
@@ -21,9 +22,12 @@ interface ExportFavoritesButtonProps {
 }
 
 /**
- * Renders a "PDF 저장" button and mounts the two off-screen capture nodes needed
- * for export. The nodes are hidden via position: fixed / left: -99999px so they
- * do not affect the visible layout.
+ * Renders a "PDF 저장" button and mounts all off-screen capture nodes:
+ *   - Full-resolution map (for cropping into hall pages)
+ *   - Hall A & B booth-number tables (top band on each hall page)
+ *   - Favourites list (page 3)
+ *
+ * All nodes are hidden via position: fixed / left: -99999px.
  */
 export function ExportFavoritesButton({
   favKeys,
@@ -31,7 +35,8 @@ export function ExportFavoritesButton({
   routeBadges = [],
 }: ExportFavoritesButtonProps) {
   const items = buildFavoriteItems(favKeys);
-  const { mapRef, listRef, exportPdf, isExporting } = useExportFavoritesPdf();
+  const { mapRef, listRef, tableRefA, tableRefB, exportPdf, isExporting } =
+    useExportFavoritesPdf();
 
   return (
     <>
@@ -54,6 +59,8 @@ export function ExportFavoritesButton({
       {/* Off-screen capture nodes — not visible to the user */}
       <ExportMapPage ref={mapRef} items={items} routePath={routePath} routeBadges={routeBadges} />
       <ExportListPage ref={listRef} items={items} />
+      <ExportHallTable ref={tableRefA} hall="A" favKeys={favKeys} />
+      <ExportHallTable ref={tableRefB} hall="B" favKeys={favKeys} />
     </>
   );
 }

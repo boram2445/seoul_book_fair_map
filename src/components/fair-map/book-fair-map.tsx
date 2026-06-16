@@ -236,6 +236,27 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   });
 
   const [isRouteVisible, setIsRouteVisible] = useState(false);
+  const [isRoutePreview, setIsRoutePreview] = useState(false);
+  const [isTooltipOpen, setIsTooltipOpen] = useState(false);
+  const routeActive = isRouteVisible || isRoutePreview;
+
+  const routeDesktopRef = useRef<HTMLDivElement>(null);
+  const routeMobileRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!isTooltipOpen) return;
+    function handleOutside(e: PointerEvent) {
+      const target = e.target as Node;
+      if (
+        !routeDesktopRef.current?.contains(target) &&
+        !routeMobileRef.current?.contains(target)
+      ) {
+        setIsTooltipOpen(false);
+      }
+    }
+    document.addEventListener('pointerdown', handleOutside);
+    return () => document.removeEventListener('pointerdown', handleOutside);
+  }, [isTooltipOpen]);
 
   useEffect(() => {
     transformRef.current = transform;
@@ -269,13 +290,13 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
 
   /** A* 경로 꺾은선 — SVG polyline points */
   const routePath = useMemo(() => {
-    if (!isRouteVisible || favoriteBooths.length < 2) return [];
+    if (!routeActive || favoriteBooths.length < 2) return [];
     return buildRoute(favoriteBooths);
-  }, [isRouteVisible, favoriteBooths]);
+  }, [routeActive, favoriteBooths]);
 
   /** 순번 배지 위치 — 각 찜 부스의 중심 */
   const routeBadges = useMemo(() => {
-    if (!isRouteVisible || favoriteBooths.length < 2) return [];
+    if (!routeActive || favoriteBooths.length < 2) return [];
     return favoriteBooths
       .map((booth) => shapesByBooth.get(booth))
       .filter((shape): shape is BoothShape => Boolean(shape))
@@ -287,7 +308,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
         boothNumber: shape.boothNumber,
         index,
       }));
-  }, [isRouteVisible, favoriteBooths, shapesByBooth]);
+  }, [routeActive, favoriteBooths, shapesByBooth]);
 
   const routeOrderByBooth = useMemo(() => {
     return new Map(routeBadges.map((badge) => [badge.boothNumber, badge.index + 1]));
@@ -1130,23 +1151,39 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsRouteVisible((v) => !v)}
-                disabled={favoriteBooths.length < 2}
-                aria-label="경로 표시 토글"
-                className={cn(
-                  'rounded-none border-border',
-                  isRouteVisible
-                    ? 'bg-brand-coral text-white hover:bg-brand-coral hover:text-white'
-                    : 'bg-white',
-                )}
+              <div
+                ref={routeDesktopRef}
+                className="relative"
+                onMouseEnter={() => !isRouteVisible && setIsRoutePreview(true)}
+                onMouseLeave={() => setIsRoutePreview(false)}
               >
-                <Route className="h-4 w-4" />
-                경로
-              </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const next = !isRouteVisible;
+                    setIsRouteVisible(next);
+                    setIsTooltipOpen(next);
+                  }}
+                  disabled={favoriteBooths.length < 2}
+                  aria-label="경로 표시 토글"
+                  className={cn(
+                    'rounded-none border-border',
+                    isRouteVisible
+                      ? 'bg-brand-coral text-white hover:bg-brand-coral hover:text-white'
+                      : 'bg-white',
+                  )}
+                >
+                  <Route className="h-4 w-4" />
+                  경로
+                </Button>
+                {(isTooltipOpen || isRoutePreview) ? (
+                  <div className="absolute top-full left-1/2 z-[60] mt-1 w-52 -translate-x-1/2 border border-border bg-white px-3 py-2 shadow-brutal-sm text-xs font-bold text-brand-muted">
+                    찜 내역 탭에서 드래그해 순서를 바꿀 수 있어요.
+                  </div>
+                ) : null}
+              </div>
               <ExportFavoritesButton
                 favKeys={favorites}
                 routePath={routePath}
@@ -1555,23 +1592,34 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
               className="pointer-events-auto absolute top-[58px] right-2 z-40 flex items-center gap-1.5 md:hidden"
               onPointerDown={(e) => e.stopPropagation()}
             >
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsRouteVisible((v) => !v)}
-                disabled={favoriteBooths.length < 2}
-                aria-label="경로 표시 토글"
-                className={cn(
-                  'rounded-none border-border bg-white shadow-brutal-sm',
-                  isRouteVisible
-                    ? 'bg-brand-coral text-white hover:bg-brand-coral hover:text-white'
-                    : 'bg-white',
-                )}
-              >
-                <Route className="h-4 w-4" />
-                경로
-              </Button>
+              <div ref={routeMobileRef} className="relative">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    const next = !isRouteVisible;
+                    setIsRouteVisible(next);
+                    setIsTooltipOpen(next);
+                  }}
+                  disabled={favoriteBooths.length < 2}
+                  aria-label="경로 표시 토글"
+                  className={cn(
+                    'rounded-none border-border bg-white shadow-brutal-sm',
+                    isRouteVisible
+                      ? 'bg-brand-coral text-white hover:bg-brand-coral hover:text-white'
+                      : 'bg-white',
+                  )}
+                >
+                  <Route className="h-4 w-4" />
+                  경로
+                </Button>
+                {isTooltipOpen ? (
+                  <div className="absolute top-full left-1/2 z-[60] mt-1 w-52 -translate-x-1/2 border border-border bg-white px-3 py-2 shadow-brutal-sm text-xs font-bold text-brand-muted">
+                    찜 내역 탭에서 드래그해 순서를 바꿀 수 있어요.
+                  </div>
+                ) : null}
+              </div>
               <ExportFavoritesButton
                 favKeys={favorites}
                 routePath={routePath}

@@ -90,16 +90,6 @@ interface ExportMapPageProps {
  * html-to-image captures it at coordinates (0,0) rather than (-99999px, 0).
  */
 export function ExportMapPage({ items, routePath, routeBadges, ref }: ExportMapPageProps) {
-  // Build label grouping identical to book-fair-map.tsx labelExhibitorsByBooth:
-  // key = origBooth if that shape exists, else booth (handles B400 책마을 zone).
-  const shapeSet = new Set(allShapes.map((s) => s.boothNumber));
-  const labelExhibitorsByBooth = exhibitors.reduce<Record<string, MapExhibitor[]>>((acc, ex) => {
-    const key = ex.origBooth && shapeSet.has(ex.origBooth) ? ex.origBooth : ex.booth;
-    acc[key] = acc[key] ?? [];
-    acc[key].push(ex);
-    return acc;
-  }, {});
-
   const favBoothSet = new Set(items.map((it) => it.booth));
 
   return (
@@ -177,62 +167,15 @@ export function ExportMapPage({ items, routePath, routeBadges, ref }: ExportMapP
           />
         ))}
 
-        {/* ── Unified static label layer (mirrors book-fair-map.tsx:1265-1408) ── */}
+        {/* ── Number-only label layer — names are in the per-hall table below the map ── */}
         {allShapes.map((shape) => {
-          const boothItems = labelExhibitorsByBooth[shape.boothNumber] ?? [];
-          if (!boothItems.length) return null;
+          // Black booths have their numbers baked into the SVG as white glyphs — skip.
+          if (shape.fill === "black") return null;
 
-          const isBlack = shape.fill === "black";
           const isFavorite = favBoothSet.has(shape.boothNumber);
-          const isZone = boothItems.some((it) => boothForMap(it) !== shape.boothNumber);
-
-          const textColor = isBlack ? "white" : isFavorite ? C.coralDeep : "#333";
-          const halo = isBlack
-            ? "0 1px 0 #000, 1px 0 0 #000, 0 -1px 0 #000, -1px 0 0 #000"
-            : "0 1px 0 white, 1px 0 0 white, 0 -1px 0 white, -1px 0 0 white";
-
-          if (isZone) {
-            // B400 책마을: header + 2-col list
-            const zoneTitle =
-              getDisplayName(
-                boothItems.find((it) => boothForMap(it) === shape.boothNumber) ?? boothItems[0],
-              ) + ` (${shape.boothNumber})`;
-
-            return (
-              <div
-                key={`label-${shape.boothNumber}`}
-                style={{
-                  position: "absolute",
-                  left: shape.x,
-                  top: shape.y,
-                  width: shape.width,
-                  height: shape.height,
-                  padding: "4px 3px 2px",
-                  color: textColor,
-                  textShadow: halo,
-                  pointerEvents: "none",
-                  zIndex: 36,
-                  overflow: "hidden",
-                }}
-              >
-                <div style={{ fontSize: 15, fontWeight: 800, textAlign: "center", marginBottom: 3, lineHeight: 1.2 }}>
-                  {zoneTitle}
-                </div>
-                <div style={{ columnCount: 2, columnGap: 4, fontSize: 11, fontWeight: 700, lineHeight: 1.2, textAlign: "left" }}>
-                  {boothItems.map((item) => (
-                    <div key={item.no} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                      {boothForMap(item)} - {getDisplayName(item)}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          }
-
-          // Regular booth
-          const maxDisplay = Math.min(Math.floor(shape.height / 24), 30);
-          const displayed = boothItems.slice(0, maxDisplay);
-          const overflow = boothItems.length - displayed.length;
+          const textColor = isFavorite ? C.coralDeep : "#333";
+          // Fixed font size so all booth numbers appear at uniform scale across the page.
+          const fontSize = shape.boothNumber.startsWith("A") ? 26 : 32;
 
           return (
             <div
@@ -243,37 +186,19 @@ export function ExportMapPage({ items, routePath, routeBadges, ref }: ExportMapP
                 top: shape.y,
                 width: shape.width,
                 height: shape.height,
-                paddingTop: Math.min(6, shape.height * 0.12),
                 display: "flex",
-                flexDirection: "column",
                 alignItems: "center",
+                justifyContent: "center",
                 textAlign: "center",
-                lineHeight: 1.15,
                 color: textColor,
-                textShadow: halo,
+                textShadow: "0 1px 0 white, 1px 0 0 white, 0 -1px 0 white, -1px 0 0 white",
                 pointerEvents: "none",
                 zIndex: 36,
-                overflow: "hidden",
               }}
             >
-              {!isBlack && (
-                <span style={{ display: "block", fontSize: 17, fontFamily: "monospace", fontWeight: 700 }}>
-                  {shape.boothNumber}
-                </span>
-              )}
-              {displayed.map((item) => (
-                <span
-                  key={item.no}
-                  style={{ display: "block", fontSize: 19, fontWeight: 800, wordBreak: "keep-all", overflowWrap: "anywhere", maxWidth: "100%" }}
-                >
-                  {getDisplayName(item)}
-                </span>
-              ))}
-              {overflow > 0 && (
-                <span style={{ display: "block", fontSize: 14, fontWeight: 700, opacity: 0.7 }}>
-                  외 {overflow}
-                </span>
-              )}
+              <span style={{ fontSize, fontFamily: "monospace", fontWeight: 900, lineHeight: 1 }}>
+                {shape.boothNumber}
+              </span>
             </div>
           );
         })}
@@ -422,6 +347,118 @@ export function ExportListPage({ items, ref }: ExportListPageProps) {
         >
           지곰 지도 · sibf.or.kr
         </p>
+      </div>
+    </div>
+  );
+}
+
+// ── Hall table page ──────────────────────────────────────────────────────────
+
+interface ExportHallTableProps {
+  hall: "A" | "B";
+  favKeys: string[];
+  ref?: React.Ref<HTMLDivElement>;
+}
+
+/**
+ * Off-screen component: compact booth-number ↔ publisher-name table for one hall.
+ * Captured at pixelRatio 1.5 and placed in the top band of each hall's PDF page.
+ * Favourite booths are highlighted in coral so users can cross-reference the map.
+ */
+export function ExportHallTable({ hall, favKeys, ref }: ExportHallTableProps) {
+  // Build a set of booths that are favourited
+  const favBoothSet = new Set(
+    favKeys.flatMap((fk) => {
+      const ex = exhibitorByFavoriteKey.get(fk);
+      return ex ? [boothForMap(ex)] : [];
+    }),
+  );
+
+  // Group exhibitors by their effective booth (boothForMap), filtered to this hall.
+  // Using boothForMap breaks B400 zone down into individual B401–B473 sub-booths.
+  const entries: [string, MapExhibitor[]][] = Array.from(
+    exhibitors
+      .filter((ex) => boothForMap(ex).startsWith(hall))
+      .reduce<Map<string, MapExhibitor[]>>((map, ex) => {
+        const key = boothForMap(ex);
+        if (!map.has(key)) map.set(key, []);
+        map.get(key)!.push(ex);
+        return map;
+      }, new Map())
+      .entries(),
+  ).sort(([a], [b]) => (parseInt(a.slice(1), 10) || 0) - (parseInt(b.slice(1), 10) || 0));
+
+  return (
+    <div aria-hidden style={{ position: "fixed", left: -99999, top: 0, overflow: "hidden" }}>
+      <div
+        ref={ref}
+        style={{
+          width: 1500,
+          padding: "12px 20px 10px",
+          backgroundColor: C.panel,
+          fontFamily: "sans-serif",
+          boxSizing: "border-box",
+        }}
+      >
+        {/* Header */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "baseline",
+            gap: 10,
+            marginBottom: 8,
+            borderBottom: `2px solid ${C.ink}`,
+            paddingBottom: 5,
+          }}
+        >
+          <span style={{ fontSize: 15, fontWeight: 900, color: C.ink }}>Hall {hall}</span>
+          <span style={{ fontSize: 10, color: C.muted }}>입점사 목록 · {entries.length}개 부스</span>
+        </div>
+        {/* Multi-column booth list */}
+        <div style={{ columnCount: hall === "A" ? 8 : 6, columnGap: 8 }}>
+          {entries.map(([boothKey, items]) => {
+            const isFav = favBoothSet.has(boothKey);
+            return (
+              <div
+                key={boothKey}
+                style={{
+                  display: "flex",
+                  gap: 5,
+                  padding: "1px 0",
+                  breakInside: "avoid",
+                  pageBreakInside: "avoid",
+                }}
+              >
+                <span
+                  style={{
+                    fontSize: 14,
+                    fontFamily: "monospace",
+                    fontWeight: 700,
+                    color: isFav ? C.coral : C.muted,
+                    flexShrink: 0,
+                    minWidth: 50,
+                    lineHeight: 1.3,
+                  }}
+                >
+                  {boothKey}
+                </span>
+                <span
+                  style={{
+                    fontSize: 14,
+                    color: isFav ? C.coralDeep : C.ink,
+                    fontWeight: isFav ? 800 : 400,
+                    lineHeight: 1.3,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {items.map((it) => getDisplayName(it)).join("·")}
+                </span>
+              </div>
+            );
+          })}
+        </div>
       </div>
     </div>
   );
