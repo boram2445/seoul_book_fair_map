@@ -4,7 +4,7 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { CalendarDays, ChevronDown, ExternalLink, Heart, Instagram, Search } from "lucide-react";
 
-import { boothForMap, getFavoriteKey, getDisplayName, getSearchText } from "@/components/fair-map/map-data";
+import { boothForMap, getFavoriteKey, getDisplayName, getSearchText } from "@/components/fair-map/map-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useFavorites } from "@/components/fair-map/use-favorites";

@@ -20,7 +20,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { CalendarDays, ChevronDown, GripVertical, Heart, Instagram, MapPinned, NotebookPen } from "lucide-react";
 
 import { getBoothEvents, getEventScheduleLabel } from "@/components/fair-map/booth-events";
-import { boothForMap, getFavoriteKey, getDisplayName } from "@/components/fair-map/map-data";
+import { boothForMap, getFavoriteKey, getDisplayName } from "@/components/fair-map/map-helpers";
 import { useFavorites } from "@/components/fair-map/use-favorites";
 import { useBoothMemo } from "@/components/fair-map/use-booth-memo";
 import type { FairMapPublisher } from "@/lib/types/fair-map/type";

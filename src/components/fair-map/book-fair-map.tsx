@@ -44,7 +44,7 @@ import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
 import { getBoothEvents, getEventScheduleLabel } from './booth-events';
-import { boothForMap, getFavoriteKey, getDisplayName, getSearchText } from './map-data';
+import { boothForMap, getFavoriteKey, getDisplayName, getSearchText } from './map-helpers';
 import { ExportFavoritesButton } from './favorites-pdf/index';
 import { buildRoute, MAP_HEIGHT, MAP_WIDTH } from './route-path';
 import type { BoothShape, MapExhibitor } from './types';

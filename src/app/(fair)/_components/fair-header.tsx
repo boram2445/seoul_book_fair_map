@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Heart } from "lucide-react";
-import type { User } from "@supabase/supabase-js";
 
 import { tabs } from "@/app/(fair)/_lib/tabs";
 import { AuthMenu } from "@/components/auth/auth-menu";
@@ -15,11 +14,7 @@ function isActiveTab(pathname: string, href: string): boolean {
   return pathname.startsWith(href);
 }
 
-interface FairHeaderProps {
-  user: User | null;
-}
-
-export function FairHeader({ user }: FairHeaderProps) {
+export function FairHeader() {
   const pathname = usePathname();
   const { favorites } = useFavorites();
 
@@ -40,7 +35,7 @@ export function FairHeader({ user }: FairHeaderProps) {
               <Heart className="h-3.5 w-3.5 fill-brand-coral text-brand-coral sm:h-4 sm:w-4" />
               {favorites.length}
             </div>
-            <AuthMenu user={user} />
+            <AuthMenu />
           </div>
         </div>
 

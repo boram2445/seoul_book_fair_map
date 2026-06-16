@@ -1,19 +1,34 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 import { createClient } from "@/lib/supabase/client";
 import { useFavorites } from "./use-favorites";
 import { useBoothMemo } from "./use-booth-memo";
 
-interface FavoritesSyncProps {
-  userId: string | null;
-}
-
-export function FavoritesSync({ userId }: FavoritesSyncProps) {
+export function FavoritesSync() {
   const { favorites, reorderFavorites } = useFavorites();
   const { memos, updateMemo } = useBoothMemo();
+  const [userId, setUserId] = useState<string | null>(null);
 
+  // 클라이언트에서 user를 직접 구독 — layout의 서버 인증 의존 제거
+  useEffect(() => {
+    const supabase = createClient();
+
+    supabase.auth.getUser().then(({ data }) => {
+      setUserId(data.user?.id ?? null);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUserId(session?.user?.id ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  // userId 변경(로그인/로그아웃)에만 반응 — favorites/memos는 스냅샷 용도
   useEffect(() => {
     if (!userId) return;
 
@@ -80,7 +95,7 @@ export function FavoritesSync({ userId }: FavoritesSyncProps) {
         }
       });
     });
-  // userId 변경(로그인/로그아웃)에만 반응 — favorites/memos는 스냅샷 용도
+  // userId 변경에만 반응 — favorites/memos는 스냅샷 용도
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId]);
 

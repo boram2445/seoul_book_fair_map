@@ -7,7 +7,7 @@ import { ReviewComposeForm } from "@/app/(fair)/_components/review-compose-form"
 import { ReviewFeed } from "@/app/(fair)/_components/review-feed";
 import { PublisherReviewHeader } from "./_components/publisher-review-header";
 import { Panel } from "@/components/fair-app/panel";
-import { boothForMap, getDisplayName } from "@/components/fair-map/map-data";
+import { boothForMap, getDisplayName } from "@/components/fair-map/map-helpers";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 

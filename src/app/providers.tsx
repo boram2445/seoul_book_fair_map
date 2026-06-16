@@ -3,7 +3,12 @@
 import { ReactNode, useState } from 'react';
 import { ThemeProvider } from 'next-themes';
 import { MutationCache, QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
+import dynamic from 'next/dynamic';
+
+const ReactQueryDevtools = dynamic(
+  () => import('@tanstack/react-query-devtools').then((m) => ({ default: m.ReactQueryDevtools })),
+  { ssr: false },
+);
 import { toast } from 'sonner';
 
 import { ApiError } from '@/network/base';

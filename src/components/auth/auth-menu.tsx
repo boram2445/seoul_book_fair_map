@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
 import { LogIn } from "lucide-react";
 import type { User } from "@supabase/supabase-js";
 
@@ -21,26 +20,25 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-interface AuthMenuProps {
-  user: User | null;
-}
-
-export function AuthMenu({ user: initialUser }: AuthMenuProps) {
-  const router = useRouter();
+export function AuthMenu() {
   const supabase = createClient();
-  const [user, setUser] = useState<User | null>(initialUser);
+  const [user, setUser] = useState<User | null>(null);
 
-  // 탭 내 로그인/로그아웃 이벤트(예: 다른 탭)를 실시간 반영
   useEffect(() => {
+    // 마운트 시 현재 세션 조회
+    supabase.auth.getUser().then(({ data }) => setUser(data.user));
+
+    // 로그인/로그아웃 이벤트 실시간 반영
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      router.refresh(); // 서버 상태(layout user)도 동기화
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase, router]);
+  // supabase 인스턴스는 안정적이므로 deps 빈 배열과 동일
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleLogin() {
     await supabase.auth.signInWithOAuth({

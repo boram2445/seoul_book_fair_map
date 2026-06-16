@@ -3,6 +3,9 @@ import exhibitorData from "@/data/sibf-2026-floor-exhibitors.json";
 import publisherDetailData from "@/data/sibf-2026-publisher-details.json";
 
 import type { BoothShape, MapExhibitor } from "./types";
+import { boothForMap, getFavoriteKey } from "./map-helpers";
+
+export { getDisplayName, getSearchText, boothForMap, getFavoriteKey } from "./map-helpers";
 
 type PublisherDetail = {
   boothNumber: string;
@@ -52,33 +55,6 @@ export const exhibitors = (exhibitorData.exhibitors as MapExhibitor[]).map((exhi
   };
 });
 export const shapes = boothData.booths as BoothShape[];
-
-export function getDisplayName(exhibitor: MapExhibitor) {
-  return exhibitor.nameKo || exhibitor.nameEn || exhibitor.booth;
-}
-
-export function getSearchText(exhibitor: MapExhibitor) {
-  return [
-    exhibitor.booth,
-    exhibitor.origBooth,
-    exhibitor.nameKo,
-    exhibitor.nameEn,
-    exhibitor.countryKo,
-    exhibitor.countryEn,
-    ...(exhibitor.categories ?? []),
-  ]
-    .filter(Boolean)
-    .join(" ")
-    .toLowerCase();
-}
-
-export function boothForMap(exhibitor: MapExhibitor) {
-  return exhibitor.origBooth || exhibitor.booth;
-}
-
-export function getFavoriteKey(exhibitor: MapExhibitor): string {
-  return String(exhibitor.no);
-}
 
 export const exhibitorByFavoriteKey: Map<string, MapExhibitor> = new Map(
   exhibitors.map((ex) => [getFavoriteKey(ex), ex])
