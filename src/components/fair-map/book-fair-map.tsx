@@ -26,6 +26,7 @@ import {
   GripVertical,
   Heart,
   Instagram,
+  MapPin,
   Minus,
   Plus,
   Info,
@@ -54,6 +55,7 @@ const MAX_SCALE = 2.4;
 
 const TOP_PANEL_HEIGHT_RATIO = 0.5;
 const TOP_PANEL_COLLAPSED_PX = 50;
+const MOBILE_LABEL_SCALE = 0.42;
 
 function getViewportHeight() {
   if (typeof window === 'undefined') return 0;
@@ -70,6 +72,19 @@ function computeSnapOffsets(panelHeight: number) {
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
+}
+
+function getShapeCenter(shape: BoothShape) {
+  return {
+    x: shape.x + shape.width / 2,
+    y: shape.y + shape.height / 2,
+  };
+}
+
+function getBoothLabel(items: MapExhibitor[]) {
+  const [first, ...rest] = items;
+  if (!first) return '';
+  return rest.length ? `${getDisplayName(first)} 외${rest.length}` : getDisplayName(first);
 }
 
 function distanceBetween(
@@ -192,6 +207,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   const [isSheetDragging, setIsSheetDragging] = useState(false);
   /** 모바일 시트 내부 뷰 상태: false = 리스트, true = 상세 */
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
+  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const sheetDragRef = useRef({
     pointerId: -1,
     startY: 0,
@@ -270,10 +286,17 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
       .map((shape, index) => ({
         x: shape.x + shape.width / 2,
         y: shape.y + shape.height / 2,
+        labelX: shape.x + shape.width,
+        labelY: shape.y,
         boothNumber: shape.boothNumber,
         index,
       }));
   }, [isRouteVisible, favoriteBooths, shapesByBooth]);
+
+  const routeOrderByBooth = useMemo(() => {
+    return new Map(routeBadges.map((badge) => [badge.boothNumber, badge.index + 1]));
+  }, [routeBadges]);
+  const routeBadgeSize = clamp(transform.scale * 40, 16, 28);
 
   const exhibitorsByBooth = useMemo(() => {
     return exhibitors.reduce<Record<string, MapExhibitor[]>>((acc, exhibitor) => {
@@ -288,6 +311,10 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   const selectedBooth = selected ? boothForMap(selected) : '';
   const selectedShape = selected ? shapesByBooth.get(selectedBooth) : undefined;
   const selectedBoothEvents = selectedBooth ? getBoothEvents(selectedBooth) : [];
+  const selectedBoothItems = selectedBooth ? (exhibitorsByBooth[selectedBooth] ?? []) : [];
+  const selectedBoothPeers = selected
+    ? selectedBoothItems.filter((exhibitor) => exhibitor.no !== selected.no)
+    : [];
   const categoryOptions = useMemo(() => {
     const categoryCounts = exhibitors.reduce<Record<string, number>>((acc, exhibitor) => {
       for (const category of exhibitor.categories ?? []) {
@@ -324,6 +351,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
       .filter((exhibitor): exhibitor is MapExhibitor => Boolean(exhibitor));
   }, [exhibitorByFavoriteKey, favorites]);
   const isTopPanelExpanded = sheetOffset > -1;
+  const isMobilePanelContentSized = isEventPanelOpen || isMobileDetailOpen;
 
   const activeMapLabels = shapes.flatMap((shape) => {
     const boothItems = exhibitorsByBooth[shape.boothNumber] ?? [];
@@ -333,11 +361,31 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     const favoritedItems = boothItems.filter((item) => favoriteSet.has(getFavoriteKey(item)));
     const isFavorite = favoritedItems.length > 0;
     const isHovered = hoveredBooth === shape.boothNumber;
-    if (!isSelected && !isFavorite && !isHovered) return [];
+    const center = getShapeCenter(shape);
+    const screenX = transform.x + center.x * transform.scale;
+    const screenY = transform.y + (shape.y + shape.height * 0.42) * transform.scale;
+    const screenWidth = shape.width * transform.scale;
+    const screenHeight = shape.height * transform.scale;
+    const panelHeight = getViewportHeight() * TOP_PANEL_HEIGHT_RATIO;
+    const coveredHeight = isMobile ? Math.max(TOP_PANEL_COLLAPSED_PX, panelHeight + sheetOffset) : 0;
+    const isVisibleOnMobile =
+      isMobile &&
+      transform.scale >= MOBILE_LABEL_SCALE &&
+      screenWidth >= 26 &&
+      screenHeight >= 12 &&
+      screenX >= -90 &&
+      screenX <= viewportSize.width + 90 &&
+      screenY >= coveredHeight + 12 &&
+      screenY <= viewportSize.height + 48;
+    if (!isSelected && !isFavorite && !isHovered && !isVisibleOnMobile) return [];
 
     // 찜 전용 상태(선택·호버 아님)이면 찜한 출판사만, 그 외엔 부스 전체 표시
     const displayItems = isFavorite && !isSelected && !isHovered ? favoritedItems : boothItems;
-    const names = displayItems.map(getDisplayName);
+    const labelItems =
+      isSelected && selected
+        ? [selected, ...boothItems.filter((item) => item.no !== selected.no)]
+        : displayItems;
+    const names = [getBoothLabel(labelItems)];
 
     return [{ boothNumber: shape.boothNumber, names, shape, isSelected, isFavorite }];
   });
@@ -405,10 +453,12 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     });
   }
 
-  function selectExhibitor(exhibitor: MapExhibitor) {
+  function selectExhibitor(exhibitor: MapExhibitor, options: { shouldFocusMap?: boolean } = {}) {
     setSelectedNo(exhibitor.no);
     setIsIntroductionExpanded(false);
-    centerBooth(boothForMap(exhibitor));
+    if (!isMobile || options.shouldFocusMap) {
+      centerBooth(boothForMap(exhibitor));
+    }
     if (isMobile) {
       setSheetOffset(computeSnapOffsets(getTopPanelHeight()).expanded);
       setIsMobileDetailOpen(true);
@@ -464,6 +514,12 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
       worldX: (anchorX - current.x) / current.scale,
       worldY: (anchorY - current.y) / current.scale,
     };
+  }
+
+  function closeTopPanel() {
+    setSheetOffset(computeSnapOffsets(getTopPanelHeight()).collapsed);
+    setIsEventPanelOpen(false);
+    setIsMobileDetailOpen(false);
   }
 
   function handlePointerDown(event: React.PointerEvent<HTMLDivElement>) {
@@ -634,8 +690,12 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     }
 
     syncPanelSnap();
+    const observer = new ResizeObserver(syncPanelSnap);
+    if (topPanelRef.current) observer.observe(topPanelRef.current);
+
     window.addEventListener('resize', syncPanelSnap);
     return () => {
+      observer.disconnect();
       window.removeEventListener('resize', syncPanelSnap);
     };
   }, []);
@@ -643,6 +703,24 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   useEffect(() => {
     listItemRefsRef.current.get(selectedNo)?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
   }, [selectedNo]);
+
+  useEffect(() => {
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+
+    const updateViewportSize = () => {
+      const rect = viewport.getBoundingClientRect();
+      setViewportSize({ width: rect.width, height: rect.height });
+    };
+
+    updateViewportSize();
+    const observer = new ResizeObserver(updateViewportSize);
+    observer.observe(viewport);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
 
   const scrollPaddingBottom = 0;
 
@@ -804,7 +882,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   const detailContent = selected ? (
     <div className="bg-brand-green p-4">
       <div className="flex items-start justify-between gap-3">
-        <div>
+        <div className="min-w-0 flex-1">
           <p className="inline-flex border border-border bg-brand-ink px-3 py-1 text-sm font-black text-white">
             {selectedBooth}
           </p>
@@ -822,38 +900,6 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                   {category}
                 </span>
               ))}
-            </div>
-          ) : null}
-          {selected.instagramUrl || selected.homepageUrl ? (
-            <div className="mt-2.5 flex flex-wrap gap-1.5">
-              {selected.instagramUrl ? (
-                <Button
-                  asChild
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
-                >
-                  <a href={selected.instagramUrl} target="_blank" rel="noreferrer">
-                    <Instagram />
-                    Instagram
-                  </a>
-                </Button>
-              ) : null}
-              {selected.homepageUrl ? (
-                <Button
-                  asChild
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-7 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
-                >
-                  <a href={selected.homepageUrl} target="_blank" rel="noreferrer">
-                    <ExternalLink />
-                    Homepage
-                  </a>
-                </Button>
-              ) : null}
             </div>
           ) : null}
         </div>
@@ -888,6 +934,47 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
         </div>
       </div>
 
+      <div className="mt-2.5 flex w-full flex-nowrap items-center gap-1.5 overflow-hidden">
+        {selected.instagramUrl ? (
+          <Button
+            asChild
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 shrink-0 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
+          >
+            <a href={selected.instagramUrl} target="_blank" rel="noreferrer">
+              <Instagram />
+              Instagram
+            </a>
+          </Button>
+        ) : null}
+        {selected.homepageUrl ? (
+          <Button
+            asChild
+            type="button"
+            variant="outline"
+            size="sm"
+            className="h-7 shrink-0 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
+          >
+            <a href={selected.homepageUrl} target="_blank" rel="noreferrer">
+              <ExternalLink />
+              Homepage
+            </a>
+          </Button>
+        ) : null}
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => centerBooth(selectedBooth)}
+          className="ml-auto h-7 shrink-0 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
+        >
+          <MapPin />
+          지도
+        </Button>
+      </div>
+
       <div className="mt-4 border border-border bg-white">
         <div className="border-b border-border px-3 py-2">
           <p className="text-xs font-black text-brand-muted">
@@ -908,6 +995,26 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
           ))}
         </ul>
       </div>
+
+      {selectedBoothPeers.length ? (
+        <div className="mt-3 border border-border/50 bg-brand-panel/80 p-2">
+          <p className="text-[11px] font-black text-brand-muted">
+            같은 부스 출판사 <span className="text-foreground">{selectedBoothPeers.length}곳</span>
+          </p>
+          <div className="mt-1.5 flex flex-wrap gap-1">
+            {selectedBoothPeers.map((exhibitor) => (
+              <button
+                key={exhibitor.no}
+                type="button"
+                onClick={() => selectExhibitor(exhibitor)}
+                className="border border-border bg-white px-1.5 py-0.5 text-[11px] font-black hover:bg-brand-yellow"
+              >
+                {getDisplayName(exhibitor)}
+              </button>
+            ))}
+          </div>
+        </div>
+      ) : null}
     </div>
   ) : null;
 
@@ -1128,7 +1235,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                     onPointerDown={(event) => {
                       if (event.pointerType === 'mouse') event.stopPropagation();
                     }}
-                    onClick={() => selectExhibitor(boothItems[0])}
+                    onClick={() => selectExhibitor(boothItems[0], { shouldFocusMap: true })}
                     className={cn(
                       'absolute cursor-pointer transition focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-brand-coral',
                       isSelected ? 'z-30' : isFavorite ? 'z-20' : 'z-10',
@@ -1145,8 +1252,8 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                       height: shape.height,
                     }}
                   >
-                    {isFavorite ? (
-                      <Star className="absolute -top-2 -right-2 h-4 w-4 fill-brand-coral text-foreground" />
+                    {isFavorite && !routeOrderByBooth.has(shape.boothNumber) ? (
+                      <Star className="absolute -top-3 -right-3 h-6 w-6 fill-brand-coral text-foreground drop-shadow-[0_1px_0_var(--color-brand-panel)]" />
                     ) : null}
                   </button>
                 );
@@ -1164,7 +1271,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                 />
               ) : null}
 
-              {/* 경로 오버레이 — 찜 순서대로 부스 중심을 잇는 선 + 순번 배지 */}
+              {/* 경로 오버레이 — 찜 순서대로 부스 중심을 잇는 선 */}
               {routePath.length >= 2 ? (
                 <svg
                   className="pointer-events-none absolute inset-0 z-[35] overflow-visible"
@@ -1183,33 +1290,41 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                     strokeLinejoin="round"
                     opacity={0.85}
                   />
-                  {/* 찜 순번 배지 — 각 부스 중심 */}
-                  {routeBadges.map((badge) => (
-                    <g key={badge.boothNumber}>
-                      <circle
-                        cx={badge.x}
-                        cy={badge.y}
-                        r={24}
-                        fill="var(--color-brand-coral)"
-                        stroke="white"
-                        strokeWidth={5}
-                      />
-                      <text
-                        x={badge.x}
-                        y={badge.y + 8}
-                        textAnchor="middle"
-                        fill="white"
-                        fontSize={22}
-                        fontWeight={800}
-                        fontFamily="system-ui, sans-serif"
-                      >
-                        {badge.index + 1}
-                      </text>
-                    </g>
-                  ))}
                 </svg>
               ) : null}
             </div>
+
+            {routeBadges.map((badge) => (
+              <div
+                key={badge.boothNumber}
+                className="pointer-events-none absolute z-[46] flex items-center justify-center border-2 border-white bg-brand-coral font-black text-white shadow-brutal-sm"
+                style={{
+                  left: transform.x + badge.labelX * transform.scale,
+                  top: transform.y + badge.labelY * transform.scale,
+                  width: routeBadgeSize,
+                  height: routeBadgeSize,
+                  minWidth: routeBadgeSize,
+                  fontSize: clamp(routeBadgeSize * 0.48, 10, 14),
+                  transform: 'translate(-50%, -50%)',
+                }}
+              >
+                {badge.index + 1}
+              </div>
+            ))}
+
+            {isMobile && isTopPanelExpanded ? (
+              <button
+                type="button"
+                aria-label="선택 패널 바깥 영역 닫기"
+                className="absolute inset-0 cursor-default bg-transparent md:hidden"
+                style={{ zIndex: 49 }}
+                onPointerDown={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  closeTopPanel();
+                }}
+              />
+            ) : null}
 
             {isMobile ? (
               <div
@@ -1221,7 +1336,8 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                 onPointerUp={(event) => event.stopPropagation()}
                 onTouchEnd={(event) => event.stopPropagation()}
                 style={{
-                  height: `${TOP_PANEL_HEIGHT_RATIO * 100}dvh`,
+                  height: isMobilePanelContentSized ? 'auto' : `${TOP_PANEL_HEIGHT_RATIO * 100}dvh`,
+                  maxHeight: `${TOP_PANEL_HEIGHT_RATIO * 100}dvh`,
                   transform: `translate3d(0, ${sheetOffset}px, 0)`,
                   transition: isSheetDragging
                     ? 'none'
@@ -1229,9 +1345,14 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                 }}
               >
                 <h2 className="sr-only">출판사 검색 및 목록</h2>
-                <div className="min-h-0 flex-1 overflow-hidden">
+                <div
+                  className={cn(
+                    'min-h-0 overflow-hidden',
+                    isMobilePanelContentSized ? 'shrink-0' : 'flex-1',
+                  )}
+                >
                   {isEventPanelOpen && selected ? (
-                    <div className="flex h-full min-h-0 flex-col">
+                    <div className="flex max-h-[calc(50dvh-50px)] min-h-0 flex-col">
                       <button
                         type="button"
                         onClick={() => setIsEventPanelOpen(false)}
@@ -1243,7 +1364,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                       <div className="min-h-0 flex-1 overflow-y-auto">{eventContent}</div>
                     </div>
                   ) : isMobileDetailOpen ? (
-                    <div className="flex h-full min-h-0 flex-col">
+                    <div className="flex max-h-[calc(50dvh-50px)] min-h-0 flex-col">
                       <button
                         type="button"
                         onClick={() => setIsMobileDetailOpen(false)}
@@ -1387,24 +1508,31 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
               <div
                 key={boothNumber}
                 className={cn(
-                  'pointer-events-none absolute z-40 max-w-[220px] text-center text-xs font-black leading-tight text-foreground',
+                  'pointer-events-none absolute z-40 flex items-center justify-center text-center text-[10px] font-black leading-[1.05] text-foreground',
+                  isFavorite ? 'overflow-visible' : 'overflow-hidden',
                   isSelected && 'text-brand-green-ink',
                   isFavorite && !isSelected && 'text-brand-coral-deep',
                 )}
                 style={{
-                  left: transform.x + (shape.x + shape.width / 2) * transform.scale,
-                  top: transform.y + (shape.y + shape.height * 0.42) * transform.scale,
-                  width: 156,
-                  fontSize: 12,
+                  left: transform.x + shape.x * transform.scale,
+                  top: transform.y + shape.y * transform.scale,
+                  width: Math.max(0, shape.width * transform.scale),
+                  height: Math.max(0, shape.height * transform.scale),
+                  fontSize: isFavorite ? 11 : isSelected ? 11 : 10,
                   textShadow:
                     '0 1px 0 var(--color-brand-panel), 1px 0 0 var(--color-brand-panel), 0 -1px 0 var(--color-brand-panel), -1px 0 0 var(--color-brand-panel)',
-                  transform: 'translate(-50%, -100%)',
                   wordBreak: 'keep-all',
                   overflowWrap: 'anywhere',
                 }}
               >
                 {names.map((name, index) => (
-                  <span key={index} className="block">
+                  <span
+                    key={index}
+                    className={cn(
+                      'block whitespace-normal px-0.5 [overflow-wrap:anywhere]',
+                      isFavorite ? 'min-w-max max-w-[180px]' : 'line-clamp-3 max-w-full',
+                    )}
+                  >
                     {name}
                   </span>
                 ))}
