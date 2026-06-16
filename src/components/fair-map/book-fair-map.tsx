@@ -351,7 +351,6 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
       .filter((exhibitor): exhibitor is MapExhibitor => Boolean(exhibitor));
   }, [exhibitorByFavoriteKey, favorites]);
   const isTopPanelExpanded = sheetOffset > -1;
-  const isMobilePanelContentSized = isEventPanelOpen || isMobileDetailOpen;
 
   const activeMapLabels = shapes.flatMap((shape) => {
     const boothItems = exhibitorsByBooth[shape.boothNumber] ?? [];
@@ -652,6 +651,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
 
     const offsets = computeSnapOffsets(getTopPanelHeight());
     const current = sheetDragRef.current.currentOffset;
+
     if (!sheetDragRef.current.didDrag) {
       toggleTopPanel();
       return;
@@ -682,11 +682,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
       setTopPanelHeight(measuredHeight);
 
       const offsets = computeSnapOffsets(measuredHeight);
-      setSheetOffset((current) =>
-        current > (offsets.expanded + offsets.collapsed) / 2
-          ? offsets.expanded
-          : offsets.collapsed,
-      );
+      setSheetOffset((current) => (current > -1 ? offsets.expanded : offsets.collapsed));
     }
 
     syncPanelSnap();
@@ -698,7 +694,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
       observer.disconnect();
       window.removeEventListener('resize', syncPanelSnap);
     };
-  }, []);
+  }, [isMobile]);
 
   useEffect(() => {
     listItemRefsRef.current.get(selectedNo)?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
@@ -1336,8 +1332,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                 onPointerUp={(event) => event.stopPropagation()}
                 onTouchEnd={(event) => event.stopPropagation()}
                 style={{
-                  height: isMobilePanelContentSized ? 'auto' : `${TOP_PANEL_HEIGHT_RATIO * 100}dvh`,
-                  maxHeight: `${TOP_PANEL_HEIGHT_RATIO * 100}dvh`,
+                  height: `${TOP_PANEL_HEIGHT_RATIO * 100}dvh`,
                   transform: `translate3d(0, ${sheetOffset}px, 0)`,
                   transition: isSheetDragging
                     ? 'none'
@@ -1346,13 +1341,10 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
               >
                 <h2 className="sr-only">출판사 검색 및 목록</h2>
                 <div
-                  className={cn(
-                    'min-h-0 overflow-hidden',
-                    isMobilePanelContentSized ? 'shrink-0' : 'flex-1',
-                  )}
+                  className="min-h-0 flex-1 overflow-hidden"
                 >
                   {isEventPanelOpen && selected ? (
-                    <div className="flex max-h-[calc(50dvh-50px)] min-h-0 flex-col">
+                    <div className="flex h-full min-h-0 flex-col">
                       <button
                         type="button"
                         onClick={() => setIsEventPanelOpen(false)}
@@ -1364,7 +1356,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                       <div className="min-h-0 flex-1 overflow-y-auto">{eventContent}</div>
                     </div>
                   ) : isMobileDetailOpen ? (
-                    <div className="flex max-h-[calc(50dvh-50px)] min-h-0 flex-col">
+                    <div className="flex h-full min-h-0 flex-col">
                       <button
                         type="button"
                         onClick={() => setIsMobileDetailOpen(false)}
@@ -1389,8 +1381,8 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                 <div
                   role="button"
                   aria-label={isTopPanelExpanded ? '선택 패널 닫기' : '선택 패널 열기'}
-                  aria-expanded={isTopPanelExpanded}
-                  className="flex h-[50px] cursor-grab touch-none items-center justify-between gap-2 border-t border-border/60 bg-brand-yellow px-3 active:cursor-grabbing"
+	                  aria-expanded={isTopPanelExpanded}
+	                  className="flex h-[50px] cursor-grab touch-none items-center justify-between gap-2 border-t border-border/60 bg-brand-yellow px-3 active:cursor-grabbing"
                   onClick={() => {
                     if (!sheetDragRef.current.didDrag) toggleTopPanel();
                   }}
