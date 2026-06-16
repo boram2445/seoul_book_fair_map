@@ -31,7 +31,7 @@ export function FaqSearch({ items }: { items: FaqItem[] }) {
           value={query}
           onChange={(event) => setQuery(event.target.value)}
           placeholder="티켓, 환불, 강연, 재입장 검색"
-          className="h-11 border-0 px-0 shadow-none focus-visible:ring-0"
+          className="h-9 border-0 px-0 text-sm shadow-none focus-visible:ring-0 md:h-11"
         />
       </div>
 

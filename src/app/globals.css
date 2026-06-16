@@ -71,6 +71,15 @@
   --color-brand-coral-deep: var(--brand-coral-deep);
   --color-brand-green-ink:  var(--brand-green-ink);
 
+  /* 구역 색 토큰 — 지도 배경 SVG 구역 색과 1:1 매핑 */
+  /* bg-zone-general, bg-zone-special, bg-zone-hall, bg-zone-indie, bg-zone-vip, bg-zone-facility */
+  --color-zone-general:  #DADADA;
+  --color-zone-special:  #FF7832;
+  --color-zone-hall:     #FFF000;
+  --color-zone-indie:    #69C8F0;
+  --color-zone-vip:      #8C82C8;
+  --color-zone-facility: #000000;
+
   /* 하드섀도 토큰 — shadow-brutal / shadow-brutal-sm */
   --shadow-brutal: 8px 8px 0 var(--brand-ink);
   --shadow-brutal-sm: 3px 3px 0 var(--brand-ink);

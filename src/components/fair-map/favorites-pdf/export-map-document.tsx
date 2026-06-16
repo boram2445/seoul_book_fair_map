@@ -2,11 +2,30 @@
 
 import type React from "react";
 
-import { boothForMap, exhibitorByFavoriteKey, getDisplayName, shapes as allShapes } from "../map-data";
-import type { BoothShape } from "../types";
+import { boothForMap, exhibitorByFavoriteKey, exhibitors, getDisplayName, shapes as allShapes } from "../map-data";
+import type { BoothShape, MapExhibitor } from "../types";
 
 export const MAP_EXPORT_WIDTH = 3230;
 export const MAP_EXPORT_HEIGHT = 3650;
+
+// Hall-level bounding boxes derived from booth shape coordinates.
+// A 60 px margin on each side ensures coral outlines, route badges, and
+// overflow labels are not clipped at the hall boundary.
+const HALL_PAD = 60;
+
+function _computeHallBbox(prefix: string) {
+  const hs = allShapes.filter((s) => s.boothNumber.startsWith(prefix));
+  const minX = Math.max(0, Math.min(...hs.map((s) => s.x)) - HALL_PAD);
+  const minY = Math.max(0, Math.min(...hs.map((s) => s.y)) - HALL_PAD);
+  const maxX = Math.min(MAP_EXPORT_WIDTH, Math.max(...hs.map((s) => s.x + s.width)) + HALL_PAD);
+  const maxY = Math.min(MAP_EXPORT_HEIGHT, Math.max(...hs.map((s) => s.y + s.height)) + HALL_PAD);
+  return { x: minX, y: minY, width: maxX - minX, height: maxY - minY };
+}
+
+export const HALL_REGIONS = {
+  A: _computeHallBbox("A"),
+  B: _computeHallBbox("B"),
+};
 
 // Stable hex values used in place of CSS custom properties.
 // html-to-image serialises the DOM to an SVG foreignObject, where oklch() tokens
@@ -34,6 +53,8 @@ export type ExportRoutePoint = {
 };
 
 export type ExportRouteBadge = ExportRoutePoint & {
+  labelX: number;
+  labelY: number;
   boothNumber: string;
   index: number;
 };
@@ -69,6 +90,18 @@ interface ExportMapPageProps {
  * html-to-image captures it at coordinates (0,0) rather than (-99999px, 0).
  */
 export function ExportMapPage({ items, routePath, routeBadges, ref }: ExportMapPageProps) {
+  // Build label grouping identical to book-fair-map.tsx labelExhibitorsByBooth:
+  // key = origBooth if that shape exists, else booth (handles B400 책마을 zone).
+  const shapeSet = new Set(allShapes.map((s) => s.boothNumber));
+  const labelExhibitorsByBooth = exhibitors.reduce<Record<string, MapExhibitor[]>>((acc, ex) => {
+    const key = ex.origBooth && shapeSet.has(ex.origBooth) ? ex.origBooth : ex.booth;
+    acc[key] = acc[key] ?? [];
+    acc[key].push(ex);
+    return acc;
+  }, {});
+
+  const favBoothSet = new Set(items.map((it) => it.booth));
+
   return (
     // Outer wrapper: off-screen, never captured
     <div
@@ -93,6 +126,7 @@ export function ExportMapPage({ items, routePath, routeBadges, ref }: ExportMapP
           style={{ position: "absolute", inset: 0, width: "100%", height: "100%" }}
         />
 
+        {/* Route polyline */}
         {routePath.length >= 2 ? (
           <svg
             aria-hidden
@@ -117,83 +151,159 @@ export function ExportMapPage({ items, routePath, routeBadges, ref }: ExportMapP
               strokeLinejoin="round"
               opacity={0.85}
             />
-            {routeBadges.map((badge) => (
-              <g key={badge.boothNumber}>
-                <circle
-                  cx={badge.x}
-                  cy={badge.y}
-                  r={26}
-                  fill={C.coral}
-                  stroke="#fff"
-                  strokeWidth={5}
-                />
-                <text
-                  x={badge.x}
-                  y={badge.y + 9}
-                  textAnchor="middle"
-                  fill="#fff"
-                  fontSize={24}
-                  fontWeight={900}
-                  fontFamily="system-ui, sans-serif"
-                >
-                  {badge.index + 1}
-                </text>
-              </g>
-            ))}
           </svg>
         ) : null}
 
-        {/* Group by booth so the same booth with multiple favorites renders one overlay */}
+        {/* ── Coral fill + ring for favorited booths (below labels) ── */}
         {Array.from(
-          items.reduce<Map<string, { booth: string; names: string[]; shape: BoothShape }>>(
-            (map, { booth, name, shape }) => {
-              const entry = map.get(booth);
-              if (entry) entry.names.push(name);
-              else map.set(booth, { booth, names: [name], shape });
-              return map;
-            },
-            new Map()
-          ).values()
-        ).map(({ booth, names, shape }) => (
-          <div key={booth}>
-            {/* Coral fill + ring — mirrors book-fair-map.tsx "isFavorite" styles */}
+          items.reduce<Map<string, BoothShape>>((map, { booth, shape }) => {
+            if (!map.has(booth)) map.set(booth, shape);
+            return map;
+          }, new Map()).values()
+        ).map((shape) => (
+          <div
+            key={`fav-fill-${shape.boothNumber}`}
+            style={{
+              position: "absolute",
+              left: shape.x,
+              top: shape.y,
+              width: shape.width,
+              height: shape.height,
+              backgroundColor: C.coralBg,
+              outline: `6px solid ${C.coral}`,
+              boxSizing: "border-box",
+              zIndex: 10,
+            }}
+          />
+        ))}
+
+        {/* ── Unified static label layer (mirrors book-fair-map.tsx:1265-1408) ── */}
+        {allShapes.map((shape) => {
+          const boothItems = labelExhibitorsByBooth[shape.boothNumber] ?? [];
+          if (!boothItems.length) return null;
+
+          const isBlack = shape.fill === "black";
+          const isFavorite = favBoothSet.has(shape.boothNumber);
+          const isZone = boothItems.some((it) => boothForMap(it) !== shape.boothNumber);
+
+          const textColor = isBlack ? "white" : isFavorite ? C.coralDeep : "#333";
+          const halo = isBlack
+            ? "0 1px 0 #000, 1px 0 0 #000, 0 -1px 0 #000, -1px 0 0 #000"
+            : "0 1px 0 white, 1px 0 0 white, 0 -1px 0 white, -1px 0 0 white";
+
+          if (isZone) {
+            // B400 책마을: header + 2-col list
+            const zoneTitle =
+              getDisplayName(
+                boothItems.find((it) => boothForMap(it) === shape.boothNumber) ?? boothItems[0],
+              ) + ` (${shape.boothNumber})`;
+
+            return (
+              <div
+                key={`label-${shape.boothNumber}`}
+                style={{
+                  position: "absolute",
+                  left: shape.x,
+                  top: shape.y,
+                  width: shape.width,
+                  height: shape.height,
+                  padding: "4px 3px 2px",
+                  color: textColor,
+                  textShadow: halo,
+                  pointerEvents: "none",
+                  zIndex: 36,
+                  overflow: "hidden",
+                }}
+              >
+                <div style={{ fontSize: 15, fontWeight: 800, textAlign: "center", marginBottom: 3, lineHeight: 1.2 }}>
+                  {zoneTitle}
+                </div>
+                <div style={{ columnCount: 2, columnGap: 4, fontSize: 11, fontWeight: 700, lineHeight: 1.2, textAlign: "left" }}>
+                  {boothItems.map((item) => (
+                    <div key={item.no} style={{ whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                      {boothForMap(item)} - {getDisplayName(item)}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          }
+
+          // Regular booth
+          const maxDisplay = Math.min(Math.floor(shape.height / 24), 30);
+          const displayed = boothItems.slice(0, maxDisplay);
+          const overflow = boothItems.length - displayed.length;
+
+          return (
             <div
+              key={`label-${shape.boothNumber}`}
               style={{
                 position: "absolute",
                 left: shape.x,
                 top: shape.y,
                 width: shape.width,
                 height: shape.height,
-                backgroundColor: C.coralBg,
-                outline: `6px solid ${C.coral}`,
-                boxSizing: "border-box",
-                zIndex: 10,
-              }}
-            />
-            {/* Publisher-name label — mirrors the screen-space label in book-fair-map.tsx */}
-            <div
-              style={{
-                position: "absolute",
-                left: shape.x + shape.width / 2,
-                top: shape.y + shape.height * 0.42,
-                width: 440,
-                transform: "translate(-50%, -100%)",
-                fontSize: 40,
-                fontWeight: 800,
-                lineHeight: 1.3,
+                paddingTop: Math.min(6, shape.height * 0.12),
+                display: "flex",
+                flexDirection: "column",
+                alignItems: "center",
                 textAlign: "center",
-                color: C.coralDeep,
-                wordBreak: "keep-all",
-                overflowWrap: "anywhere",
-                textShadow: `0 2px 0 ${C.panel}, 2px 0 0 ${C.panel}, 0 -2px 0 ${C.panel}, -2px 0 0 ${C.panel}`,
-                zIndex: 20,
+                lineHeight: 1.15,
+                color: textColor,
+                textShadow: halo,
                 pointerEvents: "none",
+                zIndex: 36,
+                overflow: "hidden",
               }}
             >
-              {names.map((n, i) => (
-                <span key={i} style={{ display: "block" }}>{n}</span>
+              {!isBlack && (
+                <span style={{ display: "block", fontSize: 17, fontFamily: "monospace", fontWeight: 700 }}>
+                  {shape.boothNumber}
+                </span>
+              )}
+              {displayed.map((item) => (
+                <span
+                  key={item.no}
+                  style={{ display: "block", fontSize: 19, fontWeight: 800, wordBreak: "keep-all", overflowWrap: "anywhere", maxWidth: "100%" }}
+                >
+                  {getDisplayName(item)}
+                </span>
               ))}
+              {overflow > 0 && (
+                <span style={{ display: "block", fontSize: 14, fontWeight: 700, opacity: 0.7 }}>
+                  외 {overflow}
+                </span>
+              )}
             </div>
+          );
+        })}
+
+        {/* ── Route order badges — coral square + visit number at booth corner ── */}
+        {routeBadges.map((badge) => (
+          <div
+            key={`badge-${badge.boothNumber}`}
+            style={{
+              position: "absolute",
+              left: badge.labelX,
+              top: badge.labelY,
+              transform: "translate(-50%, -50%)",
+              width: 80,
+              height: 80,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              backgroundColor: C.coral,
+              border: "8px solid #fff",
+              color: "#fff",
+              fontSize: 34,
+              fontWeight: 900,
+              fontFamily: "sans-serif",
+              boxSizing: "border-box",
+              zIndex: 40,
+              pointerEvents: "none",
+            }}
+          >
+            {badge.index + 1}
           </div>
         ))}
       </div>

@@ -10,7 +10,7 @@ import { ReviewCountBadge, useReviewCounts } from "./review-count";
 import { ReviewFeed } from "./review-feed";
 
 const TABS: { value: ReviewScope; label: string }[] = [
-  { value: "fair", label: "서울국제도서전" },
+  { value: "fair", label: "도서전" },
   { value: "booth", label: "부스" },
   { value: "book", label: "책 추천" },
 ];

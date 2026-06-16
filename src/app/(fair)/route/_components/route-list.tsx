@@ -17,7 +17,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CalendarDays, GripVertical, Heart, Instagram, MapPinned, NotebookPen } from "lucide-react";
+import { CalendarDays, ChevronDown, GripVertical, Heart, Instagram, MapPinned, NotebookPen } from "lucide-react";
 
 import { getBoothEvents, getEventScheduleLabel } from "@/components/fair-map/booth-events";
 import { boothForMap, getFavoriteKey, getDisplayName } from "@/components/fair-map/map-data";
@@ -48,6 +48,7 @@ function SortableBoothCard({
 }) {
   // 마운트 시 초기값으로만 사용, 변경은 onBlur 저장
   const [localMemo, setLocalMemo] = useState(memo);
+  const [isEventsOpen, setIsEventsOpen] = useState(false);
   const events = getBoothEvents(booth);
   const heartCount = exhibitor.favoriteCount + 1;
 
@@ -78,10 +79,10 @@ function SortableBoothCard({
             variant="outline"
             size="icon"
             aria-label="찜 해제"
-            className="absolute top-3 right-3 z-10 rounded-none border-border bg-white shadow-brutal-sm hover:bg-brand-yellow"
+            className="absolute top-3 right-3 z-10 size-8 rounded-none border-border bg-white shadow-brutal-sm hover:bg-brand-yellow md:size-9"
             onClick={() => onFavoriteToggle(favKey)}
           >
-            <Heart className="h-4 w-4 fill-brand-coral text-brand-coral" />
+            <Heart className="h-3.5 w-3.5 fill-brand-coral text-brand-coral md:h-4 md:w-4" />
           </Button>
 
           <div className="grid gap-3 border-b border-border p-4 pr-16 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
@@ -98,21 +99,26 @@ function SortableBoothCard({
                   {heartCount}
                 </span>
               </div>
-              <h3 className="mt-3 truncate text-lg font-black">{getDisplayName(exhibitor)}</h3>
+              <h3 className="mt-3 truncate text-base font-black md:text-lg">{getDisplayName(exhibitor)}</h3>
               {exhibitor.nameEn ? (
                 <p className="text-sm font-bold text-brand-muted">{exhibitor.nameEn}</p>
               ) : null}
               {exhibitor.categories?.length ? (
-                <div className="mt-3 flex flex-wrap gap-1.5">
-                  {[...new Set(exhibitor.categories)].slice(0, 6).map((category) => (
-                    <span
-                      key={category}
-                      className="border border-border/60 bg-brand-panel px-2 py-1 text-xs font-black text-brand-subtle"
-                    >
-                      {category}
-                    </span>
-                  ))}
-                </div>
+                <>
+                  <p className="mt-1.5 truncate text-xs text-brand-muted md:hidden">
+                    {[...new Set(exhibitor.categories)].slice(0, 6).join(", ")}
+                  </p>
+                  <div className="mt-3 hidden flex-wrap gap-1.5 md:flex">
+                    {[...new Set(exhibitor.categories)].slice(0, 6).map((category) => (
+                      <span
+                        key={category}
+                        className="border border-border/60 bg-brand-panel px-2 py-1 text-xs font-black text-brand-subtle"
+                      >
+                        {category}
+                      </span>
+                    ))}
+                  </div>
+                </>
               ) : null}
             </div>
 
@@ -155,14 +161,22 @@ function SortableBoothCard({
             </div>
 
             <div className="border border-border bg-brand-surface">
-              <div className="flex items-center justify-between border-b border-border px-3 py-2">
+              <button
+                type="button"
+                onClick={() => setIsEventsOpen((prev) => !prev)}
+                className="flex w-full items-center justify-between px-3 py-2 text-left"
+              >
                 <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
                   <CalendarDays className="h-4 w-4" />
                   이벤트
                 </span>
-                <span className="text-xs font-black text-brand-muted">{events.length}개 예정</span>
-              </div>
-              <ul>
+                <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-muted">
+                  {events.length}개 예정
+                  <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", isEventsOpen && "rotate-180")} />
+                </span>
+              </button>
+              {isEventsOpen && (
+              <ul className="border-t border-border">
                 {events.slice(0, 3).map((event) => (
                   <li
                     key={`${getEventScheduleLabel(event)}-${event.title}`}
@@ -180,6 +194,7 @@ function SortableBoothCard({
                   </li>
                 ))}
               </ul>
+              )}
             </div>
           </div>
         </article>

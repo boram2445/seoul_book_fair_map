@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { CalendarDays, ExternalLink, Heart, Instagram, Search } from "lucide-react";
+import { CalendarDays, ChevronDown, ExternalLink, Heart, Instagram, Search } from "lucide-react";
 
 import { boothForMap, getFavoriteKey, getDisplayName, getSearchText } from "@/components/fair-map/map-data";
 import { Button } from "@/components/ui/button";
@@ -36,7 +36,16 @@ interface PopularListProps {
 export function PopularList({ publishers }: PopularListProps) {
   const router = useRouter();
   const [query, setQuery] = useState("");
+  const [openEvents, setOpenEvents] = useState<Set<number>>(new Set());
   const { favorites, toggleFavorite } = useFavorites();
+
+  function toggleEventOpen(no: number) {
+    setOpenEvents((prev) => {
+      const next = new Set(prev);
+      if (next.has(no)) next.delete(no); else next.add(no);
+      return next;
+    });
+  }
   const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
 
   const filteredItems = useMemo(() => {
@@ -78,17 +87,16 @@ export function PopularList({ publishers }: PopularListProps) {
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder="출판사, 부스, 카테고리 검색"
-            className="h-11 border-0 px-0 font-bold shadow-none focus-visible:ring-0"
+            className="h-9 border-0 px-0 text-sm font-bold shadow-none focus-visible:ring-0 md:h-11"
           />
-        </div>
-        <div className="mt-3 flex items-center justify-between text-xs font-black text-brand-muted">
-          <span>검색 결과 {filteredItems.length}개</span>
-          <span>전체 {publishers.length}개</span>
+          <span className="shrink-0 text-xs font-bold tabular-nums text-brand-muted">
+            {filteredItems.length}/{publishers.length}
+          </span>
         </div>
       </section>
 
       <section className="grid gap-3">
-        {filteredItems.map((item) => {
+        {filteredItems.map((item, index) => {
           const booth = boothForMap(item);
           const favKey = getFavoriteKey(item);
           const isFavorite = favoriteSet.has(favKey);
@@ -115,7 +123,7 @@ export function PopularList({ publishers }: PopularListProps) {
                 size="icon"
                 aria-label={isFavorite ? "찜 해제" : "찜하기"}
                 className={cn(
-                  "absolute top-3 right-3 z-10 rounded-none border-border shadow-brutal-sm",
+                  "absolute top-3 right-3 z-10 size-8 rounded-none border-border shadow-brutal-sm md:size-9",
                   isFavorite
                     ? "border-brand-coral bg-brand-coral text-white hover:bg-brand-coral/90 hover:text-white"
                     : "bg-brand-panel hover:bg-brand-yellow"
@@ -125,12 +133,15 @@ export function PopularList({ publishers }: PopularListProps) {
                   toggleFavorite(favKey);
                 }}
               >
-                <Heart className={cn("h-4 w-4", isFavorite ? "fill-white text-white" : "text-brand-coral")} />
+                <Heart className={cn("h-3.5 w-3.5 md:h-4 md:w-4", isFavorite ? "fill-white text-white" : "text-brand-coral")} />
               </Button>
 
               <div className="grid gap-3 border-b border-border p-4 pr-16 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
+                    <span className="border border-border bg-brand-ink px-2 py-1 text-xs font-black text-white">
+                      {index + 1}
+                    </span>
                     <span className="border border-border bg-brand-yellow px-2 py-1 text-xs font-black text-brand-rust">
                       {booth}
                     </span>
@@ -145,19 +156,24 @@ export function PopularList({ publishers }: PopularListProps) {
                       </span>
                     ) : null}
                   </div>
-                  <h3 className="mt-3 truncate text-lg font-black">{getDisplayName(item)}</h3>
+                  <h3 className="mt-3 truncate text-base font-black md:text-lg">{getDisplayName(item)}</h3>
                   {item.nameEn ? <p className="text-sm font-bold text-brand-muted">{item.nameEn}</p> : null}
                   {categories.length ? (
-                    <div className="mt-3 flex flex-wrap gap-1.5">
-                      {[...new Set(categories)].slice(0, 6).map((category) => (
-                        <span
-                          key={category}
-                          className="border border-border/60 bg-brand-panel px-2 py-1 text-xs font-black text-brand-subtle"
-                        >
-                          {category}
-                        </span>
-                      ))}
-                    </div>
+                    <>
+                      <p className="mt-1.5 truncate text-xs text-brand-muted md:hidden">
+                        {[...new Set(categories)].slice(0, 6).join(", ")}
+                      </p>
+                      <div className="mt-3 hidden flex-wrap gap-1.5 md:flex">
+                        {[...new Set(categories)].slice(0, 6).map((category) => (
+                          <span
+                            key={category}
+                            className="border border-border/60 bg-brand-panel px-2 py-1 text-xs font-black text-brand-subtle"
+                          >
+                            {category}
+                          </span>
+                        ))}
+                      </div>
+                    </>
                   ) : null}
                 </div>
 
@@ -214,14 +230,22 @@ export function PopularList({ publishers }: PopularListProps) {
                 </p>
 
                 <div className="border border-border bg-brand-surface">
-                  <div className="flex items-center justify-between border-b border-border px-3 py-2">
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); toggleEventOpen(item.no); }}
+                    className="flex w-full items-center justify-between px-3 py-2 text-left"
+                  >
                     <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
                       <CalendarDays className="h-4 w-4" />
                       이벤트
                     </span>
-                    <span className="text-xs font-black text-brand-muted">{mockEventRows.length}개 예정</span>
-                  </div>
-                  <ul>
+                    <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-muted">
+                      {mockEventRows.length}개 예정
+                      <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", openEvents.has(item.no) && "rotate-180")} />
+                    </span>
+                  </button>
+                  {openEvents.has(item.no) && (
+                  <ul className="border-t border-border">
                     {mockEventRows.map((event) => (
                       <li
                         key={`${booth}-${event.time}-${event.title}`}
@@ -237,6 +261,7 @@ export function PopularList({ publishers }: PopularListProps) {
                       </li>
                     ))}
                   </ul>
+                  )}
                 </div>
               </div>
             </article>

@@ -432,10 +432,10 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     });
   }
 
-  function selectExhibitor(exhibitor: MapExhibitor, options: { shouldFocusMap?: boolean; focusMap?: boolean } = {}) {
+  function selectExhibitor(exhibitor: MapExhibitor, options: { shouldFocusMap?: boolean; focusMap?: boolean; keepView?: boolean } = {}) {
     setSelectedNo(exhibitor.no);
     setIsIntroductionExpanded(false);
-    if (!isMobile || options.shouldFocusMap || options.focusMap) {
+    if (!options.keepView && (!isMobile || options.shouldFocusMap || options.focusMap)) {
       const nextScale = options.focusMap ? Math.max(transform.scale, FOCUS_SCALE) : undefined;
       centerBooth(boothForMap(exhibitor), nextScale);
     }
@@ -734,6 +734,9 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
             placeholder="출판사, 부스, 국가 검색"
             className="h-9 border-0 px-0 text-sm shadow-none focus-visible:ring-0 md:h-11"
           />
+          <span className="shrink-0 text-xs font-bold tabular-nums text-brand-muted">
+            {filteredExhibitors.length}/{exhibitors.length}
+          </span>
           {query ? (
             <button
               type="button"
@@ -744,10 +747,6 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
               <X className="h-4 w-4" />
             </button>
           ) : null}
-        </div>
-        <div className="mt-2 flex items-center justify-between text-xs font-bold text-brand-muted">
-          <span>표시 {filteredExhibitors.length}개</span>
-          <span>전체 {exhibitors.length}개</span>
         </div>
         <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
           {categoryOptions.map((category) => (
@@ -854,10 +853,10 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     <div className="bg-brand-green p-4">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
-          <p className="inline-flex border border-border bg-brand-ink px-3 py-1 text-sm font-black text-white">
+          <p className="inline-flex border border-border bg-brand-ink px-2 py-0.5 text-xs font-black text-white md:px-3 md:py-1 md:text-sm">
             {selectedBooth}
           </p>
-          <h2 className="mt-3 text-xl font-black">{getDisplayName(selected)}</h2>
+          <h2 className="mt-2 text-base font-black md:mt-3 md:text-xl">{getDisplayName(selected)}</h2>
           {selected.nameEn ? (
             <p className="text-sm font-bold text-brand-green-deep">{selected.nameEn}</p>
           ) : null}
@@ -881,11 +880,11 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
             size="icon"
             onClick={() => selected && toggleFavorite(getFavoriteKey(selected))}
             aria-label="부스 찜하기"
-            className="border-border bg-white hover:bg-brand-yellow"
+            className="size-8 border-border bg-white hover:bg-brand-yellow md:size-9"
           >
             <Heart
               className={cn(
-                'h-4 w-4',
+                'h-3.5 w-3.5 md:h-4 md:w-4',
                 selected && favoriteSet.has(getFavoriteKey(selected)) && 'fill-brand-coral text-brand-coral',
               )}
             />
@@ -898,9 +897,9 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
               setIsEventPanelOpen(true);
             }}
             aria-label="출판사 상세 패널 열기"
-            className="rounded-none border border-border bg-brand-yellow hover:bg-white"
+            className="size-8 rounded-none border border-border bg-brand-yellow hover:bg-white md:size-9"
           >
-            <ChevronRight className="h-5 w-5" />
+            <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />
           </Button>
         </div>
       </div>
@@ -912,7 +911,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
             type="button"
             variant="outline"
             size="sm"
-            className="h-9 shrink-0 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
+            className="h-7 shrink-0 rounded-none border-border bg-white px-2 text-[10px] font-black hover:bg-brand-yellow md:h-9 md:px-2.5 md:text-[11px] [&_svg:not([class*='size-'])]:size-3 md:[&_svg:not([class*='size-'])]:size-3.5"
           >
             <a href={selected.instagramUrl} target="_blank" rel="noreferrer">
               <Instagram />
@@ -926,7 +925,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
             type="button"
             variant="outline"
             size="sm"
-            className="h-9 shrink-0 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
+            className="h-7 shrink-0 rounded-none border-border bg-white px-2 text-[10px] font-black hover:bg-brand-yellow md:h-9 md:px-2.5 md:text-[11px] [&_svg:not([class*='size-'])]:size-3 md:[&_svg:not([class*='size-'])]:size-3.5"
           >
             <a href={selected.homepageUrl} target="_blank" rel="noreferrer">
               <ExternalLink />
@@ -939,7 +938,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
           variant="outline"
           size="sm"
           onClick={() => centerBooth(selectedBooth)}
-          className="ml-auto h-9 shrink-0 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
+          className="ml-auto h-7 shrink-0 rounded-none border-border bg-white px-2 text-[10px] font-black hover:bg-brand-yellow md:h-9 md:px-2.5 md:text-[11px] [&_svg:not([class*='size-'])]:size-3 md:[&_svg:not([class*='size-'])]:size-3.5"
         >
           <MapPin />
           지도
@@ -1163,7 +1162,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerUp}
             className={cn(
-              'relative flex-1 overflow-hidden bg-brand-map touch-none select-none',
+              'relative flex-1 overflow-hidden bg-brand-map touch-none select-none [-webkit-touch-callout:none]',
               isDragging ? 'cursor-grabbing' : 'cursor-grab',
             )}
           >
@@ -1183,7 +1182,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                 fill
                 priority
                 unoptimized
-                className="select-none object-contain"
+                className="select-none object-contain pointer-events-none [-webkit-touch-callout:none]"
                 draggable={false}
               />
 
@@ -1203,7 +1202,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                     onPointerDown={(event) => {
                       if (event.pointerType === 'mouse') event.stopPropagation();
                     }}
-                    onClick={() => selectExhibitor(boothItems[0], { shouldFocusMap: true })}
+                    onClick={() => selectExhibitor(boothItems[0], { keepView: true })}
                     className={cn(
                       'absolute cursor-pointer transition focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-brand-coral',
                       isSelected ? 'z-30' : isFavorite ? 'z-20' : 'z-10',
@@ -1513,15 +1512,20 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                   onPointerUp={handleSheetPointerUp}
                   onPointerCancel={handleSheetPointerUp}
                 >
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-black text-brand-rust">선택</p>
-                    <p className="truncate text-sm font-black">
-                      {isEventPanelOpen
-                        ? '이벤트 보기'
-                        : isMobileDetailOpen && selected
-                          ? `${selectedBooth} ${getDisplayName(selected)}`
-                          : `출판사 ${filteredExhibitors.length}개`}
-                    </p>
+                  <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
+                    {([
+                      ['bg-zone-general',  '일반'],
+                      ['bg-zone-special',  '특별전시'],
+                      ['bg-zone-hall',     '독자만남홀'],
+                      ['bg-zone-indie',    '책마을'],
+                      ['bg-zone-vip',      '특별구역'],
+                      ['bg-zone-facility', '전시·WC'],
+                    ] as const).map(([bg, label]) => (
+                      <span key={label} className="inline-flex items-center gap-1">
+                        <span className={cn('h-2.5 w-2.5 shrink-0 border border-border/40', bg)} />
+                        <span className="text-[10px] font-bold text-brand-rust">{label}</span>
+                      </span>
+                    ))}
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
                     <span className="inline-flex items-center gap-1 border border-border bg-white px-1.5 py-0.5 text-xs font-black">

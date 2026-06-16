@@ -41,5 +41,5 @@ export function useReviewCounts(exhibitorNo?: number): CountMap {
 /** 숫자를 "(N)" 형태로 표시. 0이면 null 반환. */
 export function ReviewCountBadge({ count }: { count: number | undefined }) {
   if (!count) return null;
-  return <span className="font-bold text-brand-muted">({count})</span>;
+  return <span className="font-bold text-current opacity-70">({count})</span>;
 }
