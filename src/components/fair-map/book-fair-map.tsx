@@ -52,10 +52,10 @@ import { useFavorites } from './use-favorites';
 
 const MIN_SCALE = 0.16;
 const MAX_SCALE = 2.4;
+const FOCUS_SCALE = 0.55;
 
-const TOP_PANEL_HEIGHT_RATIO = 0.5;
+const TOP_PANEL_HEIGHT_RATIO = 0.4;
 const TOP_PANEL_COLLAPSED_PX = 50;
-const MOBILE_LABEL_SCALE = 0.42;
 
 function getViewportHeight() {
   if (typeof window === 'undefined') return 0;
@@ -74,17 +74,14 @@ function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
 }
 
-function getShapeCenter(shape: BoothShape) {
-  return {
-    x: shape.x + shape.width / 2,
-    y: shape.y + shape.height / 2,
-  };
-}
-
-function getBoothLabel(items: MapExhibitor[]) {
-  const [first, ...rest] = items;
-  if (!first) return '';
-  return rest.length ? `${getDisplayName(first)} 외${rest.length}` : getDisplayName(first);
+function computeFitTransform(viewportWidth: number, viewportHeight: number, mobile: boolean) {
+  const visibleH = mobile ? viewportHeight - TOP_PANEL_COLLAPSED_PX : viewportHeight;
+  const scale = clamp(Math.min(viewportWidth / MAP_WIDTH, visibleH / MAP_HEIGHT), MIN_SCALE, MAX_SCALE);
+  const x = (viewportWidth - MAP_WIDTH * scale) / 2;
+  const y = mobile
+    ? TOP_PANEL_COLLAPSED_PX + (visibleH - MAP_HEIGHT * scale) / 2
+    : (viewportHeight - MAP_HEIGHT * scale) / 2;
+  return { scale, x, y };
 }
 
 function distanceBetween(
@@ -129,7 +126,7 @@ function SortableFavoriteChip({
       style={style}
       {...attributes}
       className={cn(
-        'inline-flex shrink-0 items-stretch border border-border bg-white text-sm font-black transition',
+        'inline-flex shrink-0 items-stretch border border-border bg-white text-xs font-black transition',
         isDragging && 'opacity-50 shadow-lg',
       )}
     >
@@ -137,15 +134,16 @@ function SortableFavoriteChip({
         type="button"
         {...listeners}
         aria-label="순서 변경"
-        className="flex cursor-grab items-center border-r border-border px-2 text-brand-muted hover:bg-brand-hover active:cursor-grabbing touch-none"
+        className="flex cursor-grab items-center border-r border-border px-1.5 text-brand-muted hover:bg-brand-hover active:cursor-grabbing touch-none"
       >
-        <GripVertical className="h-4 w-4" />
+        <GripVertical className="h-3 w-3" />
       </button>
       <button
         type="button"
         onClick={onSelect}
-        className="flex items-center gap-2 px-3 py-2 hover:bg-brand-yellow"
+        className="flex min-w-0 items-center gap-1.5 px-2 py-1.5 hover:bg-brand-yellow"
       >
+        <span className="truncate max-w-[7rem] md:max-w-[12rem]">{label}</span>
         <span
           role="button"
           aria-label="찜 해제"
@@ -161,11 +159,10 @@ function SortableFavoriteChip({
             }
           }}
           onPointerDown={(e) => e.stopPropagation()}
-          className="inline-flex cursor-pointer items-center [&:hover>svg]:fill-brand-coral/40 [&:hover>svg]:text-brand-coral/40"
+          className="-m-1 inline-flex shrink-0 cursor-pointer items-center p-1 [&:hover>svg]:fill-brand-coral/40 [&:hover>svg]:text-brand-coral/40"
         >
-          <Heart className="h-4 w-4 fill-brand-coral text-brand-coral transition-colors" />
+          <Heart className="h-3 w-3 fill-brand-coral text-brand-coral transition-colors" />
         </span>
-        {label}
       </button>
     </div>
   );
@@ -178,11 +175,11 @@ interface BookFairMapProps {
 
 export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   const [query, setQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('전체');
   const [selectedNo, setSelectedNo] = useState<number>(4);
   const [transform, setTransform] = useState({ scale: 0.28, x: 56, y: 18 });
   const [isDragging, setIsDragging] = useState(false);
-  const [hoveredBooth, setHoveredBooth] = useState('');
   const [isEventPanelOpen, setIsEventPanelOpen] = useState(false);
   const [isIntroductionExpanded, setIsIntroductionExpanded] = useState(false);
   const { favorites, toggleFavorite, reorderFavorites } = useFavorites();
@@ -207,7 +204,6 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   const [isSheetDragging, setIsSheetDragging] = useState(false);
   /** 모바일 시트 내부 뷰 상태: false = 리스트, true = 상세 */
   const [isMobileDetailOpen, setIsMobileDetailOpen] = useState(false);
-  const [viewportSize, setViewportSize] = useState({ width: 0, height: 0 });
   const sheetDragRef = useRef({
     pointerId: -1,
     startY: 0,
@@ -307,6 +303,22 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     }, {});
   }, [exhibitors]);
 
+  /**
+   * 라벨 레이어 전용 — origBooth가 도형으로 존재하지 않으면 booth(구역 키)로 폴백.
+   * B400(책마을) 같이 내부 구획이 도형 없이 origBooth만 세분된 경우, 전부 구역 도형에 통합.
+   */
+  const labelExhibitorsByBooth = useMemo(() => {
+    return exhibitors.reduce<Record<string, MapExhibitor[]>>((acc, exhibitor) => {
+      const key =
+        exhibitor.origBooth && shapesByBooth.has(exhibitor.origBooth)
+          ? exhibitor.origBooth
+          : exhibitor.booth;
+      acc[key] = acc[key] ?? [];
+      acc[key].push(exhibitor);
+      return acc;
+    }, {});
+  }, [exhibitors, shapesByBooth]);
+
   const selected = exhibitors.find((exhibitor) => exhibitor.no === selectedNo) ?? exhibitors[0];
   const selectedBooth = selected ? boothForMap(selected) : '';
   const selectedShape = selected ? shapesByBooth.get(selectedBooth) : undefined;
@@ -332,8 +344,13 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     ];
   }, [exhibitors]);
 
+  useEffect(() => {
+    const timer = setTimeout(() => setDebouncedQuery(query), 250);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   const filteredExhibitors = useMemo(() => {
-    const normalized = query.trim().toLowerCase();
+    const normalized = debouncedQuery.trim().toLowerCase();
     return exhibitors.filter((exhibitor) => {
       const matchesQuery = normalized ? getSearchText(exhibitor).includes(normalized) : true;
       const matchesCategory =
@@ -342,7 +359,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
           : (exhibitor.categories ?? []).includes(selectedCategory);
       return matchesQuery && matchesCategory;
     });
-  }, [exhibitors, query, selectedCategory]);
+  }, [exhibitors, debouncedQuery, selectedCategory]);
 
   const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
   const favoriteItems = useMemo(() => {
@@ -351,43 +368,6 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
       .filter((exhibitor): exhibitor is MapExhibitor => Boolean(exhibitor));
   }, [exhibitorByFavoriteKey, favorites]);
   const isTopPanelExpanded = sheetOffset > -1;
-
-  const activeMapLabels = shapes.flatMap((shape) => {
-    const boothItems = exhibitorsByBooth[shape.boothNumber] ?? [];
-    if (!boothItems.length) return [];
-
-    const isSelected = shape.boothNumber === selectedBooth;
-    const favoritedItems = boothItems.filter((item) => favoriteSet.has(getFavoriteKey(item)));
-    const isFavorite = favoritedItems.length > 0;
-    const isHovered = hoveredBooth === shape.boothNumber;
-    const center = getShapeCenter(shape);
-    const screenX = transform.x + center.x * transform.scale;
-    const screenY = transform.y + (shape.y + shape.height * 0.42) * transform.scale;
-    const screenWidth = shape.width * transform.scale;
-    const screenHeight = shape.height * transform.scale;
-    const panelHeight = getViewportHeight() * TOP_PANEL_HEIGHT_RATIO;
-    const coveredHeight = isMobile ? Math.max(TOP_PANEL_COLLAPSED_PX, panelHeight + sheetOffset) : 0;
-    const isVisibleOnMobile =
-      isMobile &&
-      transform.scale >= MOBILE_LABEL_SCALE &&
-      screenWidth >= 26 &&
-      screenHeight >= 12 &&
-      screenX >= -90 &&
-      screenX <= viewportSize.width + 90 &&
-      screenY >= coveredHeight + 12 &&
-      screenY <= viewportSize.height + 48;
-    if (!isSelected && !isFavorite && !isHovered && !isVisibleOnMobile) return [];
-
-    // 찜 전용 상태(선택·호버 아님)이면 찜한 출판사만, 그 외엔 부스 전체 표시
-    const displayItems = isFavorite && !isSelected && !isHovered ? favoritedItems : boothItems;
-    const labelItems =
-      isSelected && selected
-        ? [selected, ...boothItems.filter((item) => item.no !== selected.no)]
-        : displayItems;
-    const names = [getBoothLabel(labelItems)];
-
-    return [{ boothNumber: shape.boothNumber, names, shape, isSelected, isFavorite }];
-  });
 
   useEffect(() => {
     const viewport = viewportRef.current;
@@ -429,7 +409,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     if (!shape || !viewport) return;
 
     const rect = viewport.getBoundingClientRect();
-    const scale = nextScale ?? Math.max(transform.scale, 0.55);
+    const scale = nextScale ?? transform.scale;
     const centerX = shape.x + shape.width / 2;
     const centerY = shape.y + shape.height / 2;
 
@@ -452,11 +432,12 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
     });
   }
 
-  function selectExhibitor(exhibitor: MapExhibitor, options: { shouldFocusMap?: boolean } = {}) {
+  function selectExhibitor(exhibitor: MapExhibitor, options: { shouldFocusMap?: boolean; focusMap?: boolean } = {}) {
     setSelectedNo(exhibitor.no);
     setIsIntroductionExpanded(false);
-    if (!isMobile || options.shouldFocusMap) {
-      centerBooth(boothForMap(exhibitor));
+    if (!isMobile || options.shouldFocusMap || options.focusMap) {
+      const nextScale = options.focusMap ? Math.max(transform.scale, FOCUS_SCALE) : undefined;
+      centerBooth(boothForMap(exhibitor), nextScale);
     }
     if (isMobile) {
       setSheetOffset(computeSnapOffsets(getTopPanelHeight()).expanded);
@@ -484,7 +465,11 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   }
 
   function resetMap() {
-    setTransform({ scale: 0.28, x: 56, y: 18 });
+    const viewport = viewportRef.current;
+    if (!viewport) return;
+    const rect = viewport.getBoundingClientRect();
+    const mobile = window.innerWidth < 768;
+    setTransform(computeFitTransform(rect.width, rect.height, mobile));
   }
 
   function startPan(pointerId: number, point: { x: number; y: number }) {
@@ -703,19 +688,9 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   useEffect(() => {
     const viewport = viewportRef.current;
     if (!viewport) return;
-
-    const updateViewportSize = () => {
-      const rect = viewport.getBoundingClientRect();
-      setViewportSize({ width: rect.width, height: rect.height });
-    };
-
-    updateViewportSize();
-    const observer = new ResizeObserver(updateViewportSize);
-    observer.observe(viewport);
-
-    return () => {
-      observer.disconnect();
-    };
+    const rect = viewport.getBoundingClientRect();
+    const mobile = window.innerWidth < 768;
+    setTransform(computeFitTransform(rect.width, rect.height, mobile));
   }, []);
 
   const scrollPaddingBottom = 0;
@@ -728,7 +703,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
       onDragEnd={onFavoriteDragEnd}
     >
       <SortableContext items={favorites} strategy={horizontalListSortingStrategy}>
-        <div className="flex gap-2 overflow-x-auto px-4 py-3">
+        <div className="flex gap-1.5 overflow-x-auto px-3 py-2">
           {favoriteItems.map((item) => {
             const favKey = getFavoriteKey(item);
             const booth = boothForMap(item);
@@ -737,7 +712,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                 key={favKey}
                 favKey={favKey}
                 label={`${booth} ${getDisplayName(item)}`}
-                onSelect={() => selectExhibitor(item)}
+                onSelect={() => selectExhibitor(item, { focusMap: true })}
                 onRemove={() => toggleFavorite(favKey)}
               />
             );
@@ -764,7 +739,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
               type="button"
               aria-label="검색어 지우기"
               onClick={() => setQuery('')}
-              className="inline-flex h-7 w-7 cursor-pointer items-center justify-center"
+              className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center"
             >
               <X className="h-4 w-4" />
             </button>
@@ -814,7 +789,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
               >
                 <button
                   type="button"
-                  onClick={() => selectExhibitor(exhibitor)}
+                  onClick={() => selectExhibitor(exhibitor, { focusMap: true })}
                   className={cn(
                     'grid w-full cursor-pointer grid-cols-[minmax(0,1fr)_auto] items-center gap-3 px-3 py-2 text-left transition',
                     isSelected
@@ -851,7 +826,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                             toggleFavorite(favKey);
                           }
                         }}
-                        className="inline-flex cursor-pointer items-center [&:hover>svg]:fill-brand-coral/40 [&:hover>svg]:text-brand-coral/40"
+                        className="-my-1 inline-flex h-9 w-9 cursor-pointer items-center justify-center [&:hover>svg]:fill-brand-coral/40 [&:hover>svg]:text-brand-coral/40"
                       >
                         <Heart className="h-4 w-4 fill-brand-coral text-brand-coral transition-colors" />
                       </span>
@@ -937,7 +912,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 shrink-0 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
+            className="h-9 shrink-0 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
           >
             <a href={selected.instagramUrl} target="_blank" rel="noreferrer">
               <Instagram />
@@ -951,7 +926,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
             type="button"
             variant="outline"
             size="sm"
-            className="h-7 shrink-0 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
+            className="h-9 shrink-0 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
           >
             <a href={selected.homepageUrl} target="_blank" rel="noreferrer">
               <ExternalLink />
@@ -964,7 +939,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
           variant="outline"
           size="sm"
           onClick={() => centerBooth(selectedBooth)}
-          className="ml-auto h-7 shrink-0 rounded-none border-border bg-white px-2 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
+          className="ml-auto h-9 shrink-0 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow [&_svg:not([class*='size-'])]:size-3.5"
         >
           <MapPin />
           지도
@@ -1002,7 +977,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
               <button
                 key={exhibitor.no}
                 type="button"
-                onClick={() => selectExhibitor(exhibitor)}
+                onClick={() => selectExhibitor(exhibitor, { focusMap: true })}
                 className="border border-border bg-white px-1.5 py-0.5 text-[11px] font-black hover:bg-brand-yellow"
               >
                 {getDisplayName(exhibitor)}
@@ -1193,12 +1168,13 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
             )}
           >
             <div
-              className="absolute top-0 left-0 overflow-hidden border border-border bg-white shadow-brutal will-change-transform"
+              className="absolute top-0 left-0 overflow-hidden border border-border bg-white shadow-brutal"
               style={{
                 width: MAP_WIDTH,
                 height: MAP_HEIGHT,
-                transform: `translate3d(${transform.x}px, ${transform.y}px, 0) scale(${transform.scale})`,
+                transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
                 transformOrigin: '0 0',
+                willChange: isDragging ? 'transform' : 'auto',
               }}
             >
               <Image
@@ -1224,10 +1200,6 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                     type="button"
                     aria-label={`${shape.boothNumber} ${boothItems.map(getDisplayName).join(', ')}`}
                     title={`${shape.boothNumber} ${boothItems.map(getDisplayName).join(', ')}`}
-                    onPointerEnter={() => setHoveredBooth(shape.boothNumber)}
-                    onPointerLeave={() =>
-                      setHoveredBooth((current) => (current === shape.boothNumber ? '' : current))
-                    }
                     onPointerDown={(event) => {
                       if (event.pointerType === 'mouse') event.stopPropagation();
                     }}
@@ -1288,6 +1260,153 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                   />
                 </svg>
               ) : null}
+
+              {/* 정적 부스 라벨 레이어 — 맵 좌표계 안쪽, CSS transform 으로 줌/팬 */}
+              {shapes.map((shape) => {
+                const boothItems = labelExhibitorsByBooth[shape.boothNumber] ?? [];
+                if (!boothItems.length) return null;
+
+                const isBlack = shape.fill === 'black';
+                const isSelected = shape.boothNumber === selectedBooth;
+                const isFavorite = boothItems.some((item) => favoriteSet.has(getFavoriteKey(item)));
+
+                /**
+                 * 구역형 부스: 멤버의 origBooth 가 도형 번호와 다른 경우
+                 * (현재 B400 책마을만 해당 — 101개 참여사가 B401~B473 으로 세분)
+                 */
+                const isZone = boothItems.some((it) => boothForMap(it) !== shape.boothNumber);
+
+                const textColor = isBlack
+                  ? 'white'
+                  : isSelected
+                    ? 'var(--color-brand-green-ink)'
+                    : isFavorite
+                      ? 'var(--color-brand-coral-deep)'
+                      : '#333';
+                const halo = isBlack
+                  ? '0 1px 0 #000, 1px 0 0 #000, 0 -1px 0 #000, -1px 0 0 #000'
+                  : '0 1px 0 white, 1px 0 0 white, 0 -1px 0 white, -1px 0 0 white';
+
+                if (isZone) {
+                  // 구역 대표명: origBooth 가 구역 번호와 같은 항목의 이름
+                  const zoneTitle =
+                    getDisplayName(
+                      boothItems.find((it) => boothForMap(it) === shape.boothNumber) ??
+                        boothItems[0],
+                    ) + ` (${shape.boothNumber})`;
+
+                  return (
+                    <div
+                      key={`label-${shape.boothNumber}`}
+                      className="pointer-events-none absolute z-[36] overflow-hidden"
+                      style={{
+                        left: shape.x,
+                        top: shape.y,
+                        width: shape.width,
+                        height: shape.height,
+                        padding: '4px 3px 2px',
+                        color: textColor,
+                        textShadow: halo,
+                      }}
+                    >
+                      {/* 헤더 */}
+                      <div
+                        style={{
+                          fontSize: 9,
+                          fontWeight: 800,
+                          textAlign: 'center',
+                          marginBottom: 2,
+                          lineHeight: 1.2,
+                        }}
+                      >
+                        {zoneTitle}
+                      </div>
+                      {/* 2열 리스트 */}
+                      <div
+                        style={{
+                          columnCount: 2,
+                          columnGap: 3,
+                          fontSize: 6.5,
+                          fontWeight: 700,
+                          lineHeight: 1.15,
+                          textAlign: 'left',
+                        }}
+                      >
+                        {boothItems.map((item) => (
+                          <div
+                            key={item.no}
+                            style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
+                          >
+                            {boothForMap(item)} - {getDisplayName(item)}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                }
+
+                // 일반 부스 — 높이에 비례한 최대 표시 수 (1줄 ≈ 13 map px, 상한 30)
+                const maxDisplay = Math.min(Math.floor(shape.height / 13), 30);
+                const displayed = boothItems.slice(0, maxDisplay);
+                const overflow = boothItems.length - displayed.length;
+
+                return (
+                  <div
+                    key={`label-${shape.boothNumber}`}
+                    className="pointer-events-none absolute z-[36] flex flex-col items-center overflow-hidden text-center"
+                    style={{
+                      left: shape.x,
+                      top: shape.y,
+                      width: shape.width,
+                      height: shape.height,
+                      paddingTop: Math.min(6, shape.height * 0.12),
+                      lineHeight: 1.15,
+                      color: textColor,
+                      textShadow: halo,
+                    }}
+                  >
+                    {!isBlack && (
+                      <span
+                        style={{
+                          display: 'block',
+                          fontSize: 9,
+                          fontFamily: 'monospace',
+                          fontWeight: 700,
+                        }}
+                      >
+                        {shape.boothNumber}
+                      </span>
+                    )}
+                    {displayed.map((item) => (
+                      <span
+                        key={item.no}
+                        style={{
+                          display: 'block',
+                          fontSize: 10,
+                          fontWeight: 800,
+                          wordBreak: 'keep-all',
+                          overflowWrap: 'anywhere',
+                          maxWidth: '100%',
+                        }}
+                      >
+                        {getDisplayName(item)}
+                      </span>
+                    ))}
+                    {overflow > 0 && (
+                      <span
+                        style={{
+                          display: 'block',
+                          fontSize: 8,
+                          fontWeight: 700,
+                          opacity: 0.7,
+                        }}
+                      >
+                        외 {overflow}
+                      </span>
+                    )}
+                  </div>
+                );
+              })}
             </div>
 
             {routeBadges.map((badge) => (
@@ -1454,6 +1573,17 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                 routePath={routePath}
                 routeBadges={routeBadges}
               />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={resetMap}
+                aria-label="지도 처음 위치로"
+                className="rounded-none border-border bg-white shadow-brutal-sm"
+              >
+                <RotateCcw className="h-4 w-4" />
+                처음
+              </Button>
             </div>
 
             {/* 줌 컨트롤 — 데스크톱 지도 우측 상단 플로팅 */}
@@ -1496,40 +1626,6 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
               </Button>
             </div>
 
-            {activeMapLabels.map(({ boothNumber, names, shape, isSelected, isFavorite }) => (
-              <div
-                key={boothNumber}
-                className={cn(
-                  'pointer-events-none absolute z-40 flex items-center justify-center text-center text-[10px] font-black leading-[1.05] text-foreground',
-                  isFavorite ? 'overflow-visible' : 'overflow-hidden',
-                  isSelected && 'text-brand-green-ink',
-                  isFavorite && !isSelected && 'text-brand-coral-deep',
-                )}
-                style={{
-                  left: transform.x + shape.x * transform.scale,
-                  top: transform.y + shape.y * transform.scale,
-                  width: Math.max(0, shape.width * transform.scale),
-                  height: Math.max(0, shape.height * transform.scale),
-                  fontSize: isFavorite ? 11 : isSelected ? 11 : 10,
-                  textShadow:
-                    '0 1px 0 var(--color-brand-panel), 1px 0 0 var(--color-brand-panel), 0 -1px 0 var(--color-brand-panel), -1px 0 0 var(--color-brand-panel)',
-                  wordBreak: 'keep-all',
-                  overflowWrap: 'anywhere',
-                }}
-              >
-                {names.map((name, index) => (
-                  <span
-                    key={index}
-                    className={cn(
-                      'block whitespace-normal px-0.5 [overflow-wrap:anywhere]',
-                      isFavorite ? 'min-w-max max-w-[180px]' : 'line-clamp-3 max-w-full',
-                    )}
-                  >
-                    {name}
-                  </span>
-                ))}
-              </div>
-            ))}
 
             {/* 데스크톱 전용 플로팅 이벤트 패널 — 모바일은 바텀시트 안 뷰로 표시 */}
             {!isMobile && isEventPanelOpen && selected ? (

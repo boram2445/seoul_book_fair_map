@@ -44,7 +44,7 @@ export function FairHeader({ user }: FairHeaderProps) {
           </div>
         </div>
 
-        <nav className="grid h-10 w-full grid-cols-5 gap-0 overflow-hidden border border-border bg-white sm:h-12 lg:w-auto">
+        <nav className="grid w-full grid-cols-5 gap-0 overflow-hidden border border-border bg-white lg:w-auto">
           {tabs.map((tab) => {
             const Icon = tab.icon;
             const active = isActiveTab(pathname, tab.href);
@@ -54,12 +54,12 @@ export function FairHeader({ user }: FairHeaderProps) {
                 key={tab.href}
                 href={tab.href}
                 className={cn(
-                  "flex h-10 items-center justify-center gap-1 border-r border-border px-1 text-[11px] font-black last:border-r-0 sm:h-12 sm:min-w-20 sm:gap-1.5 sm:px-1.5 sm:text-sm xl:min-w-24",
+                  "flex flex-col items-center justify-center gap-0.5 border-r border-border px-1 py-1.5 sm:min-w-20 sm:py-2 xl:min-w-24 last:border-r-0",
                   active ? "bg-brand-ink text-white" : "hover:bg-brand-yellow"
                 )}
               >
-                <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
+                <Icon className="h-4 w-4 sm:h-4 sm:w-4" />
+                <span className="text-[9px] font-black leading-tight sm:text-[11px]">{tab.label}</span>
               </Link>
             );
           })}
