@@ -136,20 +136,17 @@ export function ReviewFeed({ exhibitorNo, scope, hideTag = false }: ReviewFeedPr
 
           return (
             <article key={comment.id} className="border-b border-border/20 p-4 last:border-b-0">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                {!hideTag && comment.scope === "booth" && (
-                  href ? (
+              {!hideTag && comment.scope === "booth" && (
+                <div className="flex flex-wrap items-center gap-2">
+                  {href ? (
                     <Link href={href} className={cn(getTagClass(comment.scope), "hover:bg-brand-yellow")}>
                       {label}
                     </Link>
                   ) : (
                     <span className={getTagClass(comment.scope)}>{label}</span>
-                  )
-                )}
-                <span className={cn("text-xs font-black text-brand-muted", (hideTag || comment.scope !== "booth") && "ml-auto")}>
-                  {formatRelativeTime(comment.created_at)}
-                </span>
-              </div>
+                  )}
+                </div>
+              )}
 
               {comment.scope === "book" && (comment.book_title || comment.book_author) && (
                 <div className="mt-3 flex items-start gap-2">
@@ -193,7 +190,11 @@ export function ReviewFeed({ exhibitorNo, scope, hideTag = false }: ReviewFeedPr
                   <p className="text-xs font-black text-brand-muted">{author}</p>
                 </div>
 
-                {isOwner && (
+                <div className="flex items-center gap-1">
+                  <span className="text-xs font-black text-brand-muted">
+                    {formatRelativeTime(comment.created_at)}
+                  </span>
+                  {isOwner && (
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
@@ -225,7 +226,8 @@ export function ReviewFeed({ exhibitorNo, scope, hideTag = false }: ReviewFeedPr
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
-                )}
+                  )}
+                </div>
               </div>
             </article>
           );
