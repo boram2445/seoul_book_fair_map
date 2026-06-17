@@ -46,7 +46,7 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
   const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
 
   const eventsOnlyCount = useMemo(
-    () => publishers.filter((p) => (eventsByBooth[boothForMap(p)] ?? []).length > 0).length,
+    () => publishers.filter((p) => (eventsByBooth[String(p.no)] ?? []).length > 0).length,
     [publishers, eventsByBooth],
   );
 
@@ -55,7 +55,7 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
 
     return [...publishers]
       .filter((item) => {
-        if (showEventsOnly && (eventsByBooth[boothForMap(item)] ?? []).length === 0) return false;
+        if (showEventsOnly && (eventsByBooth[String(item.no)] ?? []).length === 0) return false;
         if (!normalizedQuery) return true;
 
         return normalizeSearch(
@@ -89,7 +89,7 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
     const heartCount = item.favoriteCount + (isFavorite ? 1 : 0);
     const categories = item.categories ?? [];
     const publisherHref = `/publishers/${item.no}`;
-    const events = eventsByBooth[booth] ?? [];
+    const events = eventsByBooth[String(item.no)] ?? [];
 
     return (
       <article

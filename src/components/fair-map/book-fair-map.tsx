@@ -345,7 +345,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
   const selected = exhibitors.find((exhibitor) => exhibitor.no === selectedNo) ?? exhibitors[0];
   const selectedBooth = selected ? boothForMap(selected) : '';
   const selectedShape = selected ? shapesByBooth.get(selectedBooth) : undefined;
-  const selectedBoothEvents = selectedBooth ? (eventsByBooth[selectedBooth] ?? []) : [];
+  const selectedBoothEvents = selected ? (eventsByBooth[String(selected.no)] ?? []) : [];
   const selectedBoothItems = selectedBooth ? (exhibitorsByBooth[selectedBooth] ?? []) : [];
   const selectedBoothPeers = selected
     ? selectedBoothItems.filter((exhibitor) => exhibitor.no !== selected.no)

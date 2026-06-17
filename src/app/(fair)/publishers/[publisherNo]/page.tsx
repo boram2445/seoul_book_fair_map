@@ -34,7 +34,7 @@ export default async function PublisherDetailPage({
   const booth = boothForMap(publisher);
   const displayName = getDisplayName(publisher);
   const heartCount = publisher.favoriteCount;
-  const events = eventsByBooth[booth] ?? [];
+  const events = eventsByBooth[String(publisher.no)] ?? [];
   const categories = publisher.categories ?? [];
   return (
     <div className="bg-brand-panel">

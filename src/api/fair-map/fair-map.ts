@@ -150,6 +150,7 @@ type PublisherEventRow = {
     booth_number: string;
     original_booth_number: string | null;
     name: string;
+    exhibitor_no: number;
   } | null;
 };
 
@@ -157,7 +158,8 @@ function mapPublisherEvent(row: PublisherEventRow): { boothKey: string; event: B
   const publisher = row.publishers;
   if (!publisher) return null;
 
-  const boothKey = publisher.original_booth_number ?? publisher.booth_number;
+  // exhibitor_no 기준으로 키잉 — booth_number 공유 출판사(예: 민음사/황금가지)가 이벤트를 섞지 않도록
+  const boothKey = String(publisher.exhibitor_no);
 
   let period: string | undefined;
   if (row.event_date) {
@@ -185,7 +187,7 @@ async function fetchPublisherEvents(): Promise<GetPublisherEventsResponse> {
     .select(
       `title, content, event_date, category, instagram_url, image_url,
        publishers!publisher_events_publisher_id_fkey (
-         booth_number, original_booth_number, name
+         booth_number, original_booth_number, name, exhibitor_no
        )`,
     )
     .eq("status", "published")

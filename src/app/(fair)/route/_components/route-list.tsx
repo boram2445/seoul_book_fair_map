@@ -358,7 +358,7 @@ export function RouteList({
                 exhibitor={exhibitor}
                 index={index}
                 memo={memos[favKey] ?? ""}
-                events={eventsByBooth[booth] ?? []}
+                events={eventsByBooth[String(exhibitor.no)] ?? []}
                 onMemoChange={updateMemo}
                 onFavoriteToggle={toggleFavorite}
               />
