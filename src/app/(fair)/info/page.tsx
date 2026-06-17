@@ -91,7 +91,7 @@ export default function InfoPage() {
               <section className="grid gap-5 border border-border bg-brand-green p-5 md:grid-cols-[minmax(0,1fr)_220px]">
                 <div>
                   <p className="text-sm font-black text-brand-green-deep">Seoul International Book Fair</p>
-                  <h3 className="mt-3 text-3xl font-black tracking-normal">책과 질문이 모이는 자리</h3>
+                  <h3 className="mt-3 text-2xl font-black tracking-normal md:text-3xl">책과 질문이 모이는 자리</h3>
                   <p className="mt-4 text-sm font-bold leading-6">
                     서울국제도서전은 1954년부터 이어진 국내 최대 규모의 책 축제입니다. 출판사,
                     저자, 독자, 예술가, 편집자 등이 한자리에 모여 책과 지식, 문화를 교류합니다.
@@ -205,11 +205,11 @@ export default function InfoPage() {
               </div>
               <ol className="grid gap-0 lg:grid-cols-4">
                 {entrySteps.map((step, index) => (
-                  <li key={step} className="border-b border-border/20 p-4 lg:border-r lg:border-b-0 lg:last:border-r-0">
-                    <span className="flex h-8 w-8 items-center justify-center border border-border bg-brand-green text-sm font-black">
+                  <li key={step} className="flex items-start gap-3 border-b border-border/20 p-4 lg:border-r lg:border-b-0 lg:last:border-r-0">
+                    <span className="flex h-8 w-8 shrink-0 items-center justify-center border border-border bg-brand-green text-sm font-black">
                       {index + 1}
                     </span>
-                    <p className="mt-3 text-sm font-bold leading-6">{step}</p>
+                    <p className="text-sm font-bold leading-6">{step}</p>
                   </li>
                 ))}
               </ol>

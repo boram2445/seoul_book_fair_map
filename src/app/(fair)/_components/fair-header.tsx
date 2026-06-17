@@ -2,7 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Heart } from "lucide-react";
 
 import { tabs } from "@/app/(fair)/_lib/tabs";
 import { AuthMenu } from "@/components/auth/auth-menu";
@@ -31,10 +30,6 @@ export function FairHeader() {
             </h1>
           </Link>
           <div className="flex shrink-0 items-center gap-2">
-            <div className="hidden h-8 items-center gap-1.5 border border-border bg-brand-yellow px-2.5 text-xs font-black sm:flex sm:h-9 sm:gap-2 sm:px-3 sm:text-sm">
-              <Heart className="h-3.5 w-3.5 fill-brand-coral text-brand-coral sm:h-4 sm:w-4" />
-              {favorites.length}
-            </div>
             <AuthMenu />
           </div>
         </div>
@@ -54,7 +49,11 @@ export function FairHeader() {
                 )}
               >
                 <Icon className="h-4 w-4 sm:h-4 sm:w-4" />
-                <span className="text-[9px] font-black leading-tight sm:text-[11px]">{tab.label}</span>
+                <span className="text-[9px] font-black leading-tight sm:text-[11px]">
+                  {tab.href === '/route' && favorites.length > 0
+                    ? `${tab.label} (${favorites.length})`
+                    : tab.label}
+                </span>
               </Link>
             );
           })}

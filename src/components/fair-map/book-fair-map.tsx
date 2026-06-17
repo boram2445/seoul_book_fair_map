@@ -872,12 +872,62 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   // 선택 출판사 상세 — 데스크톱 aside와 모바일 시트 상세 뷰에서 공유
   const detailContent = selected ? (
     <div className="bg-brand-green p-4">
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0 flex-1">
-          <p className="inline-flex border border-border bg-brand-ink px-2 py-0.5 text-xs font-black text-white md:px-3 md:py-1 md:text-sm">
-            {selectedBooth}
-          </p>
-          <h2 className="mt-2 text-base font-black md:mt-3 md:text-xl">{getDisplayName(selected)}</h2>
+      {/* 모바일: 상단 액션 줄 — < 뒤로가기(좌) / ♡·>(우) */}
+      {isMobile && (
+        <div className="mb-3 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => setIsMobileDetailOpen(false)}
+              aria-label="목록으로 돌아가기"
+              className="size-8 shrink-0 rounded-none border-border bg-white hover:bg-brand-yellow"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="border border-border bg-brand-ink px-2 py-0.5 text-xs font-black text-white">
+              {selectedBooth}
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => selected && toggleFavorite(getFavoriteKey(selected))}
+              aria-label="부스 찜하기"
+              className="size-8 border-border bg-white hover:bg-brand-yellow"
+            >
+              <Heart
+                className={cn(
+                  'h-3.5 w-3.5',
+                  selected && favoriteSet.has(getFavoriteKey(selected)) && 'fill-brand-coral text-brand-coral',
+                )}
+              />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsEventPanelOpen(true)}
+              aria-label="출판사 상세 패널 열기"
+              className="size-8 rounded-none border border-border bg-brand-yellow hover:bg-white"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      )}
+      {/* 콘텐츠 + 데스크톱 액션 */}
+      <div className={cn(!isMobile && 'flex items-start justify-between gap-3')}>
+        <div className={cn('min-w-0', !isMobile && 'flex-1')}>
+          {!isMobile && (
+            <p className="inline-flex border border-border bg-brand-ink px-2 py-0.5 text-xs font-black text-white md:px-3 md:py-1 md:text-sm">
+              {selectedBooth}
+            </p>
+          )}
+          <h2 className="text-base font-black md:mt-2 md:text-xl">{getDisplayName(selected)}</h2>
           {selected.nameEn ? (
             <p className="text-sm font-bold text-brand-green-deep">{selected.nameEn}</p>
           ) : null}
@@ -894,35 +944,36 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
             </div>
           ) : null}
         </div>
-        <div className="flex shrink-0 items-center gap-2">
-          <Button
-            type="button"
-            variant="outline"
-            size="icon"
-            onClick={() => selected && toggleFavorite(getFavoriteKey(selected))}
-            aria-label="부스 찜하기"
-            className="size-8 border-border bg-white hover:bg-brand-yellow md:size-9"
-          >
-            <Heart
-              className={cn(
-                'h-3.5 w-3.5 md:h-4 md:w-4',
-                selected && favoriteSet.has(getFavoriteKey(selected)) && 'fill-brand-coral text-brand-coral',
-              )}
-            />
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => {
-              setIsEventPanelOpen(true);
-            }}
-            aria-label="출판사 상세 패널 열기"
-            className="size-8 rounded-none border border-border bg-brand-yellow hover:bg-white md:size-9"
-          >
-            <ChevronRight className="h-4 w-4 md:h-5 md:w-5" />
-          </Button>
-        </div>
+        {/* 데스크톱 전용 액션 버튼 */}
+        {!isMobile && (
+          <div className="flex shrink-0 items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              onClick={() => selected && toggleFavorite(getFavoriteKey(selected))}
+              aria-label="부스 찜하기"
+              className="size-9 border-border bg-white hover:bg-brand-yellow"
+            >
+              <Heart
+                className={cn(
+                  'h-4 w-4',
+                  selected && favoriteSet.has(getFavoriteKey(selected)) && 'fill-brand-coral text-brand-coral',
+                )}
+              />
+            </Button>
+            <Button
+              type="button"
+              variant="ghost"
+              size="icon"
+              onClick={() => setIsEventPanelOpen(true)}
+              aria-label="출판사 상세 패널 열기"
+              className="size-9 rounded-none border border-border bg-brand-yellow hover:bg-white"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="mt-2.5 flex w-full flex-nowrap items-center gap-1.5 overflow-hidden">
@@ -1013,7 +1064,19 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   const eventContent = selected ? (
     <>
       <div className="flex items-start justify-between gap-3 border-b border-border bg-brand-yellow p-4">
-        <div className="min-w-0">
+        {isMobile && (
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            onClick={() => setIsEventPanelOpen(false)}
+            aria-label="출판사로 돌아가기"
+            className="size-8 shrink-0 rounded-none border-border bg-white hover:bg-white/80 md:size-9"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+        )}
+        <div className="min-w-0 flex-1">
           <p className="inline-flex border border-border bg-brand-ink px-2 py-1 text-xs font-black text-white">
             {selectedBooth}
           </p>
@@ -1162,15 +1225,18 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                   variant="outline"
                   size="sm"
                   onClick={() => {
+                    if (favoriteBooths.length < 2) {
+                      setIsTooltipOpen((v) => !v);
+                      return;
+                    }
                     const next = !isRouteVisible;
                     setIsRouteVisible(next);
                     setIsTooltipOpen(next);
                   }}
-                  disabled={favoriteBooths.length < 2}
                   aria-label="경로 표시 토글"
                   className={cn(
                     'rounded-none border-border',
-                    isRouteVisible
+                    isRouteVisible && favoriteBooths.length >= 2
                       ? 'bg-brand-coral text-white hover:bg-brand-coral hover:text-white'
                       : 'bg-white',
                   )}
@@ -1180,7 +1246,9 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                 </Button>
                 {(isTooltipOpen || isRoutePreview) ? (
                   <div className="absolute top-full left-1/2 z-[60] mt-1 w-52 -translate-x-1/2 border border-border bg-white px-3 py-2 shadow-brutal-sm text-xs font-bold text-brand-muted">
-                    찜 내역 탭에서 드래그해 순서를 바꿀 수 있어요.
+                    {favoriteBooths.length < 2
+                      ? '찜한 부스가 2개 이상이어야 경로를 볼 수 있어요.'
+                      : '찜 내역 탭에서 드래그해 순서를 바꿀 수 있어요.'}
                   </div>
                 ) : null}
               </div>
@@ -1499,29 +1567,9 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                   className="min-h-0 flex-1 overflow-hidden"
                 >
                   {isEventPanelOpen && selected ? (
-                    <div className="flex h-full min-h-0 flex-col">
-                      <button
-                        type="button"
-                        onClick={() => setIsEventPanelOpen(false)}
-                        className="flex shrink-0 cursor-pointer items-center gap-1.5 border-b border-border px-4 py-2.5 text-sm font-black hover:bg-brand-hover"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                        출판사로
-                      </button>
-                      <div className="min-h-0 flex-1 overflow-y-auto">{eventContent}</div>
-                    </div>
+                    <div className="flex h-full min-h-0 flex-col">{eventContent}</div>
                   ) : isMobileDetailOpen ? (
-                    <div className="flex h-full min-h-0 flex-col">
-                      <button
-                        type="button"
-                        onClick={() => setIsMobileDetailOpen(false)}
-                        className="flex shrink-0 cursor-pointer items-center gap-1.5 border-b border-border px-4 py-2.5 text-sm font-black hover:bg-brand-hover"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                        목록으로
-                      </button>
-                      <div className="min-h-0 flex-1 overflow-y-auto">{detailContent}</div>
-                    </div>
+                    <div className="h-full overflow-y-auto">{detailContent}</div>
                   ) : (
                     <div className="flex h-full min-h-0 flex-col">
                       {favoriteItems.length ? (
@@ -1566,10 +1614,6 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                   </div>
                   <div className="flex shrink-0 items-center gap-1.5">
                     <span className="inline-flex items-center gap-1 border border-border bg-white px-1.5 py-0.5 text-xs font-black">
-                      <Heart className="h-3.5 w-3.5 fill-brand-coral text-brand-coral" />
-                      {favoriteItems.length}
-                    </span>
-                    <span className="inline-flex items-center gap-1 border border-border bg-white px-1.5 py-0.5 text-xs font-black">
                       {isTopPanelExpanded ? (
                         <>
                           <ChevronUp className="h-3.5 w-3.5" />
@@ -1598,15 +1642,18 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                   variant="outline"
                   size="sm"
                   onClick={() => {
+                    if (favoriteBooths.length < 2) {
+                      setIsTooltipOpen((v) => !v);
+                      return;
+                    }
                     const next = !isRouteVisible;
                     setIsRouteVisible(next);
                     setIsTooltipOpen(next);
                   }}
-                  disabled={favoriteBooths.length < 2}
                   aria-label="경로 표시 토글"
                   className={cn(
                     'rounded-none border-border bg-white shadow-brutal-sm',
-                    isRouteVisible
+                    isRouteVisible && favoriteBooths.length >= 2
                       ? 'bg-brand-coral text-white hover:bg-brand-coral hover:text-white'
                       : 'bg-white',
                   )}
@@ -1616,7 +1663,9 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
                 </Button>
                 {isTooltipOpen ? (
                   <div className="absolute top-full left-1/2 z-[60] mt-1 w-52 -translate-x-1/2 border border-border bg-white px-3 py-2 shadow-brutal-sm text-xs font-bold text-brand-muted">
-                    찜 내역 탭에서 드래그해 순서를 바꿀 수 있어요.
+                    {favoriteBooths.length < 2
+                      ? '찜한 부스가 2개 이상이어야 경로를 볼 수 있어요.'
+                      : '찜 내역 탭에서 드래그해 순서를 바꿀 수 있어요.'}
                   </div>
                 ) : null}
               </div>

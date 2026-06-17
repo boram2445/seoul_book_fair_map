@@ -117,26 +117,67 @@ export function PopularList({ publishers }: PopularListProps) {
               }}
               className="relative cursor-pointer border border-border bg-white transition-colors hover:bg-brand-panel focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink"
             >
-              <Button
-                type="button"
-                variant="outline"
-                size="icon"
-                aria-label={isFavorite ? "찜 해제" : "찜하기"}
-                className={cn(
-                  "absolute top-3 right-3 z-10 size-8 rounded-none border-border shadow-brutal-sm md:size-9",
-                  isFavorite
-                    ? "border-brand-coral bg-brand-coral text-white hover:bg-brand-coral/90 hover:text-white"
-                    : "bg-brand-panel hover:bg-brand-yellow"
-                )}
-                onClick={(event) => {
-                  event.stopPropagation();
-                  toggleFavorite(favKey);
-                }}
-              >
-                <Heart className={cn("h-3.5 w-3.5 md:h-4 md:w-4", isFavorite ? "fill-white text-white" : "text-brand-coral")} />
-              </Button>
+              {/* 상단 우측 액션 행: 링크 버튼(md) + 하트 */}
+              <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
+                {item.instagramUrl ? (
+                  <Button
+                    asChild
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="hidden md:inline-flex h-9 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow"
+                  >
+                    <a
+                      href={item.instagramUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <Instagram className="h-3.5 w-3.5" />
+                      Instagram
+                    </a>
+                  </Button>
+                ) : null}
+                {item.homepageUrl ? (
+                  <Button
+                    asChild
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="hidden md:inline-flex h-9 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow"
+                  >
+                    <a
+                      href={item.homepageUrl}
+                      target="_blank"
+                      rel="noreferrer"
+                      onClick={(event) => event.stopPropagation()}
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                      Homepage
+                    </a>
+                  </Button>
+                ) : null}
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  aria-label={isFavorite ? "찜 해제" : "찜하기"}
+                  className={cn(
+                    "size-8 rounded-none border-border shadow-brutal-sm md:size-9",
+                    isFavorite
+                      ? "border-brand-coral bg-brand-coral text-white hover:bg-brand-coral/90 hover:text-white"
+                      : "bg-brand-panel hover:bg-brand-yellow"
+                  )}
+                  onClick={(event) => {
+                    event.stopPropagation();
+                    toggleFavorite(favKey);
+                  }}
+                >
+                  <Heart className={cn("h-3.5 w-3.5 md:h-4 md:w-4", isFavorite ? "fill-white text-white" : "text-brand-coral")} />
+                </Button>
+              </div>
 
-              <div className="grid gap-3 border-b border-border p-4 pr-16 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
+              <div className="border-b border-border p-4 pr-14">
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="border border-border bg-brand-ink px-2 py-1 text-xs font-black text-white">
@@ -149,12 +190,6 @@ export function PopularList({ publishers }: PopularListProps) {
                       <Heart className="h-3.5 w-3.5 fill-brand-coral text-brand-coral" />
                       {heartCount}
                     </span>
-                    {isFavorite ? (
-                      <span className="inline-flex items-center gap-1 border border-border bg-brand-green px-2 py-1 text-xs font-black text-brand-green-ink">
-                        <Heart className="h-3.5 w-3.5 fill-brand-coral text-brand-coral" />
-                        찜
-                      </span>
-                    ) : null}
                   </div>
                   <h3 className="mt-3 truncate text-base font-black md:text-lg">{getDisplayName(item)}</h3>
                   {item.nameEn ? <p className="text-sm font-bold text-brand-muted">{item.nameEn}</p> : null}
@@ -176,76 +211,102 @@ export function PopularList({ publishers }: PopularListProps) {
                     </>
                   ) : null}
                 </div>
-
-                <div className="flex flex-wrap gap-2 md:justify-end md:pr-12">
-                  {item.instagramUrl ? (
-                    <Button
-                      asChild
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 rounded-none border-border bg-brand-panel px-2 text-xs font-black hover:bg-brand-yellow md:h-9 md:px-3 md:text-sm"
-                    >
-                      <a
-                        href={item.instagramUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(event) => event.stopPropagation()}
+                {/* 모바일 전용 링크 버튼 */}
+                {(item.instagramUrl || item.homepageUrl) ? (
+                  <div className="mt-3 flex flex-wrap gap-2 md:hidden">
+                    {item.instagramUrl ? (
+                      <Button
+                        asChild
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 rounded-none border-border bg-white px-2 text-[10px] font-black hover:bg-brand-yellow"
                       >
-                        <Instagram className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                        Instagram
-                      </a>
-                    </Button>
-                  ) : null}
-                  {item.homepageUrl ? (
-                    <Button
-                      asChild
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 rounded-none border-border bg-brand-panel px-2 text-xs font-black hover:bg-brand-yellow md:h-9 md:px-3 md:text-sm"
-                    >
-                      <a
-                        href={item.homepageUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        onClick={(event) => event.stopPropagation()}
+                        <a
+                          href={item.instagramUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <Instagram className="h-3 w-3" />
+                          Instagram
+                        </a>
+                      </Button>
+                    ) : null}
+                    {item.homepageUrl ? (
+                      <Button
+                        asChild
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-7 rounded-none border-border bg-white px-2 text-[10px] font-black hover:bg-brand-yellow"
                       >
-                        <ExternalLink className="h-3.5 w-3.5 md:h-4 md:w-4" />
-                        Homepage
-                      </a>
-                    </Button>
-                  ) : null}
-                </div>
+                        <a
+                          href={item.homepageUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          onClick={(event) => event.stopPropagation()}
+                        >
+                          <ExternalLink className="h-3 w-3" />
+                          Homepage
+                        </a>
+                      </Button>
+                    ) : null}
+                  </div>
+                ) : null}
               </div>
 
-              <div className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]">
-                <p
-                  className={cn(
-                    "text-sm font-bold leading-6 text-brand-subtle",
-                    item.introduction ? "line-clamp-4" : "text-brand-muted"
-                  )}
+              {/* 모바일: 소개·이벤트 아코디언 */}
+              <div className="border-t border-border md:hidden">
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); toggleEventOpen(item.no); }}
+                  className="flex w-full items-center justify-between px-4 py-2.5 text-left hover:bg-brand-hover"
                 >
+                  <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
+                    <CalendarDays className="h-3.5 w-3.5" />
+                    소개 · 이벤트 {mockEventRows.length}개
+                  </span>
+                  <ChevronDown className={cn("h-3.5 w-3.5 text-brand-muted transition-transform", openEvents.has(item.no) && "rotate-180")} />
+                </button>
+                {openEvents.has(item.no) && (
+                  <div className="border-t border-border p-4 pt-3">
+                    <p className={cn("text-sm font-bold leading-6 text-brand-subtle", !item.introduction && "text-brand-muted")}>
+                      {item.introduction || "아직 소개 정보가 없습니다."}
+                    </p>
+                    <ul className="mt-3 border border-border">
+                      {mockEventRows.map((event) => (
+                        <li
+                          key={`${booth}-${event.time}-${event.title}`}
+                          className="grid grid-cols-[4rem_minmax(0,1fr)] gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0"
+                        >
+                          <span className="font-mono text-xs font-black text-brand-coral-deep">{event.time}</span>
+                          <span className="min-w-0">
+                            <span className="mr-1 border border-border bg-white px-1.5 py-0.5 text-[11px] font-black">
+                              {event.category}
+                            </span>
+                            <span className="font-bold">{event.title}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              {/* 웹: 소개(좌) + 이벤트 박스(우) — 항상 표시 */}
+              <div className="hidden border-t border-border p-4 md:grid md:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]">
+                <p className={cn("text-sm font-bold leading-6 text-brand-subtle", item.introduction ? "line-clamp-4" : "text-brand-muted")}>
                   {item.introduction || "아직 소개 정보가 없습니다."}
                 </p>
-
                 <div className="border border-border bg-brand-surface">
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); toggleEventOpen(item.no); }}
-                    className="flex w-full items-center justify-between px-3 py-2 text-left"
-                  >
+                  <div className="flex items-center justify-between border-b border-border px-3 py-2">
                     <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
                       <CalendarDays className="h-4 w-4" />
                       이벤트
                     </span>
-                    <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-muted">
-                      {mockEventRows.length}개 예정
-                      <ChevronDown className={cn("h-3.5 w-3.5 transition-transform", openEvents.has(item.no) && "rotate-180")} />
-                    </span>
-                  </button>
-                  {openEvents.has(item.no) && (
-                  <ul className="border-t border-border">
+                    <span className="text-xs font-black text-brand-muted">{mockEventRows.length}개 예정</span>
+                  </div>
+                  <ul>
                     {mockEventRows.map((event) => (
                       <li
                         key={`${booth}-${event.time}-${event.title}`}
@@ -261,7 +322,6 @@ export function PopularList({ publishers }: PopularListProps) {
                       </li>
                     ))}
                   </ul>
-                  )}
                 </div>
               </div>
             </article>

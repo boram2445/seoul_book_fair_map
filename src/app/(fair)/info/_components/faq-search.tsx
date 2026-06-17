@@ -44,7 +44,7 @@ export function FaqSearch({ items }: { items: FaqItem[] }) {
         {filteredItems.map((item) => (
           <article key={`${item.category}-${item.question}`} className="border border-border bg-white">
             <div className="flex items-start gap-3 border-b border-border/20 px-4 py-3">
-              <span className="border border-border bg-brand-yellow px-2 py-1 text-xs font-black">
+              <span className="shrink-0 whitespace-nowrap border border-border bg-brand-yellow px-2 py-1 text-xs font-black">
                 {item.category}
               </span>
               <h3 className="min-w-0 text-sm font-black leading-6">{item.question}</h3>
