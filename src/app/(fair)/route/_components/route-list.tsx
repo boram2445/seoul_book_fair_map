@@ -2,6 +2,7 @@
 
 import { useState, useMemo } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
   DndContext,
@@ -50,6 +51,8 @@ function SortableBoothCard({
   onFavoriteToggle: (favKey: string) => void;
 }) {
   // 마운트 시 초기값으로만 사용, 변경은 onBlur 저장
+  const router = useRouter();
+  const href = `/publishers/${exhibitor.no}`;
   const [localMemo, setLocalMemo] = useState(memo);
   const heartCount = exhibitor.favoriteCount + 1;
 
@@ -74,7 +77,16 @@ function SortableBoothCard({
         >
           <GripVertical className="h-4 w-4" />
         </button>
-        <article className="relative">
+        <article
+          className="relative cursor-pointer transition-colors hover:bg-brand-panel focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink"
+          tabIndex={0}
+          onClick={() => router.push(href)}
+          onKeyDown={(e) => {
+            if (e.key !== "Enter" && e.key !== " ") return;
+            e.preventDefault();
+            router.push(href);
+          }}
+        >
           {/* 상단 우측 액션 행: 링크 버튼(md) + 하트 */}
           <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
             {exhibitor.instagramUrl ? (
@@ -85,7 +97,7 @@ function SortableBoothCard({
                 size="sm"
                 className="hidden md:inline-flex h-9 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow"
               >
-                <a href={exhibitor.instagramUrl} target="_blank" rel="noreferrer">
+                <a href={exhibitor.instagramUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
                   <Instagram className="h-3.5 w-3.5" />
                   Instagram
                 </a>
@@ -99,7 +111,7 @@ function SortableBoothCard({
                 size="sm"
                 className="hidden md:inline-flex h-9 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow"
               >
-                <a href={exhibitor.homepageUrl} target="_blank" rel="noreferrer">
+                <a href={exhibitor.homepageUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
                   <ExternalLink className="h-3.5 w-3.5" />
                   Homepage
                 </a>
@@ -111,7 +123,7 @@ function SortableBoothCard({
               size="icon"
               aria-label="찜 해제"
               className="size-8 rounded-none border-border bg-white shadow-brutal-sm hover:bg-brand-yellow md:size-9"
-              onClick={() => onFavoriteToggle(favKey)}
+              onClick={(e) => { e.stopPropagation(); onFavoriteToggle(favKey); }}
             >
               <Heart className="h-3.5 w-3.5 fill-brand-coral text-brand-coral md:h-4 md:w-4" />
             </Button>
@@ -135,6 +147,7 @@ function SortableBoothCard({
                 <h3 className="min-w-0 truncate text-base font-black md:text-lg">{getDisplayName(exhibitor)}</h3>
                 <Link
                   href={`/publishers/${exhibitor.no}`}
+                  onClick={(e) => e.stopPropagation()}
                   className="flex shrink-0 items-center justify-center text-brand-muted hover:text-brand-ink"
                   aria-label="출판사 상세 보기"
                 >
@@ -163,7 +176,7 @@ function SortableBoothCard({
                     size="sm"
                     className="h-7 rounded-none border-border bg-white px-2 text-[10px] font-black hover:bg-brand-yellow"
                   >
-                    <a href={exhibitor.instagramUrl} target="_blank" rel="noreferrer">
+                    <a href={exhibitor.instagramUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
                       <Instagram className="h-3 w-3" />
                       Instagram
                     </a>
@@ -177,7 +190,7 @@ function SortableBoothCard({
                     size="sm"
                     className="h-7 rounded-none border-border bg-white px-2 text-[10px] font-black hover:bg-brand-yellow"
                   >
-                    <a href={exhibitor.homepageUrl} target="_blank" rel="noreferrer">
+                    <a href={exhibitor.homepageUrl} target="_blank" rel="noreferrer" onClick={(e) => e.stopPropagation()}>
                       <ExternalLink className="h-3 w-3" />
                       Homepage
                     </a>
@@ -195,6 +208,7 @@ function SortableBoothCard({
             </div>
             <textarea
               value={localMemo}
+              onClick={(e) => e.stopPropagation()}
               onChange={(e) => setLocalMemo(e.target.value)}
               onBlur={(e) => {
                 if (e.target.value === memo) return;
@@ -217,7 +231,12 @@ function SortableBoothCard({
                 {events.slice(0, 3).map((event) => (
                   <li
                     key={`${getEventScheduleLabel(event)}-${event.title}`}
-                    className="grid grid-cols-[5.75rem_minmax(0,1fr)] gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0"
+                    className={cn(
+                      "grid gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0",
+                      event.startAt
+                        ? "grid-cols-[8.25rem_minmax(0,1fr)]"
+                        : "grid-cols-[5.75rem_minmax(0,1fr)]",
+                    )}
                   >
                     <span className="font-mono text-xs font-black whitespace-nowrap text-brand-coral-deep">
                       {getEventScheduleLabel(event)}
@@ -266,7 +285,12 @@ function SortableBoothCard({
                   {events.slice(0, 3).map((event) => (
                     <li
                       key={`${getEventScheduleLabel(event)}-${event.title}`}
-                      className="grid grid-cols-[5.75rem_minmax(0,1fr)] gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0"
+                      className={cn(
+                        "grid gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0",
+                        event.startAt
+                          ? "grid-cols-[8.25rem_minmax(0,1fr)]"
+                          : "grid-cols-[5.75rem_minmax(0,1fr)]",
+                      )}
                     >
                       <span className="font-mono text-xs font-black whitespace-nowrap text-brand-coral-deep">
                         {getEventScheduleLabel(event)}

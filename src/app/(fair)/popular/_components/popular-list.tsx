@@ -256,9 +256,14 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
               {events.map((event) => (
                 <li
                   key={`${getEventScheduleLabel(event)}-${event.title}`}
-                  className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-baseline gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0"
+                  className={cn(
+                    "grid items-baseline gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0",
+                    event.startAt
+                      ? "grid-cols-[8.25rem_minmax(0,1fr)]"
+                      : "grid-cols-[5.5rem_minmax(0,1fr)]",
+                  )}
                 >
-                  <span className="font-mono text-xs font-black text-brand-coral-deep">{getEventScheduleLabel(event)}</span>
+                  <span className="font-mono text-xs font-black whitespace-nowrap text-brand-coral-deep">{getEventScheduleLabel(event)}</span>
                   <span className="min-w-0">
                     <span className="mr-1 border border-border bg-white px-1.5 py-0.5 text-[11px] font-black">
                       {event.category}
@@ -288,9 +293,14 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
                 {events.map((event) => (
                   <li
                     key={`${getEventScheduleLabel(event)}-${event.title}`}
-                    className="grid grid-cols-[5.5rem_minmax(0,1fr)] items-baseline gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0"
+                    className={cn(
+                      "grid items-baseline gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0",
+                      event.startAt
+                        ? "grid-cols-[8.25rem_minmax(0,1fr)]"
+                        : "grid-cols-[5.5rem_minmax(0,1fr)]",
+                    )}
                   >
-                    <span className="font-mono text-xs font-black text-brand-coral-deep">{getEventScheduleLabel(event)}</span>
+                    <span className="font-mono text-xs font-black whitespace-nowrap text-brand-coral-deep">{getEventScheduleLabel(event)}</span>
                     <span className="min-w-0">
                       <span className="mr-1 border border-border bg-white px-1.5 py-0.5 text-[11px] font-black">
                         {event.category}

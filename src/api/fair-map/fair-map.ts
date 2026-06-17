@@ -10,7 +10,7 @@ import type {
   GetPublishersResponse,
 } from "@/lib/types/fair-map/response";
 import type { FairMapPublisher } from "@/lib/types/fair-map/type";
-import type { BoothEvent } from "@/components/fair-map/booth-events";
+import { getEventScheduleLabel, type BoothEvent } from "@/components/fair-map/booth-events";
 
 const FAIR_MAP_CACHE_REVALIDATE_SECONDS = 60 * 60 * 24;
 
@@ -143,6 +143,8 @@ type PublisherEventRow = {
   title: string;
   content: string;
   event_date: string | null;
+  start_at: string | null;
+  end_at: string | null;
   category: string | null;
   instagram_url: string | null;
   image_url: string | null;
@@ -174,6 +176,8 @@ function mapPublisherEvent(row: PublisherEventRow): { boothKey: string; event: B
     sourceName: publisher.name,
     instagramUrl: row.instagram_url ?? undefined,
     imageUrl: row.image_url ?? undefined,
+    startAt: row.start_at ?? undefined,
+    endAt: row.end_at ?? undefined,
     period,
   };
 
@@ -185,7 +189,7 @@ async function fetchPublisherEvents(): Promise<GetPublisherEventsResponse> {
   const { data, error } = await supabase
     .from("publisher_events")
     .select(
-      `title, content, event_date, category, instagram_url, image_url,
+      `title, content, event_date, start_at, end_at, category, instagram_url, image_url,
        publishers!publisher_events_publisher_id_fkey (
          booth_number, original_booth_number, name, exhibitor_no
        )`,
@@ -205,6 +209,18 @@ async function fetchPublisherEvents(): Promise<GetPublisherEventsResponse> {
     result[boothKey] = result[boothKey] ?? [];
     result[boothKey].push(event);
   }
+
+  for (const events of Object.values(result)) {
+    events.sort((a, b) => {
+      if (a.startAt && b.startAt) {
+        return new Date(a.startAt).getTime() - new Date(b.startAt).getTime();
+      }
+      if (a.startAt) return -1;
+      if (b.startAt) return 1;
+      return getEventScheduleLabel(a).localeCompare(getEventScheduleLabel(b), "ko");
+    });
+  }
+
   return result;
 }
 
