@@ -1,16 +1,22 @@
+import { Suspense } from "react";
 import { Trophy } from "lucide-react";
 
-import { GetPublishers } from "@/api/fair-map/fair-map";
+import { GetPublisherEvents, GetPublishers } from "@/api/fair-map/fair-map";
 import { Panel } from "@/components/fair-app/panel";
 import { PopularList } from "@/app/(fair)/popular/_components/popular-list";
 
 export default async function PopularPage() {
-  const publishers = await GetPublishers();
+  const [publishers, eventsByBooth] = await Promise.all([
+    GetPublishers(),
+    GetPublisherEvents(),
+  ]);
 
   return (
     <div className="bg-brand-surface">
       <Panel title="인기 순위" icon={Trophy}>
-        <PopularList publishers={publishers} />
+        <Suspense>
+          <PopularList publishers={publishers} eventsByBooth={eventsByBooth} />
+        </Suspense>
       </Panel>
     </div>
   );

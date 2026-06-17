@@ -1,4 +1,4 @@
-import { ExternalLink, Info, Ticket } from "lucide-react";
+import { ExternalLink, Info, Lightbulb, Ticket } from "lucide-react";
 import Image from "next/image";
 
 import { Panel, StatBlock } from "@/components/fair-app/panel";
@@ -64,19 +64,19 @@ export default function InfoPage() {
         title="행사 정보"
         icon={Info}
       >
-        <Tabs defaultValue="intro" className="gap-4">
+        <Tabs defaultValue="info" className="gap-4">
           <TabsList className="grid !h-11 w-full grid-cols-3 gap-0 overflow-hidden rounded-none border border-border bg-white p-0 sm:w-[420px]">
             <TabsTrigger
-              value="intro"
+              value="tips"
               className="!h-11 cursor-pointer rounded-none border-r border-border text-sm font-black after:hidden data-[state=active]:bg-brand-ink data-[state=active]:text-white"
             >
-              소개
+              꿀팁
             </TabsTrigger>
             <TabsTrigger
-              value="ticket"
+              value="info"
               className="!h-11 cursor-pointer rounded-none border-r border-border text-sm font-black after:hidden data-[state=active]:bg-brand-ink data-[state=active]:text-white"
             >
-              티켓
+              행사 안내
             </TabsTrigger>
             <TabsTrigger
               value="faq"
@@ -86,7 +86,14 @@ export default function InfoPage() {
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="intro" className="m-0">
+          <TabsContent value="tips" className="m-0">
+            <div className="flex flex-col items-center justify-center gap-3 border border-border bg-white py-16 text-brand-muted">
+              <Lightbulb className="h-8 w-8 opacity-30" />
+              <p className="text-sm font-bold">꿀팁을 준비 중입니다.</p>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="info" className="m-0">
             <div className="grid gap-4 lg:grid-cols-[1.2fr_0.8fr]">
               <section className="grid gap-5 border border-border bg-brand-green p-5 md:grid-cols-[minmax(0,1fr)_220px]">
                 <div>
@@ -139,10 +146,8 @@ export default function InfoPage() {
                 ))}
               </div>
             </section>
-          </TabsContent>
 
-          <TabsContent value="ticket" className="m-0">
-            <div className="grid gap-4 lg:grid-cols-[1fr_0.85fr]">
+            <div className="mt-4 grid gap-4 lg:grid-cols-[1fr_0.85fr]">
               <section className="border border-border bg-white">
                 <div className="flex items-center justify-between gap-3 border-b border-border bg-brand-yellow px-4 py-3">
                   <h3 className="text-sm font-black">온라인 티켓</h3>

@@ -43,8 +43,9 @@ import { Input } from '@/components/ui/input';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
-import { getBoothEvents, getEventScheduleLabel } from './booth-events';
-import { boothForMap, getFavoriteKey, getDisplayName, getSearchText } from './map-helpers';
+import { BoothEventDetailList } from './booth-event-detail-list';
+import { type BoothEvent, getEventScheduleLabel } from './booth-events';
+import { boothForMap, getFavoriteKey, getDisplayName, getSearchText, normalizeSearch } from './map-helpers';
 import { ExportFavoritesButton } from './favorites-pdf/index';
 import { buildRoute, MAP_HEIGHT, MAP_WIDTH } from './route-path';
 import type { BoothShape, MapExhibitor } from './types';
@@ -171,9 +172,10 @@ function SortableFavoriteChip({
 interface BookFairMapProps {
   exhibitors: MapExhibitor[];
   shapes: BoothShape[];
+  eventsByBooth: Record<string, BoothEvent[]>;
 }
 
-export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
+export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapProps) {
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('전체');
@@ -343,7 +345,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   const selected = exhibitors.find((exhibitor) => exhibitor.no === selectedNo) ?? exhibitors[0];
   const selectedBooth = selected ? boothForMap(selected) : '';
   const selectedShape = selected ? shapesByBooth.get(selectedBooth) : undefined;
-  const selectedBoothEvents = selectedBooth ? getBoothEvents(selectedBooth) : [];
+  const selectedBoothEvents = selectedBooth ? (eventsByBooth[selectedBooth] ?? []) : [];
   const selectedBoothItems = selectedBooth ? (exhibitorsByBooth[selectedBooth] ?? []) : [];
   const selectedBoothPeers = selected
     ? selectedBoothItems.filter((exhibitor) => exhibitor.no !== selected.no)
@@ -371,9 +373,9 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
   }, [query]);
 
   const filteredExhibitors = useMemo(() => {
-    const normalized = debouncedQuery.trim().toLowerCase();
+    const normalized = normalizeSearch(debouncedQuery);
     return exhibitors.filter((exhibitor) => {
-      const matchesQuery = normalized ? getSearchText(exhibitor).includes(normalized) : true;
+      const matchesQuery = normalized ? normalizeSearch(getSearchText(exhibitor)).includes(normalized) : true;
       const matchesCategory =
         selectedCategory === '전체'
           ? true
@@ -1119,61 +1121,7 @@ export function BookFairMap({ exhibitors, shapes }: BookFairMapProps) {
           <span className="text-xs font-black text-brand-muted">이벤트</span>
           <strong className="text-sm font-black">{selectedBoothEvents.length}개</strong>
         </div>
-        <ul className="space-y-3">
-          {selectedBoothEvents.map((event) => (
-            <li
-              key={`${getEventScheduleLabel(event)}-${event.title}`}
-              className="overflow-hidden border border-border bg-white"
-            >
-              {event.imageUrl ? (
-                <div
-                  className="aspect-[4/3] border-b border-border bg-brand-surface bg-cover bg-center"
-                  style={{ backgroundImage: `url(${event.imageUrl})` }}
-                />
-              ) : null}
-              <div className="p-3">
-                <div className="flex items-center justify-between gap-3">
-                  <span className="font-mono text-sm font-black text-brand-coral-deep">
-                    {getEventScheduleLabel(event)}
-                  </span>
-                  <div className="flex shrink-0 items-center gap-1">
-                    {event.period ? (
-                      <span className="border border-border bg-brand-yellow px-2 py-1 text-xs font-black">
-                        기간 이벤트
-                      </span>
-                    ) : null}
-                    <span className="border border-border bg-brand-green px-2 py-1 text-xs font-black">
-                      {event.category}
-                    </span>
-                  </div>
-                </div>
-                <h4 className="mt-3 text-base font-black leading-5">{event.title}</h4>
-                <p className="mt-2 whitespace-pre-line text-sm font-bold leading-5 text-brand-subtle">
-                  {event.content}
-                </p>
-                <div className="mt-3 flex items-center justify-between gap-3 border-t border-border/20 pt-3">
-                  <span className="min-w-0 truncate text-xs font-black text-brand-muted">
-                    출처 {event.sourceName}
-                  </span>
-                  {event.instagramUrl ? (
-                    <Button
-                      asChild
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      className="h-8 rounded-none border-border bg-brand-panel px-2 text-xs font-black hover:bg-brand-yellow"
-                    >
-                      <a href={event.instagramUrl} target="_blank" rel="noreferrer">
-                        <Instagram className="h-4 w-4" />
-                        원문
-                      </a>
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <BoothEventDetailList events={selectedBoothEvents} />
       </div>
       <div className="border-t border-border bg-white px-4 py-3 text-xs font-bold text-brand-muted">
         <CalendarDays className="mr-1 inline h-4 w-4 align-[-3px]" />

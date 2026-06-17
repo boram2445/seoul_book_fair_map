@@ -6,9 +6,11 @@ import { createClient } from "@supabase/supabase-js";
 import type { GetPublisherByExhibitorNoRequest } from "@/lib/types/fair-map/request";
 import type {
   GetPublisherByExhibitorNoResponse,
+  GetPublisherEventsResponse,
   GetPublishersResponse,
 } from "@/lib/types/fair-map/response";
 import type { FairMapPublisher } from "@/lib/types/fair-map/type";
+import type { BoothEvent } from "@/components/fair-map/booth-events";
 
 const FAIR_MAP_CACHE_REVALIDATE_SECONDS = 60 * 60 * 24;
 
@@ -136,3 +138,79 @@ export function GetPublisherByExhibitorNo({
 }: GetPublisherByExhibitorNoRequest) {
   return getCachedPublisherByExhibitorNo(no);
 }
+
+type PublisherEventRow = {
+  title: string;
+  content: string;
+  event_date: string | null;
+  category: string | null;
+  instagram_url: string | null;
+  image_url: string | null;
+  publishers: {
+    booth_number: string;
+    original_booth_number: string | null;
+    name: string;
+  } | null;
+};
+
+function mapPublisherEvent(row: PublisherEventRow): { boothKey: string; event: BoothEvent } | null {
+  const publisher = row.publishers;
+  if (!publisher) return null;
+
+  const boothKey = publisher.original_booth_number ?? publisher.booth_number;
+
+  let period: string | undefined;
+  if (row.event_date) {
+    const d = new Date(row.event_date);
+    period = `${d.getMonth() + 1}월 ${d.getDate()}일`;
+  }
+
+  const event: BoothEvent = {
+    title: row.title,
+    content: row.content,
+    category: row.category ?? "소개",
+    sourceName: publisher.name,
+    instagramUrl: row.instagram_url ?? undefined,
+    imageUrl: row.image_url ?? undefined,
+    period,
+  };
+
+  return { boothKey, event };
+}
+
+async function fetchPublisherEvents(): Promise<GetPublisherEventsResponse> {
+  const supabase = createPublicSupabaseClient();
+  const { data, error } = await supabase
+    .from("publisher_events")
+    .select(
+      `title, content, event_date, category, instagram_url, image_url,
+       publishers!publisher_events_publisher_id_fkey (
+         booth_number, original_booth_number, name
+       )`,
+    )
+    .eq("status", "published")
+    .returns<PublisherEventRow[]>();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  const result: GetPublisherEventsResponse = {};
+  for (const row of data) {
+    const mapped = mapPublisherEvent(row);
+    if (!mapped) continue;
+    const { boothKey, event } = mapped;
+    result[boothKey] = result[boothKey] ?? [];
+    result[boothKey].push(event);
+  }
+  return result;
+}
+
+export const GetPublisherEvents = unstable_cache(
+  fetchPublisherEvents,
+  ["fair-map", "publisher-events"],
+  {
+    revalidate: FAIR_MAP_CACHE_REVALIDATE_SECONDS,
+    tags: ["fair-map", "publisher-events"],
+  },
+);

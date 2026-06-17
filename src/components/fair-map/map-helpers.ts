@@ -19,6 +19,10 @@ export function getSearchText(exhibitor: MapExhibitor) {
     .toLowerCase();
 }
 
+export function normalizeSearch(text: string) {
+  return text.toLowerCase().replace(/\s+/g, "");
+}
+
 export function boothForMap(exhibitor: MapExhibitor) {
   return exhibitor.origBooth || exhibitor.booth;
 }

@@ -5,7 +5,7 @@ import publisherDetailData from "@/data/sibf-2026-publisher-details.json";
 import type { BoothShape, MapExhibitor } from "./types";
 import { boothForMap, getFavoriteKey } from "./map-helpers";
 
-export { getDisplayName, getSearchText, boothForMap, getFavoriteKey } from "./map-helpers";
+export { getDisplayName, getSearchText, normalizeSearch, boothForMap, getFavoriteKey } from "./map-helpers";
 
 type PublisherDetail = {
   boothNumber: string;

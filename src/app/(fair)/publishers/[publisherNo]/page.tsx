@@ -1,33 +1,15 @@
-import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, CalendarDays, ExternalLink, Heart, Instagram, MessageSquareText } from "lucide-react";
+import { CalendarDays, ExternalLink, Heart, Instagram } from "lucide-react";
 
-import { GetPublisherByExhibitorNo } from "@/api/fair-map/fair-map";
+import { GetPublisherByExhibitorNo, GetPublisherEvents } from "@/api/fair-map/fair-map";
 import { ReviewComposeForm } from "@/app/(fair)/_components/review-compose-form";
 import { ReviewFeed } from "@/app/(fair)/_components/review-feed";
+import { BackButton } from "./_components/back-button";
 import { PublisherReviewHeader } from "./_components/publisher-review-header";
-import { Panel } from "@/components/fair-app/panel";
+import { BoothEventDetailList } from "@/components/fair-map/booth-event-detail-list";
 import { boothForMap, getDisplayName } from "@/components/fair-map/map-helpers";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-
-const mockEventRows = [
-  {
-    time: "10:30",
-    category: "사인회",
-    title: "작가 사인회",
-  },
-  {
-    time: "13:20",
-    category: "토크",
-    title: "오늘의 책을 고르는 대화",
-  },
-  {
-    time: "16:00",
-    category: "이벤트",
-    title: "현장 한정 굿즈 증정",
-  },
-];
 
 
 export default async function PublisherDetailPage({
@@ -40,7 +22,10 @@ export default async function PublisherDetailPage({
   if (!Number.isInteger(no)) {
     notFound();
   }
-  const publisher = await GetPublisherByExhibitorNo({ no });
+  const [publisher, eventsByBooth] = await Promise.all([
+    GetPublisherByExhibitorNo({ no }),
+    GetPublisherEvents(),
+  ]);
 
   if (!publisher) {
     notFound();
@@ -49,21 +34,14 @@ export default async function PublisherDetailPage({
   const booth = boothForMap(publisher);
   const displayName = getDisplayName(publisher);
   const heartCount = publisher.favoriteCount;
+  const events = eventsByBooth[booth] ?? [];
   const categories = publisher.categories ?? [];
   return (
-    <div className="bg-brand-surface">
-      <Panel
-        title={displayName}
-        icon={MessageSquareText}
-        action={
-          <Button asChild variant="outline" className="rounded-none border-border bg-white font-black hover:bg-brand-yellow">
-            <Link href="/popular">
-              <ArrowLeft className="h-4 w-4" />
-              목록
-            </Link>
-          </Button>
-        }
-      >
+    <div className="bg-brand-panel">
+      <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 lg:px-8">
+        <div className="mb-4">
+          <BackButton />
+        </div>
         <div className="grid gap-4">
           <article className="border border-border bg-white">
             <div className="grid gap-3 border-b border-border p-4 md:grid-cols-[minmax(0,1fr)_auto] md:items-start">
@@ -100,7 +78,7 @@ export default async function PublisherDetailPage({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="rounded-none border-border bg-brand-panel font-black hover:bg-brand-yellow"
+                    className="h-9 rounded-none border-border bg-brand-panel px-2.5 text-[11px] font-black hover:bg-brand-yellow"
                   >
                     <a href={publisher.instagramUrl} target="_blank" rel="noreferrer">
                       <Instagram className="h-4 w-4" />
@@ -114,7 +92,7 @@ export default async function PublisherDetailPage({
                     type="button"
                     variant="outline"
                     size="sm"
-                    className="rounded-none border-border bg-brand-panel font-black hover:bg-brand-yellow"
+                    className="h-9 rounded-none border-border bg-brand-panel px-2.5 text-[11px] font-black hover:bg-brand-yellow"
                   >
                     <a href={publisher.homepageUrl} target="_blank" rel="noreferrer">
                       <ExternalLink className="h-4 w-4" />
@@ -125,7 +103,7 @@ export default async function PublisherDetailPage({
               </div>
             </div>
 
-            <div className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]">
+            <div className={cn("grid gap-3 p-4", events.length > 0 && "lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]")}>
               <p
                 className={cn(
                   "text-sm font-bold leading-6 text-brand-subtle",
@@ -135,31 +113,20 @@ export default async function PublisherDetailPage({
                 {publisher.introduction || "아직 소개 정보가 없습니다."}
               </p>
 
-              <div className="border border-border bg-brand-surface">
-                <div className="flex items-center justify-between border-b border-border px-3 py-2">
-                  <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
-                    <CalendarDays className="h-4 w-4" />
-                    이벤트
-                  </span>
-                  <span className="text-xs font-black text-brand-muted">{mockEventRows.length}개 예정</span>
+              {events.length > 0 ? (
+                <div className="border border-border bg-brand-surface">
+                  <div className="flex items-center justify-between border-b border-border px-3 py-2">
+                    <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
+                      <CalendarDays className="h-4 w-4" />
+                      이벤트
+                    </span>
+                    <span className="text-xs font-black text-brand-muted">{events.length}개</span>
+                  </div>
+                  <div className="p-3">
+                    <BoothEventDetailList events={events} />
+                  </div>
                 </div>
-                <ul>
-                  {mockEventRows.map((event) => (
-                    <li
-                      key={`${booth}-${event.time}-${event.title}`}
-                      className="grid grid-cols-[4rem_minmax(0,1fr)] gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0"
-                    >
-                      <span className="font-mono text-xs font-black text-brand-coral-deep">{event.time}</span>
-                      <span className="min-w-0">
-                        <span className="mr-1 border border-border bg-white px-1.5 py-0.5 text-[11px] font-black">
-                          {event.category}
-                        </span>
-                        <span className="font-bold">{event.title}</span>
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              ) : null}
             </div>
           </article>
 
@@ -172,7 +139,7 @@ export default async function PublisherDetailPage({
 
           <ReviewComposeForm defaultPublisherNo={publisher.no} variant="publisher" />
         </div>
-      </Panel>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import Link from "next/link";
 import { toast } from "sonner";
 import {
   DndContext,
@@ -17,9 +18,9 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { CalendarDays, ChevronDown, ExternalLink, GripVertical, Heart, Instagram, MapPinned, NotebookPen } from "lucide-react";
+import { CalendarDays, ChevronRight, ExternalLink, GripVertical, Heart, Instagram, MapPinned, NotebookPen } from "lucide-react";
 
-import { getBoothEvents, getEventScheduleLabel } from "@/components/fair-map/booth-events";
+import { type BoothEvent, getEventScheduleLabel } from "@/components/fair-map/booth-events";
 import { boothForMap, getFavoriteKey, getDisplayName } from "@/components/fair-map/map-helpers";
 import { useFavorites } from "@/components/fair-map/use-favorites";
 import { useBoothMemo } from "@/components/fair-map/use-booth-memo";
@@ -35,6 +36,7 @@ function SortableBoothCard({
   exhibitor,
   index,
   memo,
+  events,
   onMemoChange,
   onFavoriteToggle,
 }: {
@@ -43,13 +45,12 @@ function SortableBoothCard({
   exhibitor: FairMapPublisher;
   index: number;
   memo: string;
+  events: BoothEvent[];
   onMemoChange: (booth: string, text: string) => void;
   onFavoriteToggle: (favKey: string) => void;
 }) {
   // 마운트 시 초기값으로만 사용, 변경은 onBlur 저장
   const [localMemo, setLocalMemo] = useState(memo);
-  const [isEventsOpen, setIsEventsOpen] = useState(false);
-  const events = getBoothEvents(booth);
   const heartCount = exhibitor.favoriteCount + 1;
 
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
@@ -130,26 +131,25 @@ function SortableBoothCard({
                   {heartCount}
                 </span>
               </div>
-              <h3 className="mt-3 truncate text-base font-black md:text-lg">{getDisplayName(exhibitor)}</h3>
-              {exhibitor.nameEn ? (
-                <p className="text-sm font-bold text-brand-muted">{exhibitor.nameEn}</p>
-              ) : null}
-              {exhibitor.categories?.length ? (
-                <>
-                  <p className="mt-1.5 truncate text-xs text-brand-muted md:hidden">
-                    {[...new Set(exhibitor.categories)].slice(0, 6).join(", ")}
-                  </p>
-                  <div className="mt-3 hidden flex-wrap gap-1.5 md:flex">
-                    {[...new Set(exhibitor.categories)].slice(0, 6).map((category) => (
-                      <span
-                        key={category}
-                        className="border border-border/60 bg-brand-panel px-2 py-1 text-xs font-black text-brand-subtle"
-                      >
-                        {category}
-                      </span>
-                    ))}
-                  </div>
-                </>
+              <div className="mt-3 flex min-w-0 items-center gap-2">
+                <h3 className="min-w-0 truncate text-base font-black md:text-lg">{getDisplayName(exhibitor)}</h3>
+                <Link
+                  href={`/publishers/${exhibitor.no}`}
+                  className="flex shrink-0 items-center justify-center text-brand-muted hover:text-brand-ink"
+                  aria-label="출판사 상세 보기"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Link>
+              </div>
+              {(exhibitor.nameEn || exhibitor.categories?.length) ? (
+                <p className="mt-1.5 truncate text-xs font-bold text-brand-muted">
+                  {[
+                    exhibitor.nameEn,
+                    [...new Set(exhibitor.categories ?? [])].slice(0, 6).join(", ") || null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </p>
               ) : null}
             </div>
             {/* 모바일 전용 링크 버튼 */}
@@ -202,55 +202,39 @@ function SortableBoothCard({
                 toast.success("메모가 저장되었습니다.");
               }}
               placeholder="구매할 책, 사인회 시간, 들를 이유를 적어두세요"
-              rows={4}
-              className="min-h-24 w-full resize-none border border-border bg-white px-3 py-2 text-sm font-bold leading-6 text-foreground placeholder:text-brand-muted focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+              rows={2}
+              className="min-h-14 w-full resize-none border border-border bg-white px-3 py-2 text-sm font-bold leading-6 text-foreground placeholder:text-brand-muted focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             />
           </div>
-          {/* 모바일: 소개·이벤트 아코디언 */}
-          <div className="border-t border-border md:hidden">
-            <button
-              type="button"
-              onClick={() => setIsEventsOpen((prev) => !prev)}
-              className="flex w-full items-center justify-between px-4 py-2.5 text-left hover:bg-brand-hover"
-            >
-              <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
+          {/* 모바일: 이벤트 있을 때만 인라인 표시 */}
+          {events.length > 0 ? (
+            <div className="border-t border-border p-3 md:hidden">
+              <div className="flex items-center gap-1.5 pb-2 text-xs font-black text-brand-rust">
                 <CalendarDays className="h-3.5 w-3.5" />
-                소개 · 이벤트 {events.length}개
-              </span>
-              <ChevronDown className={cn("h-3.5 w-3.5 text-brand-muted transition-transform", isEventsOpen && "rotate-180")} />
-            </button>
-            {isEventsOpen && (
-              <div className="border-t border-border p-4 pt-3">
-                {exhibitor.introduction && (
-                  <p className="mb-3 text-sm font-bold leading-6 text-brand-subtle">{exhibitor.introduction}</p>
-                )}
-                {events.length > 0 ? (
-                  <ul className="border border-border">
-                    {events.slice(0, 3).map((event) => (
-                      <li
-                        key={`${getEventScheduleLabel(event)}-${event.title}`}
-                        className="grid grid-cols-[5.75rem_minmax(0,1fr)] gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0"
-                      >
-                        <span className="font-mono text-xs font-black whitespace-nowrap text-brand-coral-deep">
-                          {getEventScheduleLabel(event)}
-                        </span>
-                        <span className="min-w-0">
-                          <span className="mr-1 border border-border bg-white px-1.5 py-0.5 text-[11px] font-black">
-                            {event.category}
-                          </span>
-                          <span className="font-bold">{event.title}</span>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-xs font-bold text-brand-muted">예정된 이벤트가 없습니다.</p>
-                )}
+                이벤트 {events.length}개
               </div>
-            )}
-          </div>
-          {/* 웹: 방문 메모(좌) + 이벤트 박스(우) — 항상 표시 */}
-          <div className="hidden border-t border-border p-4 md:grid md:gap-3 lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]">
+              <ul className="border border-border">
+                {events.slice(0, 3).map((event) => (
+                  <li
+                    key={`${getEventScheduleLabel(event)}-${event.title}`}
+                    className="grid grid-cols-[5.75rem_minmax(0,1fr)] gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0"
+                  >
+                    <span className="font-mono text-xs font-black whitespace-nowrap text-brand-coral-deep">
+                      {getEventScheduleLabel(event)}
+                    </span>
+                    <span className="flex min-w-0 flex-wrap items-center gap-x-1">
+                      <span className="border border-border bg-white px-1.5 py-0.5 text-[11px] font-black">
+                        {event.category}
+                      </span>
+                      <span className="font-bold">{event.title}</span>
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
+          {/* 웹: 방문 메모(좌) + 이벤트 박스(우, 이벤트 있을 때만) */}
+          <div className={cn("hidden border-t border-border p-4 md:grid md:gap-3", events.length > 0 && "lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]")}>
             <div>
               <div className="mb-2 flex items-center gap-2 text-xs font-black text-brand-muted">
                 <NotebookPen className="h-3.5 w-3.5" />
@@ -265,19 +249,19 @@ function SortableBoothCard({
                   toast.success("메모가 저장되었습니다.");
                 }}
                 placeholder="구매할 책, 사인회 시간, 들를 이유를 적어두세요"
-                rows={4}
-                className="min-h-24 w-full resize-none border border-border bg-white px-3 py-2 text-sm font-bold leading-6 text-foreground placeholder:text-brand-muted focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
+                rows={2}
+                className="min-h-14 w-full resize-none border border-border bg-white px-3 py-2 text-sm font-bold leading-6 text-foreground placeholder:text-brand-muted focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
               />
             </div>
-            <div className="border border-border bg-brand-surface">
-              <div className="flex items-center justify-between border-b border-border px-3 py-2">
-                <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
-                  <CalendarDays className="h-4 w-4" />
-                  이벤트
-                </span>
-                <span className="text-xs font-black text-brand-muted">{events.length}개 예정</span>
-              </div>
-              {events.length > 0 ? (
+            {events.length > 0 ? (
+              <div className="border border-border bg-brand-surface">
+                <div className="flex items-center justify-between border-b border-border px-3 py-2">
+                  <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
+                    <CalendarDays className="h-4 w-4" />
+                    이벤트
+                  </span>
+                  <span className="text-xs font-black text-brand-muted">{events.length}개</span>
+                </div>
                 <ul>
                   {events.slice(0, 3).map((event) => (
                     <li
@@ -287,8 +271,8 @@ function SortableBoothCard({
                       <span className="font-mono text-xs font-black whitespace-nowrap text-brand-coral-deep">
                         {getEventScheduleLabel(event)}
                       </span>
-                      <span className="min-w-0">
-                        <span className="mr-1 border border-border bg-white px-1.5 py-0.5 text-[11px] font-black">
+                      <span className="flex min-w-0 flex-wrap items-center gap-x-1">
+                        <span className="border border-border bg-white px-1.5 py-0.5 text-[11px] font-black">
                           {event.category}
                         </span>
                         <span className="font-bold">{event.title}</span>
@@ -296,10 +280,8 @@ function SortableBoothCard({
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="px-3 py-2 text-xs font-bold text-brand-muted">예정된 이벤트가 없습니다.</p>
-              )}
-            </div>
+              </div>
+            ) : null}
           </div>
         </article>
       </div>
@@ -309,7 +291,13 @@ function SortableBoothCard({
 
 // ─── 메인 리스트 ──────────────────────────────────────────────────────────────
 
-export function RouteList({ publishers }: { publishers: FairMapPublisher[] }) {
+export function RouteList({
+  publishers,
+  eventsByBooth,
+}: {
+  publishers: FairMapPublisher[];
+  eventsByBooth: Record<string, BoothEvent[]>;
+}) {
   const { favorites, reorderFavorites, toggleFavorite } = useFavorites();
   const { memos, updateMemo } = useBoothMemo();
 
@@ -370,6 +358,7 @@ export function RouteList({ publishers }: { publishers: FairMapPublisher[] }) {
                 exhibitor={exhibitor}
                 index={index}
                 memo={memos[favKey] ?? ""}
+                events={eventsByBooth[booth] ?? []}
                 onMemoChange={updateMemo}
                 onFavoriteToggle={toggleFavorite}
               />
