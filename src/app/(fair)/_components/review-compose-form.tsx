@@ -141,7 +141,7 @@ export function ReviewComposeForm({
       type="button"
       disabled={isSubmitting}
       onClick={handleSubmit}
-      className="rounded-none border border-border bg-brand-ink font-black text-white"
+      className="h-8 rounded-none border border-border bg-brand-ink text-xs font-black text-white sm:h-9 sm:text-sm"
     >
       <Send className="h-4 w-4" />
       {isSubmitting ? "등록 중…" : "등록"}

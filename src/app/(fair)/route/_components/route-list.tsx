@@ -217,7 +217,7 @@ function SortableBoothCard({
                 onMemoChange(favKey, e.target.value);
                 toast.success("메모가 저장되었습니다.");
               }}
-              placeholder="구매할 책, 사인회 시간, 들를 이유를 적어두세요"
+              placeholder="구매할 굿즈, 책, 방문 이유를 기록해보세요."
               rows={2}
               className="min-h-14 w-full resize-none border border-border bg-white px-3 py-2 text-sm font-bold leading-6 text-foreground placeholder:text-brand-muted focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             />
@@ -241,7 +241,7 @@ function SortableBoothCard({
                   onMemoChange(favKey, e.target.value);
                   toast.success("메모가 저장되었습니다.");
                 }}
-                placeholder="구매할 책, 사인회 시간, 들를 이유를 적어두세요"
+                placeholder="구매할 굿즈, 책, 방문 이유를 기록해보세요."
                 rows={2}
                 className="min-h-14 w-full resize-none border border-border bg-white px-3 py-2 text-sm font-bold leading-6 text-foreground placeholder:text-brand-muted focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
               />

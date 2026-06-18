@@ -142,7 +142,7 @@ export const ReviewPhotoField = forwardRef<ReviewPhotoFieldHandle, ReviewPhotoFi
         variant="outline"
         onClick={() => inputRef.current?.click()}
         disabled={photos.length >= MAX_PHOTOS || isCompressing}
-        className="w-fit rounded-none border-border bg-white font-black hover:bg-brand-green disabled:cursor-not-allowed disabled:opacity-50"
+        className="h-8 w-fit rounded-none border-border bg-white text-xs font-black hover:bg-brand-green disabled:cursor-not-allowed disabled:opacity-50 sm:h-9 sm:text-sm"
       >
         {isCompressing ? (
           <>

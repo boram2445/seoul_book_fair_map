@@ -63,7 +63,7 @@ export function ExportFavoritesButton({
           PDF 저장
         </Button>
         <div className="absolute top-full left-1/2 z-[60] mt-1 hidden w-52 -translate-x-1/2 border border-border bg-white px-3 py-2 shadow-brutal-sm text-xs font-bold text-brand-muted group-hover:block">
-          경로 버튼을 켜고 저장하면 경로도 함께 저장돼요.
+          경로 버튼을 켜고 PDF를 저장하면 경로도 함께 저장돼요.
         </div>
       </div>
 

@@ -239,6 +239,17 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
     worldY: 0,
   });
 
+  /** 맵 wrapper div — 명령형 style.transform 기록용 */
+  const mapWrapperRef = useRef<HTMLDivElement | null>(null);
+  /** 순번 배지 div 맵 (boothNumber → element) — 명령형 위치 동기화용 */
+  const badgeRefsRef = useRef(new Map<string, HTMLDivElement>());
+  /** 줌 % 텍스트 span — 명령형 textContent 동기화용 */
+  const zoomPctRef = useRef<HTMLSpanElement | null>(null);
+  /** 항상 최신 routeBadges 를 담는 ref — wheel useEffect 내 stale 방지 */
+  const routeBadgesRef = useRef<Array<{ boothNumber: string; labelX: number; labelY: number }>>([]);
+  /** 휠 버스트 종료 감지용 디바운스 타이머 */
+  const wheelCommitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const [isRouteVisible, setIsRouteVisible] = useState(false);
   const [isRoutePreview, setIsRoutePreview] = useState(false);
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
@@ -269,6 +280,41 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
   useEffect(() => {
     sheetOffsetRef.current = sheetOffset;
   }, [sheetOffset]);
+
+  /**
+   * 제스처 프레임마다 React 재렌더 없이 DOM을 직접 갱신한다.
+   * - transformRef 갱신 → wrapper style.transform 기록
+   * - 순번 배지 위치·크기 동기화
+   * - 줌 % 텍스트 동기화
+   * 모든 의존 값이 ref이므로 useCallback deps 는 빈 배열.
+   */
+  const applyTransformImperative = useCallback(
+    (next: { scale: number; x: number; y: number }) => {
+      transformRef.current = next;
+
+      const w = mapWrapperRef.current;
+      if (w) {
+        w.style.transform = `translate3d(${next.x}px, ${next.y}px, 0) scale(${next.scale})`;
+      }
+
+      const badgeSize = clamp(next.scale * 40, 16, 28);
+      for (const badge of routeBadgesRef.current) {
+        const el = badgeRefsRef.current.get(badge.boothNumber);
+        if (!el) continue;
+        el.style.left = `${next.x + badge.labelX * next.scale}px`;
+        el.style.top = `${next.y + badge.labelY * next.scale}px`;
+        el.style.width = `${badgeSize}px`;
+        el.style.height = `${badgeSize}px`;
+        el.style.minWidth = `${badgeSize}px`;
+        el.style.fontSize = `${clamp(badgeSize * 0.48, 10, 14)}px`;
+      }
+
+      if (zoomPctRef.current) {
+        zoomPctRef.current.textContent = `${Math.round(next.scale * 100)}%`;
+      }
+    },
+    [], // refs only — stable across renders
+  );
 
   function getTopPanelHeight() {
     return topPanelHeight || getViewportHeight() * TOP_PANEL_HEIGHT_RATIO;
@@ -321,6 +367,12 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
   const routeOrderByBooth = useMemo(() => {
     return new Map(routeBadges.map((badge) => [badge.boothNumber, badge.index + 1]));
   }, [routeBadges]);
+
+  // wheel useEffect([]) 내 stale 방지 — 최신 routeBadges 를 ref 에 유지
+  useEffect(() => {
+    routeBadgesRef.current = routeBadges;
+  }, [routeBadges]);
+
   const routeBadgeSize = clamp(transform.scale * 40, 16, 28);
 
   const exhibitorsByBooth = useMemo(() => {
@@ -414,17 +466,31 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
       const anchorY = event.clientY - rect.top;
       const zoomFactor = event.deltaY > 0 ? 0.88 : 1.14;
 
-      setTransform((current) => {
-        const nextScale = clamp(current.scale * zoomFactor, MIN_SCALE, MAX_SCALE);
-        const worldX = (anchorX - current.x) / current.scale;
-        const worldY = (anchorY - current.y) / current.scale;
+      // 제스처 중 GPU 힌트 (첫 이벤트 때만 설정, 이후 idempotent)
+      const w = mapWrapperRef.current;
+      if (w) w.style.willChange = 'transform';
 
-        return {
-          scale: nextScale,
-          x: anchorX - worldX * nextScale,
-          y: anchorY - worldY * nextScale,
-        };
-      });
+      // 현재 transform 은 ref 에서 읽어 state 갱신 없이 계산
+      const current = transformRef.current;
+      const nextScale = clamp(current.scale * zoomFactor, MIN_SCALE, MAX_SCALE);
+      const worldX = (anchorX - current.x) / current.scale;
+      const worldY = (anchorY - current.y) / current.scale;
+      const next = {
+        scale: nextScale,
+        x: anchorX - worldX * nextScale,
+        y: anchorY - worldY * nextScale,
+      };
+
+      // DOM 직접 갱신 — React 재렌더 없음
+      applyTransformImperative(next);
+
+      // 버스트 종료 감지: 마지막 휠 이후 150ms 내 새 이벤트 없으면 state 커밋
+      if (wheelCommitTimerRef.current !== null) clearTimeout(wheelCommitTimerRef.current);
+      wheelCommitTimerRef.current = setTimeout(() => {
+        wheelCommitTimerRef.current = null;
+        if (w) w.style.willChange = 'auto';
+        setTransform({ ...transformRef.current });
+      }, 150);
     }
 
     viewport.addEventListener('wheel', handleNativeWheel, { passive: false });
@@ -432,7 +498,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
     return () => {
       viewport.removeEventListener('wheel', handleNativeWheel);
     };
-  }, []);
+  }, [applyTransformImperative]);
 
   const centerBooth = useCallback(function centerBooth(booth: string, nextScale?: number) {
     const shape = shapesByBooth.get(booth);
@@ -591,7 +657,8 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
         MAX_SCALE,
       );
 
-      setTransform({
+      // 핀치 — 명령형 DOM 갱신
+      applyTransformImperative({
         scale: nextScale,
         x: anchorX - pinchRef.current.worldX * nextScale,
         y: anchorY - pinchRef.current.worldY * nextScale,
@@ -604,11 +671,12 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
     const dx = event.clientX - dragRef.current.startX;
     const dy = event.clientY - dragRef.current.startY;
 
-    setTransform((current) => ({
-      ...current,
+    // 드래그 — 명령형 DOM 갱신
+    applyTransformImperative({
+      ...transformRef.current,
       x: dragRef.current.originX + dx,
       y: dragRef.current.originY + dy,
-    }));
+    });
   }
 
   function handlePointerUp(event: React.PointerEvent<HTMLDivElement>) {
@@ -628,6 +696,8 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
     }
 
     if (dragRef.current.pointerId === event.pointerId || points.length === 0) {
+      // 제스처 종료 — transformRef 를 state 로 커밋 (한 번만 재렌더)
+      setTransform({ ...transformRef.current });
       setIsDragging(false);
     }
   }
@@ -1246,6 +1316,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
             )}
           >
             <div
+              ref={mapWrapperRef}
               className="absolute top-0 left-0 overflow-hidden border border-border bg-white shadow-brutal"
               style={{
                 width: MAP_WIDTH,
@@ -1290,6 +1361,10 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
             {routeBadges.map((badge) => (
               <div
                 key={badge.boothNumber}
+                ref={(el) => {
+                  if (el) badgeRefsRef.current.set(badge.boothNumber, el);
+                  else badgeRefsRef.current.delete(badge.boothNumber);
+                }}
                 className="pointer-events-none absolute z-[46] flex items-center justify-center border-2 border-white bg-brand-coral font-black text-white shadow-brutal-sm"
                 style={{
                   left: transform.x + badge.labelX * transform.scale,
@@ -1344,7 +1419,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                   {isEventPanelOpen && selected ? (
                     <div className="flex h-full min-h-0 flex-col">{eventContent}</div>
                   ) : isMobileDetailOpen ? (
-                    <div className="h-full overflow-y-auto">{detailContent}</div>
+                    <div className="h-full overflow-y-auto bg-brand-green">{detailContent}</div>
                   ) : (
                     <div className="flex h-full min-h-0 flex-col">
                       {favoriteItems.length ? (
@@ -1361,12 +1436,6 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                   aria-label={isTopPanelExpanded ? '선택 패널 닫기' : '선택 패널 열기'}
 	                  aria-expanded={isTopPanelExpanded}
 	                  className="flex h-[50px] cursor-grab touch-none items-center justify-between gap-2 border-t border-border/60 bg-brand-yellow px-3 active:cursor-grabbing"
-                  onClick={() => {
-                    if (!sheetDragRef.current.didDrag) toggleTopPanel();
-                  }}
-                  onTouchEnd={() => {
-                    if (!sheetDragRef.current.didDrag) toggleTopPanel();
-                  }}
                   onPointerDown={handleSheetPointerDown}
                   onPointerMove={handleSheetPointerMove}
                   onPointerUp={handleSheetPointerUp}
@@ -1443,7 +1512,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                       : (
                         <>
                           <span className="block">찜 내역 탭에서 드래그해 순서를 바꿀 수 있어요.</span>
-                          <span className="mt-1 block">경로 버튼을 켜고 저장하면 경로도 함께 저장돼요.</span>
+                          <span className="mt-1 block">경로 버튼을 켜고 PDF를 저장하면 경로도 함께 저장돼요.</span>
                         </>
                       )}
                   </div>
@@ -1483,7 +1552,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
               >
                 <Minus className="h-4 w-4" />
               </Button>
-              <span className="min-w-14 px-2 text-center text-xs font-black">
+              <span ref={zoomPctRef} className="min-w-14 px-2 text-center text-xs font-black">
                 {Math.round(transform.scale * 100)}%
               </span>
               <Button
