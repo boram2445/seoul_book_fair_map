@@ -138,40 +138,6 @@
   --sidebar-ring:               var(--brand-coral);
 }
 
-/* 다크 모드는 라이트와 동일하게 유지 (깨짐 방지) */
-.dark {
-  --background:            var(--brand-paper);
-  --foreground:            var(--brand-ink);
-  --card:                  var(--brand-panel);
-  --card-foreground:       var(--brand-ink);
-  --popover:               var(--brand-panel);
-  --popover-foreground:    var(--brand-ink);
-  --primary:               var(--brand-ink);
-  --primary-foreground:    var(--brand-panel);
-  --secondary:             var(--brand-yellow);
-  --secondary-foreground:  var(--brand-ink);
-  --muted:                 var(--brand-surface);
-  --muted-foreground:      var(--brand-muted);
-  --accent:                var(--brand-hover);
-  --accent-foreground:     var(--brand-ink);
-  --destructive:           var(--brand-coral);
-  --border:                var(--brand-ink);
-  --input:                 var(--brand-ink);
-  --ring:                  var(--brand-coral);
-  --chart-1: oklch(0.63 0.21 30);
-  --chart-2: oklch(0.88 0.29 148);
-  --chart-3: oklch(0.95 0.22 105);
-  --chart-4: oklch(0.46 0.018 75);
-  --chart-5: oklch(0.84 0.015 83);
-  --sidebar:                    var(--brand-panel);
-  --sidebar-foreground:         var(--brand-ink);
-  --sidebar-primary:            var(--brand-ink);
-  --sidebar-primary-foreground: var(--brand-panel);
-  --sidebar-accent:             var(--brand-hover);
-  --sidebar-accent-foreground:  var(--brand-ink);
-  --sidebar-border:             var(--brand-ink);
-  --sidebar-ring:               var(--brand-coral);
-}
 
 @layer base {
   * {

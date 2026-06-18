@@ -1,18 +1,17 @@
 "use client";
 
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CalendarDays, ChevronRight, ExternalLink, Heart, Instagram, Search, X } from "lucide-react";
+import { CalendarDays, Search, X } from "lucide-react";
 
-import { type BoothEvent, getEventScheduleLabel } from "@/components/fair-map/booth-events";
-import { CollapsibleEventList } from "@/components/fair-map/collapsible-event-list";
-import { boothForMap, getFavoriteKey, getDisplayName, getSearchText, normalizeSearch } from "@/components/fair-map/map-helpers";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { type BoothEvent } from "@/components/fair-map/booth-events";
+import { getFavoriteKey, getSearchText, normalizeSearch } from "@/components/fair-map/map-helpers";
 import { useFavorites } from "@/components/fair-map/use-favorites";
+import { PublisherCard } from "@/components/fair-app/publisher-card";
+import { Input } from "@/components/ui/input";
 import type { FairMapPublisher } from "@/lib/types/fair-map/type";
 import { cn } from "@/lib/utils";
+import { boothForMap } from "@/components/fair-map/map-helpers";
 
 const EVENT_CATEGORIES = ["굿즈", "사인회", "할인/증정", "전시", "신간", "토크/강연"] as const;
 
@@ -22,8 +21,8 @@ interface PopularListProps {
 }
 
 // ─── 카드 컴포넌트 ─────────────────────────────────────────────────────────────
-// 모듈 레벨 memo: isFavorite / index 등 해당 카드에 귀속된 props만 변경될 때 리렌더.
-// 찜 토글 시 변경된 카드 1개만 조정, 나머지 441개 reconcile 스킵.
+// memo: isFavorite / index 등 해당 카드에 귀속된 props만 변경될 때 리렌더.
+// 찜 토글 시 변경된 카드 1개만 재조정, 나머지 reconcile 스킵.
 
 interface PopularCardProps {
   item: FairMapPublisher;
@@ -44,206 +43,30 @@ const PopularCard = memo(function PopularCard({
   onToggle,
   onNavigate,
 }: PopularCardProps) {
-  const booth = boothForMap(item);
-  const favKey = getFavoriteKey(item);
-  const heartCount = item.favoriteCount + (isFavorite ? 1 : 0);
-  const categories = item.categories ?? [];
-  const publisherHref = `/publishers/${item.no}`;
-  const isCategoryFilter = eventFilter !== "전체" && eventFilter !== "이벤트";
+  const highlightCategory =
+    eventFilter !== "전체" && eventFilter !== "이벤트" ? eventFilter : undefined;
 
   return (
-    <article
-      tabIndex={0}
-      onClick={() => onNavigate(publisherHref)}
-      onKeyDown={(event) => {
-        if (event.key !== "Enter" && event.key !== " ") return;
-        event.preventDefault();
-        onNavigate(publisherHref);
-      }}
-      className="relative cursor-pointer border border-border bg-white transition-colors hover:bg-brand-panel focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-ink"
-    >
-      {/* 상단 우측 액션 행: 링크 버튼(md) + 하트 */}
-      <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
-        {item.instagramUrl ? (
-          <Button
-            asChild
-            type="button"
-            variant="outline"
-            size="sm"
-            className="hidden md:inline-flex h-9 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow"
-          >
-            <a
-              href={item.instagramUrl}
-              target="_blank"
-              rel="noreferrer"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <Instagram className="h-3.5 w-3.5" />
-              Instagram
-            </a>
-          </Button>
-        ) : null}
-        {item.homepageUrl ? (
-          <Button
-            asChild
-            type="button"
-            variant="outline"
-            size="sm"
-            className="hidden md:inline-flex h-9 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow"
-          >
-            <a
-              href={item.homepageUrl}
-              target="_blank"
-              rel="noreferrer"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Homepage
-            </a>
-          </Button>
-        ) : null}
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          aria-label={isFavorite ? "찜 해제" : "찜하기"}
+    <PublisherCard
+      exhibitor={item}
+      index={index}
+      isFavorite={isFavorite}
+      events={events}
+      onFavoriteToggle={() => onToggle(getFavoriteKey(item))}
+      onNavigate={() => onNavigate(`/publishers/${item.no}`)}
+      rankTone="ink"
+      highlightCategory={highlightCategory}
+      desktopAside={
+        <p
           className={cn(
-            "size-8 rounded-none border-border shadow-brutal-sm md:size-9",
-            isFavorite
-              ? "border-brand-coral bg-brand-coral text-white hover:bg-brand-coral/90 hover:text-white"
-              : "bg-brand-panel hover:bg-brand-yellow"
+            "text-sm font-bold leading-6 text-brand-subtle",
+            item.introduction ? "line-clamp-4" : "text-brand-muted",
           )}
-          onClick={(event) => {
-            event.stopPropagation();
-            onToggle(favKey);
-          }}
         >
-          <Heart className={cn("h-3.5 w-3.5 md:h-4 md:w-4", isFavorite ? "fill-white text-white" : "text-brand-coral")} />
-        </Button>
-      </div>
-
-      <div className="border-b border-border p-4 pr-14">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="border border-border bg-brand-ink px-2 py-1 text-xs font-black text-white">
-              {index + 1}
-            </span>
-            <span className="border border-border bg-brand-yellow px-2 py-1 text-xs font-black text-brand-rust">
-              {booth}
-            </span>
-            <span className="inline-flex items-center gap-1 text-xs font-black text-brand-coral-deep">
-              <Heart className="h-3.5 w-3.5 fill-brand-coral text-brand-coral" />
-              {heartCount}
-            </span>
-          </div>
-          <div className="mt-3 flex min-w-0 items-center gap-2">
-            <h3 className="min-w-0 truncate text-base font-black md:text-lg">{getDisplayName(item)}</h3>
-            <Link
-              href={publisherHref}
-              onClick={(e) => e.stopPropagation()}
-              className="flex shrink-0 items-center justify-center text-brand-muted hover:text-brand-ink"
-              aria-label="출판사 상세 보기"
-            >
-              <ChevronRight className="h-4 w-4" />
-            </Link>
-          </div>
-          {(item.nameEn || categories.length) ? (
-            <p className="mt-1.5 truncate text-xs font-bold text-brand-muted">
-              {[
-                item.nameEn,
-                [...new Set(categories)].slice(0, 6).join(", ") || null,
-              ]
-                .filter(Boolean)
-                .join(" · ")}
-            </p>
-          ) : null}
-        </div>
-        {/* 모바일 전용 링크 버튼 */}
-        {(item.instagramUrl || item.homepageUrl) ? (
-          <div className="mt-3 flex flex-wrap gap-2 md:hidden">
-            {item.instagramUrl ? (
-              <Button
-                asChild
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 rounded-none border-border bg-white px-2 text-[10px] font-black hover:bg-brand-yellow"
-              >
-                <a
-                  href={item.instagramUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <Instagram className="h-3 w-3" />
-                  Instagram
-                </a>
-              </Button>
-            ) : null}
-            {item.homepageUrl ? (
-              <Button
-                asChild
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 rounded-none border-border bg-white px-2 text-[10px] font-black hover:bg-brand-yellow"
-              >
-                <a
-                  href={item.homepageUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(event) => event.stopPropagation()}
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Homepage
-                </a>
-              </Button>
-            ) : null}
-          </div>
-        ) : null}
-      </div>
-
-      {/* 모바일: 이벤트 토글 */}
-      <CollapsibleEventList events={events} />
-      {/* 웹: 소개(좌) + 이벤트 박스(우, 이벤트 있을 때만) */}
-      <div className={cn("hidden border-t border-border p-4 md:grid md:gap-3", events.length > 0 && "lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]")}>
-        <p className={cn("text-sm font-bold leading-6 text-brand-subtle", item.introduction ? "line-clamp-4" : "text-brand-muted")}>
           {item.introduction || "아직 소개 정보가 없습니다."}
         </p>
-        {events.length > 0 ? (
-          <div className="border border-border bg-brand-surface">
-            <div className="flex items-center justify-between border-b border-border px-3 py-2">
-              <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
-                <CalendarDays className="h-4 w-4" />
-                이벤트
-              </span>
-              <span className="text-xs font-black text-brand-muted">{events.length}개</span>
-            </div>
-            <ul>
-              {events.map((event) => (
-                <li
-                  key={`${getEventScheduleLabel(event)}-${event.title}`}
-                  className={cn(
-                    "grid items-baseline gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0",
-                    event.startAt
-                      ? "grid-cols-[8.25rem_minmax(0,1fr)]"
-                      : "grid-cols-[5.5rem_minmax(0,1fr)]",
-                  )}
-                >
-                  <span className="font-mono text-xs font-black whitespace-nowrap text-brand-coral-deep">{getEventScheduleLabel(event)}</span>
-                  <span className="min-w-0">
-                    <span className={cn("mr-1 border px-1.5 py-0.5 text-[11px] font-black", isCategoryFilter && event.category === eventFilter ? "border-brand-ink bg-brand-yellow" : "border-border bg-white")}>
-                      {event.category}
-                    </span>
-                    <span className="font-bold">{event.title}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
-      </div>
-    </article>
+      }
+    />
   );
 });
 

@@ -39,6 +39,7 @@ import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { FavoriteButton } from '@/components/fair-app/favorite-button';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
 
@@ -988,21 +989,11 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => selected && toggleFavorite(getFavoriteKey(selected))}
-              aria-label="부스 찜하기"
-              className="size-8 border-border bg-white hover:bg-brand-yellow"
-            >
-              <Heart
-                className={cn(
-                  'h-3.5 w-3.5',
-                  selected && favoriteSet.has(getFavoriteKey(selected)) && 'fill-brand-coral text-brand-coral',
-                )}
-              />
-            </Button>
+            <FavoriteButton
+              isFavorite={!!selected && favoriteSet.has(getFavoriteKey(selected))}
+              onToggle={() => selected && toggleFavorite(getFavoriteKey(selected))}
+              className="size-8 md:size-8"
+            />
             <Button
               type="button"
               variant="ghost"
@@ -1044,21 +1035,10 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
         {/* 데스크톱 전용 액션 버튼 */}
         {!isMobile && (
           <div className="flex shrink-0 items-center gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              onClick={() => selected && toggleFavorite(getFavoriteKey(selected))}
-              aria-label="부스 찜하기"
-              className="size-9 border-border bg-white hover:bg-brand-yellow"
-            >
-              <Heart
-                className={cn(
-                  'h-4 w-4',
-                  selected && favoriteSet.has(getFavoriteKey(selected)) && 'fill-brand-coral text-brand-coral',
-                )}
-              />
-            </Button>
+            <FavoriteButton
+              isFavorite={!!selected && favoriteSet.has(getFavoriteKey(selected))}
+              onToggle={() => selected && toggleFavorite(getFavoriteKey(selected))}
+            />
             <Button
               type="button"
               variant="ghost"
@@ -1211,7 +1191,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
           </Button>
         )}
       </div>
-      <div className="min-h-0 flex-1 overflow-y-auto p-3">
+      <div className={cn('p-3', !isMobile && 'min-h-0 flex-1 overflow-y-auto')}>
         <div className="mb-3 flex items-center justify-between border border-border bg-white px-3 py-2">
           <span className="text-xs font-black text-brand-muted">이벤트</span>
           <strong className="text-sm font-black">{selectedBoothEvents.length}개</strong>
@@ -1417,7 +1397,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                   className="min-h-0 flex-1 overflow-hidden"
                 >
                   {isEventPanelOpen && selected ? (
-                    <div className="flex h-full min-h-0 flex-col">{eventContent}</div>
+                    <div className="h-full overflow-y-auto">{eventContent}</div>
                   ) : isMobileDetailOpen ? (
                     <div className="h-full overflow-y-auto bg-brand-green">{detailContent}</div>
                   ) : (
@@ -1583,7 +1563,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
               <aside
                 data-map-overlay
                 onPointerDown={(event) => event.stopPropagation()}
-                className="absolute inset-x-4 top-16 bottom-4 z-[60] flex flex-col border border-border bg-brand-panel shadow-brutal sm:inset-x-auto sm:right-4 sm:w-[360px]"
+                className="absolute inset-x-4 top-16 bottom-4 z-[60] flex flex-col border border-border bg-brand-panel shadow-brutal sm:inset-x-auto sm:left-4 sm:w-[360px]"
               >
                 {eventContent}
               </aside>

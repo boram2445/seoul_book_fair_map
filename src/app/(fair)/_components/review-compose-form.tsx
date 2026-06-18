@@ -44,6 +44,7 @@ export function ReviewComposeForm({
   const [user, setUser] = useState<User | null>(null);
 
   // booth
+  const [boothListOpen, setBoothListOpen] = useState(false);
   const [boothQuery, setBoothQuery] = useState("");
   const [selectedBoothValue, setSelectedBoothValue] = useState(
     defaultPublisherNo ? `${defaultPublisherNo}` : targetOptions[0]?.value ?? ""
@@ -167,41 +168,53 @@ export function ReviewComposeForm({
             <Label htmlFor="booth-review-search" className="text-xs font-black text-brand-rust">
               부스 검색
             </Label>
-            <div className="flex items-center gap-2 border border-border bg-white px-3">
-              <Search className="h-4 w-4 shrink-0" />
-              <Input
-                id="booth-review-search"
-                value={boothQuery}
-                onChange={(e) => setBoothQuery(e.target.value)}
-                placeholder="부스 번호나 참여사 이름 검색"
-                className="h-11 border-0 px-0 font-bold shadow-none focus-visible:ring-0"
-              />
-            </div>
-            <div className="max-h-52 overflow-y-auto border border-border bg-white">
-              {filteredTargets.length ? (
-                filteredTargets.map((opt) => (
-                  <button
-                    key={opt.value}
-                    type="button"
-                    onClick={() => setSelectedBoothValue(opt.value)}
-                    className={cn(
-                      "grid w-full cursor-pointer grid-cols-[5rem_minmax(0,1fr)] items-center gap-3 border-b border-border/20 px-3 py-2 text-left text-sm last:border-b-0",
-                      selectedBoothValue === opt.value ? "bg-brand-ink text-white" : "hover:bg-brand-green"
-                    )}
-                  >
-                    <span
-                      className={cn(
-                        "border px-2 py-1 text-center text-xs font-black",
-                        selectedBoothValue === opt.value ? "border-white/40" : "border-border"
-                      )}
-                    >
-                      {opt.booth}
-                    </span>
-                    <span className="min-w-0 truncate font-black">{opt.name}</span>
-                  </button>
-                ))
-              ) : (
-                <p className="px-3 py-4 text-sm font-bold text-brand-muted">검색 결과가 없습니다.</p>
+            <div className="relative">
+              <div className="flex items-center gap-2 border border-border bg-white px-3">
+                <Search className="h-4 w-4 shrink-0 text-brand-muted" />
+                <Input
+                  id="booth-review-search"
+                  value={boothQuery}
+                  onChange={(e) => setBoothQuery(e.target.value)}
+                  onFocus={() => setBoothListOpen(true)}
+                  onBlur={() => setTimeout(() => setBoothListOpen(false), 150)}
+                  placeholder="부스 번호나 참여사 이름 검색"
+                  className="h-9 border-0 px-0 font-bold shadow-none focus-visible:ring-0 sm:h-11"
+                  autoComplete="off"
+                />
+              </div>
+              {boothListOpen && (
+                <div className="absolute left-0 right-0 top-full z-20 max-h-52 overflow-y-auto border border-t-0 border-border bg-white shadow-md">
+                  {filteredTargets.length ? (
+                    filteredTargets.map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onMouseDown={(e) => e.preventDefault()}
+                        onClick={() => {
+                          setSelectedBoothValue(opt.value);
+                          setBoothListOpen(false);
+                          setBoothQuery("");
+                        }}
+                        className={cn(
+                          "grid w-full cursor-pointer grid-cols-[5rem_minmax(0,1fr)] items-center gap-3 border-b border-border/20 px-3 py-2 text-left text-sm last:border-b-0",
+                          selectedBoothValue === opt.value ? "bg-brand-ink text-white" : "hover:bg-brand-green"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "border px-2 py-1 text-center text-xs font-black",
+                            selectedBoothValue === opt.value ? "border-white/40" : "border-border"
+                          )}
+                        >
+                          {opt.booth}
+                        </span>
+                        <span className="min-w-0 truncate font-black">{opt.name}</span>
+                      </button>
+                    ))
+                  ) : (
+                    <p className="px-3 py-4 text-sm font-bold text-brand-muted">검색 결과가 없습니다.</p>
+                  )}
+                </div>
               )}
             </div>
             {selectedBooth && (

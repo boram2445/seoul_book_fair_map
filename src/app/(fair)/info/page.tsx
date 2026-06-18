@@ -88,22 +88,22 @@ export default function InfoPage() {
         icon={Info}
       >
         <Tabs defaultValue="tips" className="gap-4">
-          <TabsList className="grid !h-11 w-full grid-cols-3 gap-0 overflow-hidden rounded-none border border-border bg-white p-0 sm:w-[420px]">
+          <TabsList className="grid !h-9 sm:!h-11 w-full grid-cols-3 gap-0 overflow-hidden rounded-none border border-border bg-white p-0 sm:w-[420px]">
             <TabsTrigger
               value="tips"
-              className="!h-11 cursor-pointer rounded-none border-r border-border text-sm font-black after:hidden data-[state=active]:bg-brand-ink data-[state=active]:text-white"
+              className="!h-9 sm:!h-11 cursor-pointer rounded-none border-r border-border text-sm font-black after:hidden data-[state=active]:bg-brand-ink data-[state=active]:text-white"
             >
               꿀팁
             </TabsTrigger>
             <TabsTrigger
               value="info"
-              className="!h-11 cursor-pointer rounded-none border-r border-border text-sm font-black after:hidden data-[state=active]:bg-brand-ink data-[state=active]:text-white"
+              className="!h-9 sm:!h-11 cursor-pointer rounded-none border-r border-border text-sm font-black after:hidden data-[state=active]:bg-brand-ink data-[state=active]:text-white"
             >
               행사 안내
             </TabsTrigger>
             <TabsTrigger
               value="faq"
-              className="!h-11 cursor-pointer rounded-none text-sm font-black after:hidden data-[state=active]:bg-brand-ink data-[state=active]:text-white"
+              className="!h-9 sm:!h-11 cursor-pointer rounded-none text-sm font-black after:hidden data-[state=active]:bg-brand-ink data-[state=active]:text-white"
             >
               FAQ
             </TabsTrigger>

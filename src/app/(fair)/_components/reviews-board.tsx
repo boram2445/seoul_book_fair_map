@@ -29,7 +29,7 @@ export function ReviewsBoard() {
               type="button"
               onClick={() => setScope(tab.value)}
               className={cn(
-                "flex-1 border-r border-border px-3 py-3 text-sm font-black last:border-r-0",
+                "flex-1 border-r border-border px-3 py-2 text-sm font-black last:border-r-0 sm:py-3",
                 scope === tab.value
                   ? "bg-brand-ink text-white"
                   : "text-brand-muted hover:bg-brand-surface"
@@ -39,10 +39,13 @@ export function ReviewsBoard() {
             </button>
           ))}
         </div>
-        <ReviewFeed scope={scope} />
       </section>
 
       <ReviewComposeForm key={scope} scope={scope} />
+
+      <section className="border border-border bg-white">
+        <ReviewFeed scope={scope} />
+      </section>
     </div>
   );
 }

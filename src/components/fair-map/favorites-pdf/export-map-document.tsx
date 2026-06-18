@@ -279,8 +279,8 @@ export function ExportListPage({ items, eventsByBooth = {}, memos = {}, ref }: E
             서울국제도서전 2026 · SIBF
           </p>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-            <h1 style={{ fontSize: 26, fontWeight: 900, color: C.ink, margin: 0 }}>
-              내 찜 부스 목록
+            <h1 style={{ fontSize: 26, fontWeight: 900, color: C.ink, margin: 0, whiteSpace: "nowrap" }}>
+              찜 부스
             </h1>
             <span style={{ fontSize: 13, color: C.muted }}>
               총 {items.length}개 부스
