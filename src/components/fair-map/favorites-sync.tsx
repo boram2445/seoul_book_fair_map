@@ -83,9 +83,12 @@ export function FavoritesSync() {
         }
       });
 
-      // 로컬에 있는 메모 → DB push (DB에 없거나 값이 다른 경우 모두)
+      // 로컬에 있는 메모 → DB push (현재 찜 목록에 있는 부스만)
+      // 찜 해제된 부스의 잔존 메모를 push하면 set_visit_memo가 favorites 행을 재생성하고
+      // 이후 list_my_favorite_nos 동기화가 그 부스를 찜 목록에 다시 추가하는 버그가 발생함.
       const dbMemoMap = new Map(dbMemos.map((r) => [String(r.exhibitor_no), r.visit_memo]));
       Object.entries(localMemos).forEach(([no, text]) => {
+        if (!localSet.has(no)) return; // 찜 해제된 부스의 메모는 push 건너뜀
         if (text && text !== dbMemoMap.get(no)) {
           supabase
             .rpc("set_visit_memo", { p_exhibitor_no: Number(no), p_memo: text })

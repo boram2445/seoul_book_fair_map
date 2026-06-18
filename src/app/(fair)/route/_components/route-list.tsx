@@ -22,6 +22,7 @@ import { CSS } from "@dnd-kit/utilities";
 import { CalendarDays, ChevronRight, ExternalLink, GripVertical, Heart, Instagram, MapPinned, NotebookPen } from "lucide-react";
 
 import { type BoothEvent, getEventScheduleLabel } from "@/components/fair-map/booth-events";
+import { CollapsibleEventList } from "@/components/fair-map/collapsible-event-list";
 import { boothForMap, getFavoriteKey, getDisplayName } from "@/components/fair-map/map-helpers";
 import { useFavorites } from "@/components/fair-map/use-favorites";
 import { useBoothMemo } from "@/components/fair-map/use-booth-memo";
@@ -209,6 +210,7 @@ function SortableBoothCard({
             <textarea
               value={localMemo}
               onClick={(e) => e.stopPropagation()}
+              onKeyDown={(e) => e.stopPropagation()}
               onChange={(e) => setLocalMemo(e.target.value)}
               onBlur={(e) => {
                 if (e.target.value === memo) return;
@@ -220,38 +222,8 @@ function SortableBoothCard({
               className="min-h-14 w-full resize-none border border-border bg-white px-3 py-2 text-sm font-bold leading-6 text-foreground placeholder:text-brand-muted focus-visible:border-ring focus-visible:outline-none focus-visible:ring-[3px] focus-visible:ring-ring/50"
             />
           </div>
-          {/* 모바일: 이벤트 있을 때만 인라인 표시 */}
-          {events.length > 0 ? (
-            <div className="border-t border-border p-3 md:hidden">
-              <div className="flex items-center gap-1.5 pb-2 text-xs font-black text-brand-rust">
-                <CalendarDays className="h-3.5 w-3.5" />
-                이벤트 {events.length}개
-              </div>
-              <ul className="border border-border">
-                {events.slice(0, 3).map((event) => (
-                  <li
-                    key={`${getEventScheduleLabel(event)}-${event.title}`}
-                    className={cn(
-                      "grid gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0",
-                      event.startAt
-                        ? "grid-cols-[8.25rem_minmax(0,1fr)]"
-                        : "grid-cols-[5.75rem_minmax(0,1fr)]",
-                    )}
-                  >
-                    <span className="font-mono text-xs font-black whitespace-nowrap text-brand-coral-deep">
-                      {getEventScheduleLabel(event)}
-                    </span>
-                    <span className="flex min-w-0 flex-wrap items-center gap-x-1">
-                      <span className="border border-border bg-white px-1.5 py-0.5 text-[11px] font-black">
-                        {event.category}
-                      </span>
-                      <span className="font-bold">{event.title}</span>
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
+          {/* 모바일: 이벤트 토글 */}
+          <CollapsibleEventList events={events} />
           {/* 웹: 방문 메모(좌) + 이벤트 박스(우, 이벤트 있을 때만) */}
           <div className={cn("hidden border-t border-border p-4 md:grid md:gap-3", events.length > 0 && "lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]")}>
             <div>
@@ -261,6 +233,8 @@ function SortableBoothCard({
               </div>
               <textarea
                 value={localMemo}
+                onClick={(e) => e.stopPropagation()}
+                onKeyDown={(e) => e.stopPropagation()}
                 onChange={(e) => setLocalMemo(e.target.value)}
                 onBlur={(e) => {
                   if (e.target.value === memo) return;
@@ -277,9 +251,17 @@ function SortableBoothCard({
                 <div className="flex items-center justify-between border-b border-border px-3 py-2">
                   <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
                     <CalendarDays className="h-4 w-4" />
-                    이벤트
+                    이벤트 {events.length}개
                   </span>
-                  <span className="text-xs font-black text-brand-muted">{events.length}개</span>
+                  {events.length > 3 ? (
+                    <Link
+                      href={`/publishers/${exhibitor.no}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="flex items-center gap-0.5 text-xs font-black text-brand-muted hover:text-brand-ink"
+                    >
+                      전체 보기 <ChevronRight className="h-3.5 w-3.5" />
+                    </Link>
+                  ) : null}
                 </div>
                 <ul>
                   {events.slice(0, 3).map((event) => (

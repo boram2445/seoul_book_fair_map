@@ -2,6 +2,7 @@
 
 import type React from "react";
 
+import { getEventScheduleLabel, type BoothEvent } from "../booth-events";
 import { boothForMap, exhibitorByFavoriteKey, exhibitors, getDisplayName, shapes as allShapes } from "../map-data";
 import type { BoothShape, MapExhibitor } from "../types";
 
@@ -38,6 +39,8 @@ export const C = {
   panel: "#fffdf7",
   muted: "#888",
   border: "#e2e0d9",
+  memoBg: "rgba(255,90,61,0.08)",
+  eventText: "#555",
 } as const;
 
 export interface FavoriteExportItem {
@@ -240,14 +243,19 @@ export function ExportMapPage({ items, routePath, routeBadges, ref }: ExportMapP
 
 interface ExportListPageProps {
   items: FavoriteExportItem[];
+  eventsByBooth?: Record<string, BoothEvent[]>;
+  memos?: Record<string, string>;
   ref?: React.Ref<HTMLDivElement>;
 }
 
 /**
  * Off-screen component: A4-width list of favourite booths (page 2 of the PDF).
+ * Each row shows: [index] [부스번호 배지] 출판사명, followed by:
+ *   - Event rows (title · schedule label) when present
+ *   - Memo block when present
  * Same wrapper/inner pattern as ExportMapPage.
  */
-export function ExportListPage({ items, ref }: ExportListPageProps) {
+export function ExportListPage({ items, eventsByBooth = {}, memos = {}, ref }: ExportListPageProps) {
   return (
     // Outer wrapper: off-screen, never captured
     <div
@@ -258,82 +266,139 @@ export function ExportListPage({ items, ref }: ExportListPageProps) {
       <div
         ref={ref}
         style={{
-          width: 794,
-          padding: "48px 56px",
+          width: 1123,
+          padding: "40px 48px",
           backgroundColor: C.panel,
           fontFamily: "sans-serif",
           boxSizing: "border-box",
         }}
       >
         {/* Header */}
-        <div style={{ borderBottom: `3px solid ${C.ink}`, paddingBottom: 16, marginBottom: 32 }}>
-          <p style={{ fontSize: 12, fontWeight: 800, color: C.coral, margin: "0 0 6px" }}>
+        <div style={{ borderBottom: `3px solid ${C.ink}`, paddingBottom: 8, marginBottom: 20 }}>
+          <p style={{ fontSize: 12, fontWeight: 800, color: C.coral, margin: "0 0 4px" }}>
             서울국제도서전 2026 · SIBF
           </p>
-          <h1 style={{ fontSize: 28, fontWeight: 900, color: C.ink, margin: 0 }}>
-            내 찜 부스 목록
-          </h1>
-          <p style={{ fontSize: 13, color: C.muted, margin: "8px 0 0" }}>
-            총 {items.length}개 부스
-          </p>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+            <h1 style={{ fontSize: 26, fontWeight: 900, color: C.ink, margin: 0 }}>
+              내 찜 부스 목록
+            </h1>
+            <span style={{ fontSize: 13, color: C.muted }}>
+              총 {items.length}개 부스
+            </span>
+          </div>
         </div>
 
-        {/* Numbered rows: [index] [부스배지] 출판사명 */}
-        <ol style={{ listStyle: "none", margin: 0, padding: 0 }}>
-          {items.map(({ favKey, booth, name }, index) => (
-            <li
-              key={favKey}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 14,
-                padding: "10px 0",
-                borderBottom: `1px solid ${C.border}`,
-              }}
-            >
-              {/* Index number */}
-              <span
+        {/* Numbered rows: 2-column layout, each item contains booth + events + memo */}
+        <ol style={{ listStyle: "none", margin: 0, padding: 0, columnCount: 2, columnGap: 32 }}>
+          {items.map(({ favKey, booth, name }, index) => {
+            const events = eventsByBooth[favKey] ?? [];
+            const memo = memos[favKey] ?? "";
+
+            return (
+              <li
+                key={favKey}
                 style={{
-                  flexShrink: 0,
-                  width: 28,
-                  fontSize: 12,
-                  fontWeight: 800,
-                  color: C.muted,
-                  textAlign: "right",
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 0,
+                  padding: "6px 0",
+                  borderBottom: `1px solid ${C.border}`,
+                  breakInside: "avoid",
+                  pageBreakInside: "avoid",
                 }}
               >
-                {index + 1}
-              </span>
-              {/* Booth number badge */}
-              <span
-                style={{
-                  flexShrink: 0,
-                  padding: "3px 8px",
-                  backgroundColor: C.coral,
-                  color: "#fff",
-                  fontSize: 11,
-                  fontWeight: 900,
-                  letterSpacing: "0.03em",
-                }}
-              >
-                {booth}
-              </span>
-              {/* Publisher name */}
-              <span
-                style={{
-                  fontSize: 14,
-                  fontWeight: 700,
-                  color: C.ink,
-                  minWidth: 0,
-                  overflow: "hidden",
-                  textOverflow: "ellipsis",
-                  whiteSpace: "nowrap",
-                }}
-              >
-                {name}
-              </span>
-            </li>
-          ))}
+                {/* Main row: index + booth badge + publisher name */}
+                <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+                  {/* Index number */}
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      width: 28,
+                      fontSize: 12,
+                      fontWeight: 800,
+                      color: C.muted,
+                      textAlign: "right",
+                    }}
+                  >
+                    {index + 1}
+                  </span>
+                  {/* Booth number badge */}
+                  <span
+                    style={{
+                      flexShrink: 0,
+                      padding: "3px 8px",
+                      backgroundColor: C.coral,
+                      color: "#fff",
+                      fontSize: 11,
+                      fontWeight: 900,
+                      letterSpacing: "0.03em",
+                    }}
+                  >
+                    {booth}
+                  </span>
+                  {/* Publisher name */}
+                  <span
+                    style={{
+                      fontSize: 14,
+                      fontWeight: 700,
+                      color: C.ink,
+                      minWidth: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                    }}
+                  >
+                    {name}
+                  </span>
+                </div>
+
+                {/* Event rows — title · schedule label only */}
+                {events.length > 0 && (
+                  <div style={{ marginTop: 5, paddingLeft: 42, display: "flex", flexDirection: "column", gap: 3 }}>
+                    {events.map((ev, i) => (
+                      <div
+                        key={i}
+                        style={{
+                          display: "flex",
+                          alignItems: "baseline",
+                          gap: 6,
+                          fontSize: 12,
+                          color: C.eventText,
+                        }}
+                      >
+                        <span style={{ flexShrink: 0, fontSize: 10, color: C.coral }}>▸</span>
+                        <span style={{ fontWeight: 600, color: C.ink }}>{ev.title}</span>
+                        <span style={{ color: C.muted, flexShrink: 0 }}>
+                          {getEventScheduleLabel(ev)}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {/* Memo block */}
+                {memo && (
+                  <div
+                    style={{
+                      marginTop: 6,
+                      marginLeft: 42,
+                      padding: "5px 10px",
+                      backgroundColor: C.memoBg,
+                      borderLeft: `3px solid ${C.coral}`,
+                      boxSizing: "border-box",
+                    }}
+                  >
+                    <span style={{ fontSize: 10, fontWeight: 800, color: C.coral, marginRight: 6 }}>
+                      메모
+                    </span>
+                    <span style={{ fontSize: 12, color: C.ink, whiteSpace: "pre-wrap", wordBreak: "break-all" }}>
+                      {memo}
+                    </span>
+                  </div>
+                )}
+              </li>
+            );
+          })}
         </ol>
 
         {/* Footer */}

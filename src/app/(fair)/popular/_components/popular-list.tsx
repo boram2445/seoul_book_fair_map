@@ -3,9 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CalendarDays, ChevronRight, ExternalLink, Heart, Instagram, Search } from "lucide-react";
+import { CalendarDays, ChevronRight, ExternalLink, Heart, Instagram, Search, X } from "lucide-react";
 
 import { type BoothEvent, getEventScheduleLabel } from "@/components/fair-map/booth-events";
+import { CollapsibleEventList } from "@/components/fair-map/collapsible-event-list";
 import { boothForMap, getFavoriteKey, getDisplayName, getSearchText, normalizeSearch } from "@/components/fair-map/map-helpers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -25,7 +26,9 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
 
   const [query, setQuery] = useState(() => searchParams.get("q") ?? "");
   const [debouncedQuery, setDebouncedQuery] = useState(() => searchParams.get("q") ?? "");
-  const [showEventsOnly, setShowEventsOnly] = useState(() => searchParams.get("events") === "1");
+  const [eventFilter, setEventFilter] = useState(() => searchParams.get("filter") ?? "전체");
+
+  const EVENT_CATEGORIES = ["굿즈", "사인회", "할인/증정", "전시", "신간", "토크/강연"] as const;
 
   // 검색어 디바운스
   useEffect(() => {
@@ -37,25 +40,33 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
   useEffect(() => {
     const params = new URLSearchParams();
     if (debouncedQuery) params.set("q", debouncedQuery);
-    if (showEventsOnly) params.set("events", "1");
+    if (eventFilter !== "전체") params.set("filter", eventFilter);
     const paramStr = params.toString();
     router.replace(paramStr ? `${pathname}?${paramStr}` : pathname, { scroll: false });
-  }, [debouncedQuery, showEventsOnly, pathname, router]);
+  }, [debouncedQuery, eventFilter, pathname, router]);
 
   const { favorites, toggleFavorite } = useFavorites();
   const favoriteSet = useMemo(() => new Set(favorites), [favorites]);
 
-  const eventsOnlyCount = useMemo(
-    () => publishers.filter((p) => (eventsByBooth[String(p.no)] ?? []).length > 0).length,
-    [publishers, eventsByBooth],
-  );
+  const filterCountMap = useMemo(() => {
+    const map: Record<string, number> = {};
+    map["이벤트"] = publishers.filter((p) => (eventsByBooth[String(p.no)] ?? []).length > 0).length;
+    for (const cat of EVENT_CATEGORIES) {
+      map[cat] = publishers.filter((p) =>
+        (eventsByBooth[String(p.no)] ?? []).some((e) => e.category === cat)
+      ).length;
+    }
+    return map;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [publishers, eventsByBooth]);
 
   const filteredItems = useMemo(() => {
     const normalizedQuery = normalizeSearch(debouncedQuery);
 
     return [...publishers]
       .filter((item) => {
-        if (showEventsOnly && (eventsByBooth[String(item.no)] ?? []).length === 0) return false;
+        if (eventFilter === "이벤트" && (eventsByBooth[String(item.no)] ?? []).length === 0) return false;
+        if (eventFilter !== "전체" && eventFilter !== "이벤트" && !(eventsByBooth[String(item.no)] ?? []).some((e) => e.category === eventFilter)) return false;
         if (!normalizedQuery) return true;
 
         return normalizeSearch(
@@ -79,7 +90,7 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
           first.no - second.no
         );
       });
-  }, [favoriteSet, publishers, debouncedQuery, showEventsOnly, eventsByBooth]);
+  }, [favoriteSet, publishers, debouncedQuery, eventFilter, eventsByBooth]);
 
   // toggleFavorite is re-created each render but reads localStorage directly → stale ref is safe
   const renderedCards = useMemo(() => filteredItems.map((item, index) => {
@@ -90,6 +101,7 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
     const categories = item.categories ?? [];
     const publisherHref = `/publishers/${item.no}`;
     const events = eventsByBooth[String(item.no)] ?? [];
+    const isCategoryFilter = eventFilter !== "전체" && eventFilter !== "이벤트";
 
     return (
       <article
@@ -245,36 +257,8 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
           ) : null}
         </div>
 
-        {/* 모바일: 이벤트 있을 때만 인라인 표시 */}
-        {events.length > 0 ? (
-          <div className="border-t border-border p-3 md:hidden">
-            <div className="flex items-center gap-1.5 pb-2 text-xs font-black text-brand-rust">
-              <CalendarDays className="h-3.5 w-3.5" />
-              이벤트 {events.length}개
-            </div>
-            <ul className="border border-border">
-              {events.map((event) => (
-                <li
-                  key={`${getEventScheduleLabel(event)}-${event.title}`}
-                  className={cn(
-                    "grid items-baseline gap-2 border-b border-border/20 px-3 py-2 text-sm last:border-b-0",
-                    event.startAt
-                      ? "grid-cols-[8.25rem_minmax(0,1fr)]"
-                      : "grid-cols-[5.5rem_minmax(0,1fr)]",
-                  )}
-                >
-                  <span className="font-mono text-xs font-black whitespace-nowrap text-brand-coral-deep">{getEventScheduleLabel(event)}</span>
-                  <span className="min-w-0">
-                    <span className="mr-1 border border-border bg-white px-1.5 py-0.5 text-[11px] font-black">
-                      {event.category}
-                    </span>
-                    <span className="font-bold">{event.title}</span>
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ) : null}
+        {/* 모바일: 이벤트 토글 */}
+        <CollapsibleEventList events={events} />
         {/* 웹: 소개(좌) + 이벤트 박스(우, 이벤트 있을 때만) */}
         <div className={cn("hidden border-t border-border p-4 md:grid md:gap-3", events.length > 0 && "lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]")}>
           <p className={cn("text-sm font-bold leading-6 text-brand-subtle", item.introduction ? "line-clamp-4" : "text-brand-muted")}>
@@ -302,7 +286,7 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
                   >
                     <span className="font-mono text-xs font-black whitespace-nowrap text-brand-coral-deep">{getEventScheduleLabel(event)}</span>
                     <span className="min-w-0">
-                      <span className="mr-1 border border-border bg-white px-1.5 py-0.5 text-[11px] font-black">
+                      <span className={cn("mr-1 border px-1.5 py-0.5 text-[11px] font-black", isCategoryFilter && event.category === eventFilter ? "border-brand-ink bg-brand-yellow" : "border-border bg-white")}>
                         {event.category}
                       </span>
                       <span className="font-bold">{event.title}</span>
@@ -316,7 +300,7 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
       </article>
     );
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }), [filteredItems, favoriteSet, eventsByBooth, router]);
+  }), [filteredItems, favoriteSet, eventsByBooth, router, eventFilter]);
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
@@ -332,22 +316,39 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
           <span className="shrink-0 text-xs font-bold tabular-nums text-brand-muted">
             {filteredItems.length}/{publishers.length}
           </span>
+          {query ? (
+            <button
+              type="button"
+              aria-label="검색어 지우기"
+              onClick={() => setQuery("")}
+              className="inline-flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center"
+            >
+              <X className="h-4 w-4" />
+            </button>
+          ) : null}
         </div>
         <div className="mt-3 flex flex-wrap gap-2">
-          <button
-            type="button"
-            aria-pressed={showEventsOnly}
-            onClick={() => setShowEventsOnly((prev) => !prev)}
-            className={cn(
-              "inline-flex items-center gap-1.5 border px-2.5 py-1 text-xs font-black transition-colors",
-              showEventsOnly
-                ? "border-brand-coral bg-brand-coral text-white"
-                : "border-border bg-brand-panel text-brand-rust hover:bg-brand-yellow"
-            )}
-          >
-            <CalendarDays className="h-3.5 w-3.5" />
-            이벤트 ({eventsOnlyCount})
-          </button>
+          {(["전체", "이벤트", ...EVENT_CATEGORIES] as const).map((f) => {
+            const isEvents = f === "이벤트";
+            const isActive = eventFilter === f;
+            return (
+              <button
+                key={f}
+                type="button"
+                aria-pressed={isActive}
+                onClick={() => setEventFilter(f)}
+                className={cn(
+                  "inline-flex items-center gap-1.5 border px-2.5 py-1 text-xs font-black transition-colors",
+                  isActive
+                    ? "border-brand-ink bg-brand-ink text-white"
+                    : "border-border bg-brand-panel text-brand-rust hover:bg-brand-yellow"
+                )}
+              >
+                {isEvents && <CalendarDays className="h-3.5 w-3.5" />}
+                {f}{filterCountMap[f] !== undefined ? ` (${filterCountMap[f]})` : ""}
+              </button>
+            );
+          })}
         </div>
       </section>
 

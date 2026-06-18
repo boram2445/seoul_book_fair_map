@@ -174,11 +174,11 @@ export function useExportFavoritesPdf() {
       doc.addPage([LANDSCAPE_W, LANDSCAPE_H]);
       placeHallPage(hallADataUrl, HALL_REGIONS.A, tableADataUrl, tableANode, "Hall A");
 
-      // ── Page 3: List (portrait) ────────────────────────────────────
-      const listImgW = A4_W - LIST_MARGIN * 2;
+      // ── Page 3: List (landscape) ───────────────────────────────────
+      const listImgW = LANDSCAPE_W - LIST_MARGIN * 2;
       const listImgH = listImgW * (listNode.offsetHeight / listNode.offsetWidth);
-      const listPageH = Math.max(A4_H, listImgH + LIST_MARGIN * 2);
-      doc.addPage([A4_W, listPageH]);
+      const listPageH = Math.max(LANDSCAPE_H, listImgH + LIST_MARGIN * 2);
+      doc.addPage([LANDSCAPE_W, listPageH]);
       doc.addImage(listDataUrl, "PNG", LIST_MARGIN, LIST_MARGIN, listImgW, listImgH);
 
       doc.save("서울국제도서전-찜부스-2026.pdf");

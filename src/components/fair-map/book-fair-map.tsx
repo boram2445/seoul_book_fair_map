@@ -397,6 +397,8 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
     if (!viewport) return;
 
     function handleNativeWheel(event: WheelEvent) {
+      // 오버레이 패널(이벤트 aside, 모바일 바텀시트) 위 휠은 패널 스크롤로 위임
+      if ((event.target as HTMLElement).closest('[data-map-overlay]')) return;
       event.preventDefault();
       const target = event.currentTarget;
       if (!(target instanceof HTMLElement)) return;
@@ -1204,6 +1206,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                 favKeys={favorites}
                 routePath={routePath}
                 routeBadges={routeBadges}
+                eventsByBooth={eventsByBooth}
               />
             </div>
           </div>
@@ -1496,6 +1499,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
             {isMobile ? (
               <div
                 ref={topPanelRef}
+                data-map-overlay
                 className="absolute inset-x-0 top-0 z-50 flex flex-col border-b border-border/60 bg-brand-panel md:hidden"
                 onClick={(event) => event.stopPropagation()}
                 onPointerDown={(event) => event.stopPropagation()}
@@ -1613,7 +1617,12 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                   <div className="absolute top-full left-1/2 z-[60] mt-1 w-52 -translate-x-1/2 border border-border bg-white px-3 py-2 shadow-brutal-sm text-xs font-bold text-brand-muted">
                     {favoriteBooths.length < 2
                       ? '찜한 부스가 2개 이상이어야 경로를 볼 수 있어요.'
-                      : '찜 내역 탭에서 드래그해 순서를 바꿀 수 있어요.'}
+                      : (
+                        <>
+                          <span className="block">찜 내역 탭에서 드래그해 순서를 바꿀 수 있어요.</span>
+                          <span className="mt-1 block">경로 버튼을 켜고 저장하면 경로도 함께 저장돼요.</span>
+                        </>
+                      )}
                   </div>
                 ) : null}
               </div>
@@ -1621,6 +1630,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                 favKeys={favorites}
                 routePath={routePath}
                 routeBadges={routeBadges}
+                eventsByBooth={eventsByBooth}
               />
               <Button
                 type="button"
@@ -1679,6 +1689,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
             {/* 데스크톱 전용 플로팅 이벤트 패널 — 모바일은 바텀시트 안 뷰로 표시 */}
             {!isMobile && isEventPanelOpen && selected ? (
               <aside
+                data-map-overlay
                 onPointerDown={(event) => event.stopPropagation()}
                 className="absolute inset-x-4 top-16 bottom-4 z-[60] flex flex-col border border-border bg-brand-panel shadow-brutal sm:inset-x-auto sm:right-4 sm:w-[360px]"
               >
