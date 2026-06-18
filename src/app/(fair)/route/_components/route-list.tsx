@@ -139,7 +139,7 @@ function SortableBoothCard({
                 <span className="border border-border bg-brand-panel px-2 py-1 text-xs font-black text-brand-muted">
                   {booth}
                 </span>
-                <span className="inline-flex items-center gap-1 border border-border bg-white px-2 py-1 text-xs font-black text-brand-coral-deep">
+                <span className="inline-flex items-center gap-1 text-xs font-black text-brand-coral-deep">
                   <Heart className="h-3.5 w-3.5 fill-brand-coral text-brand-coral" />
                   {heartCount}
                 </span>

@@ -103,7 +103,7 @@ export default async function PublisherDetailPage({
               </div>
             </div>
 
-            <div className={cn("grid gap-3 p-4", events.length > 0 && "lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]")}>
+            <div className={cn("grid items-start gap-3 p-4", events.length > 0 && "lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]")}>
               <p
                 className={cn(
                   "text-sm font-bold leading-6 text-brand-subtle",
@@ -114,15 +114,15 @@ export default async function PublisherDetailPage({
               </p>
 
               {events.length > 0 ? (
-                <div className="border border-border bg-brand-surface">
-                  <div className="flex items-center justify-between border-b border-border px-3 py-2">
+                <div className="flex flex-col border border-border bg-brand-surface lg:max-h-[480px]">
+                  <div className="flex shrink-0 items-center justify-between border-b border-border px-3 py-2">
                     <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
                       <CalendarDays className="h-4 w-4" />
                       이벤트
                     </span>
                     <span className="text-xs font-black text-brand-muted">{events.length}개</span>
                   </div>
-                  <div className="p-3">
+                  <div className="overflow-y-auto p-3">
                     <BoothEventDetailList events={events} />
                   </div>
                 </div>

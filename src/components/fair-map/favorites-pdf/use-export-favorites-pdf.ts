@@ -1,4 +1,5 @@
 import { useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { toast } from "sonner";
 
 import { HALL_REGIONS } from "./export-map-document";
@@ -69,13 +70,21 @@ export function useExportFavoritesPdf() {
   const [isExporting, setIsExporting] = useState(false);
 
   async function exportPdf() {
+    // Re-entrancy guard — also gates the conditional render of capture nodes
+    if (isExporting) return;
+
+    // Mount capture nodes synchronously so refs are populated before we read them.
+    flushSync(() => setIsExporting(true));
+
     const mapNode = mapRef.current;
     const listNode = listRef.current;
     const tableANode = tableRefA.current;
     const tableBNode = tableRefB.current;
-    if (!mapNode || !listNode || !tableANode || !tableBNode) return;
+    if (!mapNode || !listNode || !tableANode || !tableBNode) {
+      setIsExporting(false);
+      return;
+    }
 
-    setIsExporting(true);
     try {
       // Ensure the floor-plan SVG has finished loading before we capture.
       const svgImg = mapNode.querySelector("img");

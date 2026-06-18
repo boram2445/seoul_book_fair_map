@@ -25,7 +25,7 @@
   "plansDirectory": ".claude/plans/",
   "enableAllProjectMcpServers": true,
   "teammateMode": "in-process",
-  "outputStyle": "Learning",
+
   "attribution": {
     "commit": "",
     "pr": ""

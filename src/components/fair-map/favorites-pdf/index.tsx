@@ -67,11 +67,15 @@ export function ExportFavoritesButton({
         </div>
       </div>
 
-      {/* Off-screen capture nodes — not visible to the user */}
-      <ExportMapPage ref={mapRef} items={items} routePath={routePath} routeBadges={routeBadges} />
-      <ExportListPage ref={listRef} items={items} eventsByBooth={eventsByBooth} memos={memos} />
-      <ExportHallTable ref={tableRefA} hall="A" favKeys={favKeys} />
-      <ExportHallTable ref={tableRefB} hall="B" favKeys={favKeys} />
+      {/* Off-screen capture nodes — mounted only during export to avoid constant DOM weight */}
+      {isExporting && (
+        <>
+          <ExportMapPage ref={mapRef} items={items} routePath={routePath} routeBadges={routeBadges} />
+          <ExportListPage ref={listRef} items={items} eventsByBooth={eventsByBooth} memos={memos} />
+          <ExportHallTable ref={tableRefA} hall="A" favKeys={favKeys} />
+          <ExportHallTable ref={tableRefB} hall="B" favKeys={favKeys} />
+        </>
+      )}
     </>
   );
 }

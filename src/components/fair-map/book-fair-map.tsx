@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   DndContext,
   type DragEndEvent,
@@ -33,7 +33,6 @@ import {
   RotateCcw,
   Route,
   Search,
-  Star,
   X,
 } from 'lucide-react';
 import Image from 'next/image';
@@ -46,6 +45,8 @@ import { useIsMobile } from '@/hooks/use-mobile';
 import { BoothEventDetailList } from './booth-event-detail-list';
 import { type BoothEvent, getEventScheduleLabel } from './booth-events';
 import { boothForMap, getFavoriteKey, getDisplayName, getSearchText, normalizeSearch } from './map-helpers';
+import { MapBoothLayer } from './map-booth-layer';
+import { MapLabelLayer } from './map-label-layer';
 import { ExportFavoritesButton } from './favorites-pdf/index';
 import { buildRoute, MAP_HEIGHT, MAP_WIDTH } from './route-path';
 import type { BoothShape, MapExhibitor } from './types';
@@ -222,6 +223,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
   const listItemRefsRef = useRef<Map<number, HTMLLIElement>>(new Map());
   const lastSheetToggleTimeRef = useRef(0);
   const transformRef = useRef(transform);
+  const sheetOffsetRef = useRef(sheetOffset);
   const activePointersRef = useRef(new Map<number, { x: number; y: number }>());
   const dragRef = useRef({
     pointerId: 0,
@@ -263,6 +265,10 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
   useEffect(() => {
     transformRef.current = transform;
   }, [transform]);
+
+  useEffect(() => {
+    sheetOffsetRef.current = sheetOffset;
+  }, [sheetOffset]);
 
   function getTopPanelHeight() {
     return topPanelHeight || getViewportHeight() * TOP_PANEL_HEIGHT_RATIO;
@@ -428,13 +434,14 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
     };
   }, []);
 
-  function centerBooth(booth: string, nextScale?: number) {
+  const centerBooth = useCallback(function centerBooth(booth: string, nextScale?: number) {
     const shape = shapesByBooth.get(booth);
     const viewport = viewportRef.current;
     if (!shape || !viewport) return;
 
     const rect = viewport.getBoundingClientRect();
-    const scale = nextScale ?? transform.scale;
+    // transformRef 사용 → transform state 의존성 제거 (useCallback 안정화)
+    const scale = nextScale ?? transformRef.current.scale;
     const centerX = shape.x + shape.width / 2;
     const centerY = shape.y + shape.height / 2;
 
@@ -443,7 +450,8 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
     let targetY: number;
     if (isMobile) {
       const panelHeight = getViewportHeight() * TOP_PANEL_HEIGHT_RATIO;
-      const coveredHeight = Math.max(TOP_PANEL_COLLAPSED_PX, panelHeight + sheetOffset);
+      // sheetOffsetRef 사용 → sheetOffset state 의존성 제거
+      const coveredHeight = Math.max(TOP_PANEL_COLLAPSED_PX, panelHeight + sheetOffsetRef.current);
       const visibleAreaHeight = Math.max(1, rect.height - coveredHeight);
       targetY = coveredHeight + visibleAreaHeight * (2 / 3);
     } else {
@@ -455,20 +463,35 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
       x: rect.width / 2 - centerX * scale,
       y: targetY - centerY * scale,
     });
-  }
+  }, [shapesByBooth, isMobile]);
 
-  function selectExhibitor(exhibitor: MapExhibitor, options: { shouldFocusMap?: boolean; focusMap?: boolean; keepView?: boolean } = {}) {
+  const selectExhibitor = useCallback(function selectExhibitor(
+    exhibitor: MapExhibitor,
+    options: { shouldFocusMap?: boolean; focusMap?: boolean; keepView?: boolean } = {},
+  ) {
     setSelectedNo(exhibitor.no);
     setIsIntroductionExpanded(false);
     if (!options.keepView && (!isMobile || options.shouldFocusMap || options.focusMap)) {
-      const nextScale = options.focusMap ? Math.max(transform.scale, FOCUS_SCALE) : undefined;
+      // transformRef 사용 → transform state 의존성 제거
+      const nextScale = options.focusMap
+        ? Math.max(transformRef.current.scale, FOCUS_SCALE)
+        : undefined;
       centerBooth(boothForMap(exhibitor), nextScale);
     }
     if (isMobile) {
-      setSheetOffset(computeSnapOffsets(getTopPanelHeight()).expanded);
+      // topPanelRef DOM 직접 읽기 → topPanelHeight state 의존성 제거
+      const panelH =
+        topPanelRef.current?.getBoundingClientRect().height ??
+        getViewportHeight() * TOP_PANEL_HEIGHT_RATIO;
+      setSheetOffset(computeSnapOffsets(panelH).expanded);
       setIsMobileDetailOpen(true);
     }
-  }
+  }, [isMobile, centerBooth]);
+
+  /** 지도 부스 버튼 전용 — keepView:true 고정, MapBoothLayer 에 안정 참조로 전달 */
+  const onSelectBoothExhibitor = useCallback((exhibitor: MapExhibitor) => {
+    selectExhibitor(exhibitor, { keepView: true });
+  }, [selectExhibitor]);
 
   function zoomBy(delta: number) {
     const viewport = viewportRef.current;
@@ -1227,7 +1250,8 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
               style={{
                 width: MAP_WIDTH,
                 height: MAP_HEIGHT,
-                transform: `translate(${transform.x}px, ${transform.y}px) scale(${transform.scale})`,
+                // translate3d → GPU 합성 레이어 힌트
+                transform: `translate3d(${transform.x}px, ${transform.y}px, 0) scale(${transform.scale})`,
                 transformOrigin: '0 0',
                 willChange: isDragging ? 'transform' : 'auto',
               }}
@@ -1242,226 +1266,25 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                 draggable={false}
               />
 
-              {shapes.map((shape) => {
-                const boothItems = exhibitorsByBooth[shape.boothNumber] ?? [];
-                if (!boothItems.length) return null;
-
-                const isSelected = shape.boothNumber === selectedBooth;
-                const isFavorite = boothItems.some((item) => favoriteSet.has(getFavoriteKey(item)));
-
-                return (
-                  <button
-                    key={shape.boothNumber}
-                    type="button"
-                    aria-label={`${shape.boothNumber} ${boothItems.map(getDisplayName).join(', ')}`}
-                    title={`${shape.boothNumber} ${boothItems.map(getDisplayName).join(', ')}`}
-                    onPointerDown={(event) => {
-                      if (event.pointerType === 'mouse') event.stopPropagation();
-                    }}
-                    onClick={() => selectExhibitor(boothItems[0], { keepView: true })}
-                    className={cn(
-                      'absolute cursor-pointer transition focus-visible:outline-3 focus-visible:outline-offset-1 focus-visible:outline-brand-coral',
-                      isSelected ? 'z-30' : isFavorite ? 'z-20' : 'z-10',
-                      isSelected && 'bg-brand-green/45 ring-4 ring-brand-green',
-                      isFavorite && !isSelected && 'bg-brand-coral/25 ring-2 ring-brand-coral',
-                      !isSelected &&
-                        !isFavorite &&
-                        'hover:bg-brand-yellow/35 hover:ring-2 hover:ring-brand-ink',
-                    )}
-                    style={{
-                      left: shape.x,
-                      top: shape.y,
-                      width: shape.width,
-                      height: shape.height,
-                    }}
-                  >
-                    {isFavorite && !routeOrderByBooth.has(shape.boothNumber) ? (
-                      <Star className="absolute -top-3 -right-3 h-6 w-6 fill-brand-coral text-foreground drop-shadow-[0_1px_0_var(--color-brand-panel)]" />
-                    ) : null}
-                  </button>
-                );
-              })}
-
-              {selectedShape ? (
-                <div
-                  className="pointer-events-none absolute z-[5] border-2 border-border bg-brand-green/30 shadow-[0_0_0_5px_var(--color-brand-green)]"
-                  style={{
-                    left: selectedShape.x,
-                    top: selectedShape.y,
-                    width: selectedShape.width,
-                    height: selectedShape.height,
-                  }}
-                />
-              ) : null}
-
-              {/* 경로 오버레이 — 찜 순서대로 부스 중심을 잇는 선 */}
-              {routePath.length >= 2 ? (
-                <svg
-                  className="pointer-events-none absolute inset-0 z-[35] overflow-visible"
-                  style={{ width: MAP_WIDTH, height: MAP_HEIGHT }}
-                  viewBox={`0 0 ${MAP_WIDTH} ${MAP_HEIGHT}`}
-                  aria-hidden
-                >
-                  {/* A* 통로 경로 꺾은선 */}
-                  <polyline
-                    points={routePath.map((p) => `${p.x},${p.y}`).join(' ')}
-                    fill="none"
-                    stroke="var(--color-brand-coral)"
-                    strokeWidth={8}
-                    strokeDasharray="20 8"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    opacity={0.85}
-                  />
-                </svg>
-              ) : null}
+              {/* 부스 클릭 레이어 + 선택 하이라이트 + 경로 오버레이 */}
+              <MapBoothLayer
+                shapes={shapes}
+                exhibitorsByBooth={exhibitorsByBooth}
+                selectedBooth={selectedBooth}
+                selectedShape={selectedShape}
+                favoriteSet={favoriteSet}
+                routeOrderByBooth={routeOrderByBooth}
+                routePath={routePath}
+                onSelectExhibitor={onSelectBoothExhibitor}
+              />
 
               {/* 정적 부스 라벨 레이어 — 맵 좌표계 안쪽, CSS transform 으로 줌/팬 */}
-              {shapes.map((shape) => {
-                const boothItems = labelExhibitorsByBooth[shape.boothNumber] ?? [];
-                if (!boothItems.length) return null;
-
-                const isBlack = shape.fill === 'black';
-                const isSelected = shape.boothNumber === selectedBooth;
-                const isFavorite = boothItems.some((item) => favoriteSet.has(getFavoriteKey(item)));
-
-                /**
-                 * 구역형 부스: 멤버의 origBooth 가 도형 번호와 다른 경우
-                 * (현재 B400 책마을만 해당 — 101개 참여사가 B401~B473 으로 세분)
-                 */
-                const isZone = boothItems.some((it) => boothForMap(it) !== shape.boothNumber);
-
-                const textColor = isBlack
-                  ? 'white'
-                  : isSelected
-                    ? 'var(--color-brand-green-ink)'
-                    : isFavorite
-                      ? 'var(--color-brand-coral-deep)'
-                      : '#333';
-                const halo = isBlack
-                  ? '0 1px 0 #000, 1px 0 0 #000, 0 -1px 0 #000, -1px 0 0 #000'
-                  : '0 1px 0 white, 1px 0 0 white, 0 -1px 0 white, -1px 0 0 white';
-
-                if (isZone) {
-                  // 구역 대표명: origBooth 가 구역 번호와 같은 항목의 이름
-                  const zoneTitle =
-                    getDisplayName(
-                      boothItems.find((it) => boothForMap(it) === shape.boothNumber) ??
-                        boothItems[0],
-                    ) + ` (${shape.boothNumber})`;
-
-                  return (
-                    <div
-                      key={`label-${shape.boothNumber}`}
-                      className="pointer-events-none absolute z-[36] overflow-hidden"
-                      style={{
-                        left: shape.x,
-                        top: shape.y,
-                        width: shape.width,
-                        height: shape.height,
-                        padding: '4px 3px 2px',
-                        color: textColor,
-                        textShadow: halo,
-                      }}
-                    >
-                      {/* 헤더 */}
-                      <div
-                        style={{
-                          fontSize: 9,
-                          fontWeight: 800,
-                          textAlign: 'center',
-                          marginBottom: 2,
-                          lineHeight: 1.2,
-                        }}
-                      >
-                        {zoneTitle}
-                      </div>
-                      {/* 2열 리스트 */}
-                      <div
-                        style={{
-                          columnCount: 2,
-                          columnGap: 3,
-                          fontSize: 6.5,
-                          fontWeight: 700,
-                          lineHeight: 1.15,
-                          textAlign: 'left',
-                        }}
-                      >
-                        {boothItems.map((item) => (
-                          <div
-                            key={item.no}
-                            style={{ whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}
-                          >
-                            {boothForMap(item)} - {getDisplayName(item)}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  );
-                }
-
-                // 일반 부스 — 높이에 비례한 최대 표시 수 (1줄 ≈ 13 map px, 상한 30)
-                const maxDisplay = Math.min(Math.floor(shape.height / 13), 30);
-                const displayed = boothItems.slice(0, maxDisplay);
-                const overflow = boothItems.length - displayed.length;
-
-                return (
-                  <div
-                    key={`label-${shape.boothNumber}`}
-                    className="pointer-events-none absolute z-[36] flex flex-col items-center overflow-hidden text-center"
-                    style={{
-                      left: shape.x,
-                      top: shape.y,
-                      width: shape.width,
-                      height: shape.height,
-                      paddingTop: Math.min(6, shape.height * 0.12),
-                      lineHeight: 1.15,
-                      color: textColor,
-                      textShadow: halo,
-                    }}
-                  >
-                    {!isBlack && (
-                      <span
-                        style={{
-                          display: 'block',
-                          fontSize: 9,
-                          fontFamily: 'monospace',
-                          fontWeight: 700,
-                        }}
-                      >
-                        {shape.boothNumber}
-                      </span>
-                    )}
-                    {displayed.map((item) => (
-                      <span
-                        key={item.no}
-                        style={{
-                          display: 'block',
-                          fontSize: 10,
-                          fontWeight: 800,
-                          wordBreak: 'keep-all',
-                          overflowWrap: 'anywhere',
-                          maxWidth: '100%',
-                        }}
-                      >
-                        {getDisplayName(item)}
-                      </span>
-                    ))}
-                    {overflow > 0 && (
-                      <span
-                        style={{
-                          display: 'block',
-                          fontSize: 8,
-                          fontWeight: 700,
-                          opacity: 0.7,
-                        }}
-                      >
-                        외 {overflow}
-                      </span>
-                    )}
-                  </div>
-                );
-              })}
+              <MapLabelLayer
+                shapes={shapes}
+                labelExhibitorsByBooth={labelExhibitorsByBooth}
+                selectedBooth={selectedBooth}
+                favoriteSet={favoriteSet}
+              />
             </div>
 
             {routeBadges.map((badge) => (
