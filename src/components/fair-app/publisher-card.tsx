@@ -3,18 +3,17 @@ import Link from 'next/link';
 import {
   CalendarDays,
   ChevronRight,
-  ExternalLink,
   Heart,
-  Instagram,
+  MapPin,
 } from 'lucide-react';
 
 import { type BoothEvent, getEventScheduleLabel } from '@/components/fair-map/booth-events';
 import { CollapsibleEventList } from '@/components/fair-map/collapsible-event-list';
 import { boothForMap, getDisplayName } from '@/components/fair-map/map-helpers';
-import { Button } from '@/components/ui/button';
 import type { FairMapPublisher } from '@/lib/types/fair-map/type';
 import { cn } from '@/lib/utils';
 
+import { ExternalLinkButton } from './external-link-button';
 import { FavoriteButton } from './favorite-button';
 
 export interface PublisherCardProps {
@@ -82,48 +81,28 @@ export function PublisherCard({
       {/* 상단 우측 액션 행: 링크 버튼(md) + 찜 */}
       <div className="absolute top-3 right-3 z-10 flex items-center gap-1.5">
         {exhibitor.instagramUrl ? (
-          <Button
-            asChild
-            type="button"
-            variant="outline"
-            size="sm"
-            className="hidden md:inline-flex h-9 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow"
-          >
-            <a
-              href={exhibitor.instagramUrl}
-              target="_blank"
-              rel="noreferrer"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <Instagram className="h-3.5 w-3.5" />
-              Instagram
-            </a>
-          </Button>
+          <ExternalLinkButton
+            href={exhibitor.instagramUrl}
+            kind="instagram"
+            tone="white"
+            onClick={(e) => e.stopPropagation()}
+            className="hidden md:inline-flex"
+          />
         ) : null}
         {exhibitor.homepageUrl ? (
-          <Button
-            asChild
-            type="button"
-            variant="outline"
-            size="sm"
-            className="hidden md:inline-flex h-9 rounded-none border-border bg-white px-2.5 text-[11px] font-black hover:bg-brand-yellow"
-          >
-            <a
-              href={exhibitor.homepageUrl}
-              target="_blank"
-              rel="noreferrer"
-              onClick={(e) => e.stopPropagation()}
-            >
-              <ExternalLink className="h-3.5 w-3.5" />
-              Homepage
-            </a>
-          </Button>
+          <ExternalLinkButton
+            href={exhibitor.homepageUrl}
+            kind="homepage"
+            tone="white"
+            onClick={(e) => e.stopPropagation()}
+            className="hidden md:inline-flex"
+          />
         ) : null}
         <FavoriteButton isFavorite={isFavorite} onToggle={onFavoriteToggle} />
       </div>
 
       {/* 헤더 */}
-      <div className="border-b border-border p-4 pr-14">
+      <div className="border-b border-border/20 p-4 pr-14">
         <div className="min-w-0">
           {/* 배지 행: 순번 · 부스 · 찜 수 */}
           <div className="flex flex-wrap items-center gap-2">
@@ -137,14 +116,8 @@ export function PublisherCard({
             >
               {index + 1}
             </span>
-            <span
-              className={cn(
-                'border border-border px-2 py-1 text-xs font-black',
-                rankTone === 'green'
-                  ? 'bg-brand-panel text-brand-muted'
-                  : 'bg-brand-yellow text-brand-rust',
-              )}
-            >
+            <span className="inline-flex items-center gap-1 bg-brand-hover px-2 py-1 text-xs font-black text-brand-muted">
+              <MapPin className="h-3 w-3 shrink-0" />
               {booth}
             </span>
             <span className="inline-flex items-center gap-1 text-xs font-black text-brand-coral-deep">
@@ -161,10 +134,11 @@ export function PublisherCard({
             <Link
               href={publisherHref}
               onClick={(e) => e.stopPropagation()}
-              className="flex shrink-0 items-center justify-center text-brand-muted hover:text-brand-ink"
+              className="flex shrink-0 items-center gap-0.5 text-xs font-black text-brand-rust hover:text-brand-ink"
               aria-label="출판사 상세 보기"
             >
-              <ChevronRight className="h-4 w-4" />
+              상세
+              <ChevronRight className="h-3.5 w-3.5" />
             </Link>
           </div>
 
@@ -183,44 +157,24 @@ export function PublisherCard({
 
         {/* 모바일 전용 링크 버튼 */}
         {(exhibitor.instagramUrl || exhibitor.homepageUrl) ? (
-          <div className="mt-3 flex flex-wrap gap-2 md:hidden">
+          <div className="mt-3 -mr-10 flex flex-wrap justify-end gap-2 md:hidden">
             {exhibitor.instagramUrl ? (
-              <Button
-                asChild
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 rounded-none border-border bg-white px-2 text-[10px] font-black hover:bg-brand-yellow"
-              >
-                <a
-                  href={exhibitor.instagramUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <Instagram className="h-3 w-3" />
-                  Instagram
-                </a>
-              </Button>
+              <ExternalLinkButton
+                href={exhibitor.instagramUrl}
+                kind="instagram"
+                tone="white"
+                mobileIconOnly
+                onClick={(e) => e.stopPropagation()}
+              />
             ) : null}
             {exhibitor.homepageUrl ? (
-              <Button
-                asChild
-                type="button"
-                variant="outline"
-                size="sm"
-                className="h-7 rounded-none border-border bg-white px-2 text-[10px] font-black hover:bg-brand-yellow"
-              >
-                <a
-                  href={exhibitor.homepageUrl}
-                  target="_blank"
-                  rel="noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                >
-                  <ExternalLink className="h-3 w-3" />
-                  Homepage
-                </a>
-              </Button>
+              <ExternalLinkButton
+                href={exhibitor.homepageUrl}
+                kind="homepage"
+                tone="white"
+                mobileIconOnly
+                onClick={(e) => e.stopPropagation()}
+              />
             ) : null}
           </div>
         ) : null}
@@ -230,19 +184,19 @@ export function PublisherCard({
       {mobileBlock ?? null}
 
       {/* 모바일 이벤트 토글 */}
-      <CollapsibleEventList events={events} />
+      <CollapsibleEventList events={events} highlightCategory={highlightCategory} />
 
       {/* 데스크톱: 소개/메모(좌) + 이벤트 박스(우) */}
       <div
         className={cn(
-          'hidden border-t border-border p-4 md:grid md:gap-3',
+          'hidden border-t border-border/20 p-4 md:grid md:gap-3',
           events.length > 0 && 'lg:grid-cols-[minmax(0,1fr)_minmax(280px,0.8fr)]',
         )}
       >
         {desktopAside}
         {events.length > 0 ? (
-          <div className="border border-border bg-brand-surface">
-            <div className="flex items-center justify-between border-b border-border px-3 py-2">
+          <div className="border border-border/20 bg-brand-surface">
+            <div className="flex items-center justify-between border-b border-border/20 px-3 py-2">
               <span className="inline-flex items-center gap-1.5 text-xs font-black text-brand-rust">
                 <CalendarDays className="h-4 w-4" />
                 이벤트

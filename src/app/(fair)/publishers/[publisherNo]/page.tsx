@@ -1,14 +1,14 @@
 import { notFound } from "next/navigation";
-import { CalendarDays, ExternalLink, Heart, Instagram } from "lucide-react";
+import { CalendarDays, Heart } from "lucide-react";
 
 import { GetPublisherByExhibitorNo, GetPublisherEvents } from "@/api/fair-map/fair-map";
 import { ReviewComposeForm } from "@/app/(fair)/_components/review-compose-form";
 import { ReviewFeed } from "@/app/(fair)/_components/review-feed";
 import { BackButton } from "./_components/back-button";
 import { PublisherReviewHeader } from "./_components/publisher-review-header";
+import { ExternalLinkButton } from "@/components/fair-app/external-link-button";
 import { BoothEventDetailList } from "@/components/fair-map/booth-event-detail-list";
 import { boothForMap, getDisplayName } from "@/components/fair-map/map-helpers";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 
@@ -73,32 +73,10 @@ export default async function PublisherDetailPage({
 
               <div className="flex flex-wrap gap-2 md:justify-end">
                 {publisher.instagramUrl ? (
-                  <Button
-                    asChild
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-9 rounded-none border-border bg-brand-panel px-2.5 text-[11px] font-black hover:bg-brand-yellow"
-                  >
-                    <a href={publisher.instagramUrl} target="_blank" rel="noreferrer">
-                      <Instagram className="h-4 w-4" />
-                      Instagram
-                    </a>
-                  </Button>
+                  <ExternalLinkButton href={publisher.instagramUrl} kind="instagram" tone="panel" />
                 ) : null}
                 {publisher.homepageUrl ? (
-                  <Button
-                    asChild
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="h-9 rounded-none border-border bg-brand-panel px-2.5 text-[11px] font-black hover:bg-brand-yellow"
-                  >
-                    <a href={publisher.homepageUrl} target="_blank" rel="noreferrer">
-                      <ExternalLink className="h-4 w-4" />
-                      Homepage
-                    </a>
-                  </Button>
+                  <ExternalLinkButton href={publisher.homepageUrl} kind="homepage" tone="panel" />
                 ) : null}
               </div>
             </div>
@@ -130,14 +108,14 @@ export default async function PublisherDetailPage({
             </div>
           </article>
 
+          <ReviewComposeForm defaultPublisherNo={publisher.no} variant="publisher" />
+
           <section className="border border-border bg-white">
             <div className="border-b border-border px-4 py-3">
               <PublisherReviewHeader exhibitorNo={publisher.no} />
             </div>
             <ReviewFeed exhibitorNo={publisher.no} hideTag />
           </section>
-
-          <ReviewComposeForm defaultPublisherNo={publisher.no} variant="publisher" />
         </div>
       </div>
     </div>

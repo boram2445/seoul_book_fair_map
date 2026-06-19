@@ -1,9 +1,8 @@
 "use client";
 
-import { Instagram } from "lucide-react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { ExternalLinkButton } from "@/components/fair-app/external-link-button";
 import { cn } from "@/lib/utils";
 
 export type TipItem = {
@@ -71,7 +70,7 @@ export function TipsList({ posts }: { posts: TipPost[] }) {
             type="button"
             onClick={() => setView(mode)}
             className={cn(
-              "flex-1 border-r py-2 text-sm font-black last:border-r-0",
+              "flex-1 cursor-pointer border-r py-2 text-sm font-black last:border-r-0",
               view === mode
                 ? "border-r-border bg-brand-ink text-white"
                 : "border-r-border bg-white text-brand-ink hover:bg-brand-surface",
@@ -129,18 +128,12 @@ export function TipsList({ posts }: { posts: TipPost[] }) {
                           출처 {sg.sourceName}
                         </span>
                         {sg.instagramUrl ? (
-                          <Button
-                            asChild
-                            type="button"
-                            variant="outline"
-                            size="sm"
-                            className="h-8 shrink-0 rounded-none border-border bg-brand-panel px-2 text-xs font-black hover:bg-brand-yellow"
-                          >
-                            <a href={sg.instagramUrl} target="_blank" rel="noreferrer">
-                              <Instagram className="h-4 w-4" />
-                              원문
-                            </a>
-                          </Button>
+                          <ExternalLinkButton
+                            href={sg.instagramUrl}
+                            kind="instagram"
+                            label="원문"
+                            tone="panel"
+                          />
                         ) : null}
                       </div>
                     </article>
@@ -170,31 +163,19 @@ export function TipsList({ posts }: { posts: TipPost[] }) {
                       출처 {post.sourceName}
                     </span>
                     <div className="flex shrink-0 items-center gap-1">
-                      <Button
-                        asChild
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        className="h-8 rounded-none border-border bg-brand-panel px-2 text-xs font-black hover:bg-brand-yellow"
-                      >
-                        <a href={getAccountUrl(post.sourceName)} target="_blank" rel="noreferrer">
-                          <Instagram className="h-4 w-4" />
-                          계정
-                        </a>
-                      </Button>
+                      <ExternalLinkButton
+                        href={getAccountUrl(post.sourceName)}
+                        kind="instagram"
+                        label="계정"
+                        tone="panel"
+                      />
                       {post.instagramUrl ? (
-                        <Button
-                          asChild
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          className="h-8 rounded-none border-border bg-brand-panel px-2 text-xs font-black hover:bg-brand-yellow"
-                        >
-                          <a href={post.instagramUrl} target="_blank" rel="noreferrer">
-                            <Instagram className="h-4 w-4" />
-                            원문
-                          </a>
-                        </Button>
+                        <ExternalLinkButton
+                          href={post.instagramUrl}
+                          kind="instagram"
+                          label="원문"
+                          tone="panel"
+                        />
                       ) : null}
                     </div>
                   </div>

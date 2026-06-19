@@ -152,7 +152,7 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
 
   return (
     <div className="grid grid-cols-[minmax(0,1fr)] gap-4">
-      <section className="border border-border bg-white p-4">
+      <section className="py-2">
         <div className="flex items-center gap-2 border border-border bg-brand-panel px-3">
           <Search className="h-4 w-4 shrink-0" />
           <Input
@@ -186,10 +186,10 @@ export function PopularList({ publishers, eventsByBooth }: PopularListProps) {
                 aria-pressed={isActive}
                 onClick={() => setEventFilter(f)}
                 className={cn(
-                  "inline-flex items-center gap-1.5 border px-2.5 py-1 text-xs font-black transition-colors",
+                  "inline-flex cursor-pointer items-center gap-1.5 border px-2.5 py-1 text-xs font-black transition-colors",
                   isActive
                     ? "border-brand-ink bg-brand-ink text-white"
-                    : "border-border bg-brand-panel text-brand-rust hover:bg-brand-yellow"
+                    : "border-border/20 bg-brand-panel text-brand-rust hover:bg-brand-yellow"
                 )}
               >
                 {isEvents && <CalendarDays className="h-3.5 w-3.5" />}

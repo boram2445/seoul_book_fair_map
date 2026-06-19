@@ -23,10 +23,7 @@ export function FavoriteButton({ isFavorite, onToggle, className }: FavoriteButt
       size="icon"
       aria-label={isFavorite ? '찜 해제' : '찜하기'}
       className={cn(
-        'size-8 rounded-none border-border shadow-brutal-sm md:size-9',
-        isFavorite
-          ? 'border-brand-coral bg-brand-coral text-white hover:bg-brand-coral/90 hover:text-white'
-          : 'bg-brand-panel hover:bg-brand-yellow',
+        'size-8 rounded-none border-border bg-brand-panel hover:bg-brand-yellow md:size-9',
         className,
       )}
       onClick={(event) => {
@@ -37,7 +34,7 @@ export function FavoriteButton({ isFavorite, onToggle, className }: FavoriteButt
       <Heart
         className={cn(
           'h-3.5 w-3.5 md:h-4 md:w-4',
-          isFavorite ? 'fill-white text-white' : 'text-brand-coral',
+          isFavorite ? 'fill-brand-coral text-brand-coral' : 'text-brand-coral',
         )}
       />
     </Button>

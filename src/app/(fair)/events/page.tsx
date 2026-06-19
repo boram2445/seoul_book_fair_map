@@ -35,7 +35,7 @@ export default function EventsPage() {
               key={filter}
               type="button"
               className={cn(
-                "shrink-0 border border-border px-4 py-2 text-sm font-black",
+                "shrink-0 cursor-pointer border border-border px-4 py-2 text-sm font-black",
                 index === 0 ? "bg-brand-ink text-white" : "bg-white hover:bg-brand-yellow"
               )}
             >

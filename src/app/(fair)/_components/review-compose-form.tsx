@@ -178,7 +178,7 @@ export function ReviewComposeForm({
                   onFocus={() => setBoothListOpen(true)}
                   onBlur={() => setTimeout(() => setBoothListOpen(false), 150)}
                   placeholder="부스 번호나 참여사 이름 검색"
-                  className="h-9 border-0 px-0 font-bold shadow-none focus-visible:ring-0 sm:h-11"
+                  className="h-9 border-0 px-0 text-sm font-bold shadow-none focus-visible:ring-0 sm:h-11"
                   autoComplete="off"
                 />
               </div>
@@ -234,7 +234,7 @@ export function ReviewComposeForm({
                 id="book-title"
                 ref={bookTitleRef}
                 placeholder="책 제목을 입력하세요"
-                className="rounded-none border-border font-bold shadow-none"
+                className="rounded-none border-border text-sm font-bold shadow-none"
               />
             </div>
             <div className="grid gap-2">
@@ -245,7 +245,7 @@ export function ReviewComposeForm({
                 id="book-author"
                 ref={bookAuthorRef}
                 placeholder="저자명"
-                className="rounded-none border-border font-bold shadow-none"
+                className="rounded-none border-border text-sm font-bold shadow-none"
               />
             </div>
           </>
@@ -266,7 +266,7 @@ export function ReviewComposeForm({
                   ? "이 책을 추천하는 이유를 남겨주세요."
                   : "방문한 부스에서 좋았던 점이나 참고할 점을 남겨주세요."
             }
-            className="min-h-32 resize-none rounded-none border-border bg-brand-surface font-bold shadow-none"
+            className="min-h-32 resize-none rounded-none border-border bg-brand-surface text-sm font-bold shadow-none"
           />
         </div>
 

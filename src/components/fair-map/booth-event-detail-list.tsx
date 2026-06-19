@@ -1,7 +1,5 @@
-import { Instagram } from "lucide-react";
-
+import { ExternalLinkButton } from "@/components/fair-app/external-link-button";
 import { type BoothEvent, getEventScheduleLabel } from "./booth-events";
-import { Button } from "@/components/ui/button";
 
 interface BoothEventDetailListProps {
   events: BoothEvent[];
@@ -54,18 +52,12 @@ export function BoothEventDetailList({ events }: BoothEventDetailListProps) {
                 출처 {event.sourceName}
               </span>
               {event.instagramUrl ? (
-                <Button
-                  asChild
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  className="h-8 rounded-none border-border bg-brand-panel px-2 text-xs font-black hover:bg-brand-yellow"
-                >
-                  <a href={event.instagramUrl} target="_blank" rel="noreferrer">
-                    <Instagram className="h-4 w-4" />
-                    원문
-                  </a>
-                </Button>
+                <ExternalLinkButton
+                  href={event.instagramUrl}
+                  kind="instagram"
+                  label="원문"
+                  tone="panel"
+                />
               ) : null}
             </div>
           </div>

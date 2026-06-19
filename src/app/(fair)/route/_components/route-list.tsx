@@ -101,14 +101,14 @@ function SortableBoothCard({
             type="button"
             {...attributes}
             {...listeners}
-            className="flex cursor-grab items-center justify-center border-r border-border bg-brand-panel text-brand-muted hover:bg-brand-hover active:cursor-grabbing touch-none"
+            className="flex cursor-grab items-center justify-center border-r border-border/20 bg-brand-panel text-brand-muted hover:bg-brand-hover active:cursor-grabbing touch-none"
             aria-label="순서 변경"
           >
             <GripVertical className="h-4 w-4" />
           </button>
         }
         mobileBlock={
-          <div className="border-t border-border p-4 md:hidden">
+          <div className="border-t border-border/20 p-4 md:hidden">
             {memoEditor}
           </div>
         }

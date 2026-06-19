@@ -22,15 +22,13 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
-  ExternalLink,
   GripVertical,
   Heart,
-  Instagram,
   MapPin,
+  Maximize,
   Minus,
   Plus,
   Info,
-  RotateCcw,
   Route,
   Search,
   X,
@@ -39,6 +37,7 @@ import Image from 'next/image';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { ExternalLinkButton } from '@/components/fair-app/external-link-button';
 import { FavoriteButton } from '@/components/fair-app/favorite-button';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
@@ -1055,32 +1054,10 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
 
       <div className="mt-2.5 flex w-full flex-nowrap items-center gap-1.5 overflow-hidden">
         {selected.instagramUrl ? (
-          <Button
-            asChild
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-7 shrink-0 rounded-none border-border bg-white px-2 text-[10px] font-black hover:bg-brand-yellow md:h-9 md:px-2.5 md:text-[11px] [&_svg:not([class*='size-'])]:size-3 md:[&_svg:not([class*='size-'])]:size-3.5"
-          >
-            <a href={selected.instagramUrl} target="_blank" rel="noreferrer">
-              <Instagram />
-              Instagram
-            </a>
-          </Button>
+          <ExternalLinkButton href={selected.instagramUrl} kind="instagram" tone="white" mobileIconOnly />
         ) : null}
         {selected.homepageUrl ? (
-          <Button
-            asChild
-            type="button"
-            variant="outline"
-            size="sm"
-            className="h-7 shrink-0 rounded-none border-border bg-white px-2 text-[10px] font-black hover:bg-brand-yellow md:h-9 md:px-2.5 md:text-[11px] [&_svg:not([class*='size-'])]:size-3 md:[&_svg:not([class*='size-'])]:size-3.5"
-          >
-            <a href={selected.homepageUrl} target="_blank" rel="noreferrer">
-              <ExternalLink />
-              Homepage
-            </a>
-          </Button>
+          <ExternalLinkButton href={selected.homepageUrl} kind="homepage" tone="white" mobileIconOnly />
         ) : null}
         <Button
           type="button"
@@ -1507,13 +1484,12 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
               <Button
                 type="button"
                 variant="outline"
-                size="sm"
+                size="icon-sm"
                 onClick={resetMap}
                 aria-label="지도 처음 위치로"
                 className="rounded-none border-border bg-white shadow-brutal-sm"
               >
-                <RotateCcw className="h-4 w-4" />
-                처음
+                <Maximize className="h-4 w-4" />
               </Button>
             </div>
 
@@ -1553,7 +1529,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                 aria-label="지도 초기화"
                 className="rounded-none"
               >
-                <RotateCcw className="h-4 w-4" />
+                <Maximize className="h-4 w-4" />
               </Button>
             </div>
 
