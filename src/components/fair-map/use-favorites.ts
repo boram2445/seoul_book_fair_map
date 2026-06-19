@@ -66,6 +66,14 @@ export function useFavorites() {
     cache = null;
     window.localStorage.setItem(FAVORITES_KEY, JSON.stringify(newOrder));
     notifyChange();
+
+    // fire-and-forget: 로그인 사용자의 기기 간 순서 동기화
+    const supabase = createClient();
+    supabase
+      .rpc("set_favorite_order", { p_exhibitor_nos: newOrder.map(Number) })
+      .then(({ error }) => {
+        if (error) console.warn("[favorites] set_favorite_order failed:", error.message);
+      });
   }
 
   return { favorites, toggleFavorite, reorderFavorites };

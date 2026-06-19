@@ -368,24 +368,194 @@ function cellCenter(i: number): { x: number; y: number } {
   return { x: gcol(i) * CELL + CELL / 2, y: grow(i) * CELL + CELL / 2 };
 }
 
+// ─── 경로 길이 ────────────────────────────────────────────────────────────────
+
+/**
+ * 두 격자 셀 인덱스 간 A* 경로 길이(맵 px 단위)를 반환한다.
+ * 경로를 찾지 못하면 Infinity.
+ */
+function pathLength(startI: number, endI: number): number {
+  if (startI === endI) return 0;
+  const path = findPath(startI, endI);
+  if (!path || path.length < 2) return Infinity;
+  let len = 0;
+  for (let k = 1; k < path.length; k++) {
+    const dc = gcol(path[k]) - gcol(path[k - 1]);
+    const dr = grow(path[k]) - grow(path[k - 1]);
+    len += Math.sqrt(dc * dc + dr * dr) * CELL;
+  }
+  return len;
+}
+
+// ─── 방문 순서 최적화 (TSP 근사, 입구 고정 출발) ─────────────────────────────
+
+/**
+ * 전시장 입구 좌표 — SVG 출입구 화살표 기준.
+ */
+export const HALL_ENTRANCES: Record<"A" | "B", { x: number; y: number }> = {
+  A: { x: 2252, y: 3200 }, // A홀 하단 입구 복도 ↑ 화살표 팁
+  B: { x: 2953, y: 850 },  // B1홀 우측 출입구 ← → 화살표 중심
+};
+
+/**
+ * 찜 부스 분포 기반 자동 기본 입구.
+ * 부스번호 prefix(`A`/`B`) 카운트 — B가 더 많으면 B, 그 외(동수 포함)는 A.
+ */
+export function getAutoEntrance(booths: string[]): "A" | "B" {
+  let aCount = 0;
+  let bCount = 0;
+  for (const booth of booths) {
+    if (booth.startsWith("A")) aCount++;
+    else if (booth.startsWith("B")) bCount++;
+  }
+  return bCount > aCount ? "B" : "A";
+}
+
+/**
+ * 부스 번호 배열을 받아 지정 입구에서 출발해 실제 도보 이동거리가 최소가 되는
+ * 방문 순서를 **원본 인덱스 순열**로 반환한다.
+ *
+ * 알고리즘:
+ * 1. 입구를 가상 노드 0으로 둔 (n+1)×(n+1) A* 거리 행렬 구성
+ * 2. 입구(0)에서 출발하는 최근접 이웃으로 초기 경로 구성
+ * 3. 2-opt 개선 (입구는 항상 0번 위치에 고정)
+ *
+ * 좌표를 알 수 없는 부스(shapes에 없음)는 계산에서 제외하고
+ * 원래 순서대로 결과 끝에 덧붙인다.
+ */
+export function optimizeRouteOrder(
+  booths: string[],
+  start: { x: number; y: number } = HALL_ENTRANCES.A,
+): number[] {
+  if (booths.length <= 1) return booths.map((_, i) => i);
+
+  // 부스 → 중심 좌표 매핑
+  type BoothEntry = { idx: number; center: { x: number; y: number } | null };
+  const entries: BoothEntry[] = booths.map((booth, idx) => {
+    const shape = shapes.find((s) => s.boothNumber === booth);
+    if (!shape) return { idx, center: null };
+    return { idx, center: { x: shape.x + shape.width / 2, y: shape.y + shape.height / 2 } };
+  });
+
+  const valid = entries.filter((e): e is BoothEntry & { center: { x: number; y: number } } =>
+    e.center !== null,
+  );
+  const invalid = entries.filter((e) => e.center === null);
+
+  if (valid.length <= 1) return booths.map((_, i) => i);
+
+  const n = valid.length;
+
+  // 격자 스냅 (인덱스 0 = 입구, 1..n = 부스)
+  const startSnap = snapToFree(start.x, start.y);
+  const boothSnaps = valid.map((e) => snapToFree(e.center.x, e.center.y));
+
+  // 거리 행렬: (n+1)×(n+1)
+  const dist: number[][] = Array.from({ length: n + 1 }, () => new Array<number>(n + 1).fill(0));
+
+  // 입구 ↔ 부스
+  for (let i = 0; i < n; i++) {
+    const astar = pathLength(startSnap, boothSnaps[i]);
+    const d =
+      astar === Infinity
+        ? Math.hypot(start.x - valid[i].center.x, start.y - valid[i].center.y)
+        : astar;
+    dist[0][i + 1] = d;
+    dist[i + 1][0] = d;
+  }
+  // 부스 ↔ 부스 (상삼각 → 대칭)
+  for (let i = 0; i < n; i++) {
+    for (let j = i + 1; j < n; j++) {
+      const astar = pathLength(boothSnaps[i], boothSnaps[j]);
+      const d =
+        astar === Infinity
+          ? Math.hypot(
+              valid[i].center.x - valid[j].center.x,
+              valid[i].center.y - valid[j].center.y,
+            )
+          : astar;
+      dist[i + 1][j + 1] = d;
+      dist[j + 1][i + 1] = d;
+    }
+  }
+
+  // 최근접 이웃 — 입구(0)에서 출발, greedy로 부스 1..n 순회
+  const visited = new Set<number>([0]);
+  const path = [0];
+  while (path.length < n + 1) {
+    const last = path[path.length - 1];
+    let best = -1;
+    let bestD = Infinity;
+    for (let j = 1; j <= n; j++) {
+      if (!visited.has(j) && dist[last][j] < bestD) {
+        bestD = dist[last][j];
+        best = j;
+      }
+    }
+    if (best === -1) break;
+    visited.add(best);
+    path.push(best);
+  }
+
+  // 2-opt 개선 (path[0] = 0 입구 항상 고정)
+  let improved = true;
+  while (improved) {
+    improved = false;
+    outer: for (let i = 0; i < n; i++) {
+      for (let j = i + 2; j <= n; j++) {
+        const edgeBefore =
+          dist[path[i]][path[i + 1]] + (j + 1 <= n ? dist[path[j]][path[j + 1]] : 0);
+        const edgeAfter =
+          dist[path[i]][path[j]] + (j + 1 <= n ? dist[path[i + 1]][path[j + 1]] : 0);
+        if (edgeAfter < edgeBefore - 1e-6) {
+          // [i+1 .. j] 구간 역순
+          let lo = i + 1;
+          let hi = j;
+          while (lo < hi) {
+            [path[lo], path[hi]] = [path[hi], path[lo]];
+            lo++;
+            hi--;
+          }
+          improved = true;
+          break outer;
+        }
+      }
+    }
+  }
+
+  // 입구 노드(0) 제거 후 부스 인덱스 순열 (1..n → 0..n-1) 로 변환
+  const result = path.slice(1).map((node) => valid[node - 1].idx);
+  // 좌표 없는 부스는 끝에 원래 순서대로 추가
+  for (const e of invalid) result.push(e.idx);
+  return result;
+}
+
 // ─── 메인 익스포트 ────────────────────────────────────────────────────────────
 
 /**
  * 찜 부스 순서대로 통로를 따라 우회하는 경로를 반환한다.
  * SVG polyline의 points로 바로 쓸 수 있는 {x, y}[] 배열.
  * 경로를 찾지 못한 구간은 직선으로 폴백한다.
+ *
+ * @param start 출발 입구 좌표(`HALL_ENTRANCES[key]`). 지정 시 폴리라인이 입구에서 시작한다.
  */
-export function buildRoute(boothSequence: string[]): { x: number; y: number }[] {
+export function buildRoute(
+  boothSequence: string[],
+  start?: { x: number; y: number },
+): { x: number; y: number }[] {
   if (boothSequence.length < 2) return [];
 
-  const centers = boothSequence
+  const boothCenters = boothSequence
     .map((booth) => {
       const shape = shapes.find((s) => s.boothNumber === booth);
       return shape ? { x: shape.x + shape.width / 2, y: shape.y + shape.height / 2 } : null;
     })
     .filter((c): c is { x: number; y: number } => c !== null);
 
-  if (centers.length < 2) return [];
+  if (boothCenters.length < 2) return [];
+
+  // 입구가 주어지면 출발점으로 prepend
+  const centers = start ? [start, ...boothCenters] : boothCenters;
 
   const all: { x: number; y: number }[] = [centers[0]];
 

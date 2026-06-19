@@ -18,10 +18,12 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical, MapPinned, NotebookPen } from "lucide-react";
+import { GripVertical, MapPinned, NotebookPen, Waypoints, Loader2 } from "lucide-react";
 
 import { type BoothEvent } from "@/components/fair-map/booth-events";
 import { getFavoriteKey } from "@/components/fair-map/map-helpers";
+import { getAutoEntrance, optimizeRouteOrder, HALL_ENTRANCES } from "@/components/fair-map/route-path";
+import { useRouteEntrance } from "@/components/fair-map/use-route-entrance";
 import { useFavorites } from "@/components/fair-map/use-favorites";
 import { useBoothMemo } from "@/components/fair-map/use-booth-memo";
 import { PublisherCard } from "@/components/fair-app/publisher-card";
@@ -129,6 +131,9 @@ export function RouteList({
 }) {
   const { favorites, reorderFavorites, toggleFavorite } = useFavorites();
   const { memos, updateMemo } = useBoothMemo();
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  // null = 자동(찜 분포 따라감), "A"|"B" = 사용자 명시 선택 (localStorage 영속 — 지도와 공유)
+  const { entrance: selectedEntrance, setEntrance: setSelectedEntrance } = useRouteEntrance();
 
   const publisherByKey = useMemo(
     () => new Map(publishers.map((p) => [getFavoriteKey(p), p])),
@@ -146,9 +151,44 @@ export function RouteList({
       );
   }, [favorites, publisherByKey]);
 
+  // 찜 부스 분포 기반 자동 기본 입구 (A가 많거나 동수 → A, B가 많으면 → B)
+  const autoEntrance = useMemo<"A" | "B">(() => {
+    return getAutoEntrance(favoriteItems.map((item) => item.booth));
+  }, [favoriteItems]);
+
+  const effectiveEntrance: "A" | "B" = selectedEntrance ?? autoEntrance;
+
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
   );
+
+  function handleOptimize(entranceKey: "A" | "B" = effectiveEntrance) {
+    const prevFavorites = [...favorites];
+    const booths = favoriteItems.map((item) => item.booth);
+
+    setIsOptimizing(true);
+    setTimeout(() => {
+      try {
+        const optimizedIndices = optimizeRouteOrder(booths, HALL_ENTRANCES[entranceKey]);
+        const reorderedFavKeys = optimizedIndices.map((i) => favoriteItems[i].favKey);
+
+        // 매칭 안 된 favorites(publisher 없음)는 끝에 원래 순서 유지
+        const reorderedSet = new Set(reorderedFavKeys);
+        const unmatched = favorites.filter((k) => !reorderedSet.has(k));
+        const newFavorites = [...reorderedFavKeys, ...unmatched];
+
+        reorderFavorites(newFavorites);
+        toast.success(`${entranceKey}관 입구 기준 최단 동선으로 정렬했습니다.`, {
+          action: {
+            label: "되돌리기",
+            onClick: () => reorderFavorites(prevFavorites),
+          },
+        });
+      } finally {
+        setIsOptimizing(false);
+      }
+    }, 0);
+  }
 
   function onDragEnd(event: DragEndEvent) {
     const { active, over } = event;
@@ -176,6 +216,41 @@ export function RouteList({
 
   return (
     <div className="grid gap-3">
+      {favoriteItems.length >= 2 && (
+        <div className="flex items-center justify-end">
+          {/* 경로 최적화 + A/B 입구 토글 (한 덩어리) */}
+          <div className="flex items-center gap-2 text-xs font-black">
+            <span className="flex items-center gap-1.5 text-brand-muted">
+              {isOptimizing ? (
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              ) : (
+                <Waypoints className="h-3.5 w-3.5" />
+              )}
+              {isOptimizing ? "최적화 중…" : "경로 최적화"}
+            </span>
+            <div className="flex border border-border">
+              {(["A", "B"] as const).map((key) => (
+                <button
+                  key={key}
+                  type="button"
+                  disabled={isOptimizing}
+                  onClick={() => {
+                    setSelectedEntrance(key);
+                    handleOptimize(key);
+                  }}
+                  className={
+                    effectiveEntrance === key
+                      ? "bg-brand-yellow px-2.5 py-1.5 text-foreground"
+                      : "bg-brand-panel px-2.5 py-1.5 text-brand-muted hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+                  }
+                >
+                  {key}입구
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>
         <SortableContext items={favorites} strategy={verticalListSortingStrategy}>
           <ol className="grid gap-3">

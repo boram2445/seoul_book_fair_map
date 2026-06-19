@@ -48,9 +48,10 @@ import { boothForMap, getFavoriteKey, getDisplayName, getSearchText, normalizeSe
 import { MapBoothLayer } from './map-booth-layer';
 import { MapLabelLayer } from './map-label-layer';
 import { ExportFavoritesButton } from './favorites-pdf/index';
-import { buildRoute, MAP_HEIGHT, MAP_WIDTH } from './route-path';
+import { buildRoute, getAutoEntrance, HALL_ENTRANCES, MAP_HEIGHT, MAP_WIDTH } from './route-path';
 import type { BoothShape, MapExhibitor } from './types';
 import { useFavorites } from './use-favorites';
+import { useRouteEntrance } from './use-route-entrance';
 
 const MIN_SCALE = 0.16;
 const MAX_SCALE = 2.4;
@@ -186,6 +187,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
   const [isEventPanelOpen, setIsEventPanelOpen] = useState(false);
   const [isIntroductionExpanded, setIsIntroductionExpanded] = useState(false);
   const { favorites, toggleFavorite, reorderFavorites } = useFavorites();
+  const { entrance: selectedEntrance } = useRouteEntrance();
   const isMobile = useIsMobile();
   const favoriteSensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
@@ -342,11 +344,16 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
       });
   }, [exhibitorByFavoriteKey, favorites]);
 
-  /** A* 경로 꺾은선 — SVG polyline points */
+  /** 선택 입구(명시) 또는 찜 분포 자동 입구 */
+  const effectiveEntrance = useMemo<"A" | "B">(() => {
+    return selectedEntrance ?? getAutoEntrance(favoriteBooths);
+  }, [selectedEntrance, favoriteBooths]);
+
+  /** A* 경로 꺾은선 — SVG polyline points (입구에서 출발) */
   const routePath = useMemo(() => {
     if (!routeActive || favoriteBooths.length < 2) return [];
-    return buildRoute(favoriteBooths);
-  }, [routeActive, favoriteBooths]);
+    return buildRoute(favoriteBooths, HALL_ENTRANCES[effectiveEntrance]);
+  }, [routeActive, favoriteBooths, effectiveEntrance]);
 
   /** 순번 배지 위치 — 각 찜 부스의 중심 */
   const routeBadges = useMemo(() => {
@@ -1314,6 +1321,28 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                 favoriteSet={favoriteSet}
               />
             </div>
+
+            {/* 입구 출발 뱃지 (0번) — 동선 활성 + 부스 2개 이상일 때만 */}
+            {routeBadges.length >= 2 && (() => {
+              const entrance = HALL_ENTRANCES[effectiveEntrance];
+              return (
+                <div
+                  key="entrance-badge"
+                  className="pointer-events-none absolute z-[46] flex items-center justify-center border-2 border-white bg-brand-yellow font-black text-foreground shadow-brutal-sm"
+                  style={{
+                    left: transform.x + entrance.x * transform.scale,
+                    top: transform.y + entrance.y * transform.scale,
+                    width: routeBadgeSize,
+                    height: routeBadgeSize,
+                    minWidth: routeBadgeSize,
+                    fontSize: clamp(routeBadgeSize * 0.48, 10, 14),
+                    transform: 'translate(-50%, -50%)',
+                  }}
+                >
+                  0
+                </div>
+              );
+            })()}
 
             {routeBadges.map((badge) => (
               <div

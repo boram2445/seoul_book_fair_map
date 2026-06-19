@@ -39,7 +39,7 @@ export function FavoritesSync() {
     const localMemos = memos;
 
     // ── 찜 동기화 ──────────────────────────────────────────────────────────────
-    supabase.rpc("list_my_favorite_nos").then(({ data, error }) => {
+    supabase.rpc("list_my_favorite_nos").then(async ({ data, error }) => {
       if (error) {
         console.warn("[favorites-sync] list_my_favorite_nos failed:", error.message);
         return;
@@ -48,21 +48,30 @@ export function FavoritesSync() {
       const dbNos = ((data as number[]) ?? []).map(String);
       const dbSet = new Set(dbNos);
 
-      // DB에만 있는 찜 → localStorage에 추가 (저장소 삭제 후 복원)
-      const onlyInDb = dbNos.filter((no) => !localSet.has(no));
-      if (onlyInDb.length > 0) {
-        reorderFavorites([...localNos, ...onlyInDb]);
+      // localStorage에만 있는 찜 → DB에 먼저 push (row 생성 후 순서를 써야 하므로 await)
+      const onlyInLocal = localNos.filter((no) => !dbSet.has(no));
+      if (onlyInLocal.length > 0) {
+        await Promise.all(
+          onlyInLocal.map((no) =>
+            supabase
+              .rpc("add_favorite", { p_exhibitor_no: Number(no) })
+              .then(({ error: rpcError }) => {
+                if (rpcError)
+                  console.warn("[favorites-sync] add_favorite failed:", rpcError.message);
+              }),
+          ),
+        );
       }
 
-      // localStorage에만 있는 찜 → DB push
-      const onlyInLocal = localNos.filter((no) => !dbSet.has(no));
-      onlyInLocal.forEach((no) => {
-        supabase
-          .rpc("add_favorite", { p_exhibitor_no: Number(no) })
-          .then(({ error: rpcError }) => {
-            if (rpcError) console.warn("[favorites-sync] add_favorite failed:", rpcError.message);
-          });
-      });
+      // 서버 순서 우선으로 병합 (DB 순서 → 로컬에만 있던 항목 순서 유지해 뒤에 추가)
+      const merged = [...dbNos, ...onlyInLocal];
+      const isSameOrder =
+        merged.length === localNos.length && merged.every((v, i) => v === localNos[i]);
+
+      if (!isSameOrder || onlyInLocal.length > 0) {
+        // reorderFavorites: localStorage 갱신 + set_favorite_order RPC fire-and-forget
+        reorderFavorites(merged);
+      }
     });
 
     // ── 메모 동기화 (로컬 우선) ────────────────────────────────────────────────
