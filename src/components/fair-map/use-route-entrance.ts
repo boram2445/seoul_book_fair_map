@@ -1,5 +1,7 @@
 import { useSyncExternalStore } from "react";
 
+import { createClient } from "@/lib/supabase/client";
+
 const ENTRANCE_KEY = "sibf-route-entrance";
 const ENTRANCE_EVENT = "sibf-entrance-change";
 const SERVER_SNAPSHOT: "A" | "B" | null = null;
@@ -40,6 +42,14 @@ export function useRouteEntrance() {
     cache = null;
     window.localStorage.setItem(ENTRANCE_KEY, JSON.stringify(value));
     notifyChange();
+
+    // fire-and-forget: 로그인 사용자의 기기 간 입구 선택 동기화
+    const supabase = createClient();
+    supabase
+      .rpc("set_route_entrance", { p_entrance: value })
+      .then(({ error }) => {
+        if (error) console.warn("[route-entrance] set_route_entrance failed:", error.message);
+      });
   }
 
   return { entrance, setEntrance };

@@ -52,6 +52,7 @@ import { buildRoute, getAutoEntrance, HALL_ENTRANCES, MAP_HEIGHT, MAP_WIDTH } fr
 import type { BoothShape, MapExhibitor } from './types';
 import { useFavorites } from './use-favorites';
 import { useRouteEntrance } from './use-route-entrance';
+import { useRouteVisible } from './use-route-visible';
 
 const MIN_SCALE = 0.16;
 const MAX_SCALE = 2.4;
@@ -252,7 +253,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
   /** 휠 버스트 종료 감지용 디바운스 타이머 */
   const wheelCommitTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const [isRouteVisible, setIsRouteVisible] = useState(false);
+  const { visible: isRouteVisible, setVisible: setIsRouteVisible } = useRouteVisible();
   const [isRoutePreview, setIsRoutePreview] = useState(false);
   const [isTooltipOpen, setIsTooltipOpen] = useState(false);
   const routeActive = isRouteVisible || isRoutePreview;

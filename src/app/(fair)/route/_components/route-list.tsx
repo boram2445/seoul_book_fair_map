@@ -217,38 +217,38 @@ export function RouteList({
   return (
     <div className="grid gap-3">
       {favoriteItems.length >= 2 && (
-        <div className="flex items-center justify-end">
-          {/* 경로 최적화 + A/B 입구 토글 (한 덩어리) */}
-          <div className="flex items-center gap-2 text-xs font-black">
-            <span className="flex items-center gap-1.5 text-brand-muted">
-              {isOptimizing ? (
-                <Loader2 className="h-3.5 w-3.5 animate-spin" />
-              ) : (
-                <Waypoints className="h-3.5 w-3.5" />
-              )}
-              {isOptimizing ? "최적화 중…" : "경로 최적화"}
-            </span>
-            <div className="flex border border-border">
-              {(["A", "B"] as const).map((key) => (
-                <button
-                  key={key}
-                  type="button"
-                  disabled={isOptimizing}
-                  onClick={() => {
-                    setSelectedEntrance(key);
-                    handleOptimize(key);
-                  }}
-                  className={
-                    effectiveEntrance === key
-                      ? "bg-brand-yellow px-2.5 py-1.5 text-foreground"
-                      : "bg-brand-panel px-2.5 py-1.5 text-brand-muted hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
-                  }
-                >
-                  {key}입구
-                </button>
-              ))}
-            </div>
+        <div className="flex items-center justify-end gap-2 text-xs font-black">
+          {/* A/B 입구 선택 토글 */}
+          <div className="flex border border-border">
+            {(["A", "B"] as const).map((key) => (
+              <button
+                key={key}
+                type="button"
+                onClick={() => setSelectedEntrance(key)}
+                className={
+                  effectiveEntrance === key
+                    ? "bg-brand-yellow px-2.5 py-1.5 text-foreground"
+                    : "bg-brand-panel px-2.5 py-1.5 text-brand-muted hover:bg-brand-hover"
+                }
+              >
+                {key}입구
+              </button>
+            ))}
           </div>
+          {/* 경로 최적화 실행 버튼 */}
+          <button
+            type="button"
+            disabled={isOptimizing}
+            onClick={() => handleOptimize()}
+            className="flex items-center gap-1.5 border border-border bg-brand-panel px-2.5 py-1.5 text-brand-muted hover:bg-brand-hover disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {isOptimizing ? (
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+            ) : (
+              <Waypoints className="h-3.5 w-3.5" />
+            )}
+            {isOptimizing ? "최적화 중…" : "경로 최적화"}
+          </button>
         </div>
       )}
       <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={onDragEnd}>

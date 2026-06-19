@@ -5,10 +5,12 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { useFavorites } from "./use-favorites";
 import { useBoothMemo } from "./use-booth-memo";
+import { useRouteEntrance } from "./use-route-entrance";
 
 export function FavoritesSync() {
   const { favorites, reorderFavorites } = useFavorites();
   const { memos, updateMemo } = useBoothMemo();
+  const { entrance: localEntrance, setEntrance } = useRouteEntrance();
   const [userId, setUserId] = useState<string | null>(null);
 
   // 클라이언트에서 user를 직접 구독 — layout의 서버 인증 의존 제거
@@ -37,6 +39,23 @@ export function FavoritesSync() {
     const localNos = favorites;
     const localSet = new Set(localNos);
     const localMemos = memos;
+    const localEntrance_ = localEntrance; // 클로저 캡처
+
+    // ── 입구 선택 동기화 ────────────────────────────────────────────────────────
+    supabase.rpc("get_route_entrance").then(({ data, error }) => {
+      if (error) {
+        console.warn("[favorites-sync] get_route_entrance failed:", error.message);
+        return;
+      }
+      const serverEntrance = data === "A" || data === "B" ? data : null;
+      if (localEntrance_ === null && serverEntrance !== null) {
+        // 로컬이 자동(미선택)이고 서버에 값 있으면 → 서버 값 채택
+        setEntrance(serverEntrance);
+      } else if (localEntrance_ !== null && localEntrance_ !== serverEntrance) {
+        // 로컬에 명시 값 있고 서버와 다르면 → 로컬을 서버로 push
+        setEntrance(localEntrance_);
+      }
+    });
 
     // ── 찜 동기화 ──────────────────────────────────────────────────────────────
     supabase.rpc("list_my_favorite_nos").then(async ({ data, error }) => {
