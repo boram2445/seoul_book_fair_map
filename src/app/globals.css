@@ -140,6 +140,9 @@
 
 
 @layer base {
+  :root {
+    --app-h: 100dvh;
+  }
   * {
     @apply border-border outline-ring/50;
   }
