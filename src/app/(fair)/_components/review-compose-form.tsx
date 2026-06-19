@@ -61,6 +61,9 @@ export function ReviewComposeForm({
   const bookTitleRef = useRef<HTMLInputElement>(null);
   const bookAuthorRef = useRef<HTMLInputElement>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contentLength, setContentLength] = useState(0);
+
+  const MAX_CONTENT_LENGTH = 1000;
 
   const photoRef = useRef<ReviewPhotoFieldHandle>(null);
 
@@ -104,7 +107,7 @@ export function ReviewComposeForm({
   async function handleSubmit() {
     const content = contentRef.current?.value ?? "";
     if (!user || !content.trim()) return;
-    if (content.trim().length > 1000) {
+    if (content.trim().length > MAX_CONTENT_LENGTH) {
       toast.error("후기는 1000자 이하로 작성해주세요.");
       return;
     }
@@ -128,6 +131,7 @@ export function ReviewComposeForm({
         return;
       }
       if (contentRef.current) contentRef.current.value = "";
+      setContentLength(0);
       if (bookTitleRef.current) bookTitleRef.current.value = "";
       if (bookAuthorRef.current) bookAuthorRef.current.value = "";
       photoRef.current?.reset();
@@ -252,8 +256,8 @@ export function ReviewComposeForm({
         )}
 
         {/* 본문 */}
-        <div className="grid gap-2">
-          <Label htmlFor="review-content" className="text-xs font-black text-brand-rust">
+        <div className="grid">
+          <Label htmlFor="review-content" className="mb-2 text-xs font-black text-brand-rust">
             {activeScope === "book" ? "추천 이유" : "후기"}
           </Label>
           <Textarea
@@ -267,12 +271,18 @@ export function ReviewComposeForm({
                   : "방문한 부스에서 좋았던 점이나 참고할 점을 남겨주세요."
             }
             className="min-h-32 resize-none rounded-none border-border bg-brand-surface text-sm font-bold shadow-none"
+            onChange={(e) => setContentLength(e.target.value.length)}
           />
-        </div>
-
-        <div className="flex items-end justify-between gap-2">
-          <ReviewPhotoField ref={photoRef} />
-          {submitButton}
+          <p className={cn(
+            "text-right text-xs font-bold tabular-nums",
+            contentLength > MAX_CONTENT_LENGTH ? "text-destructive" : "text-brand-muted"
+          )}>
+            {contentLength}/{MAX_CONTENT_LENGTH}
+          </p>
+          <div className="flex items-end justify-between gap-2">
+            <ReviewPhotoField ref={photoRef} />
+            {submitButton}
+          </div>
         </div>
       </form>
     </section>

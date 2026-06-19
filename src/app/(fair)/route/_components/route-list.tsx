@@ -218,7 +218,7 @@ export function RouteList({
     <div className="grid gap-3">
       {favoriteItems.length >= 2 && (
         <div className="flex items-center justify-end gap-2 text-xs font-black">
-          {/* A/B 입구 선택 토글 */}
+          <span className="text-brand-muted">출발</span>
           <div className="flex border border-border">
             {(["A", "B"] as const).map((key) => (
               <button
@@ -235,7 +235,7 @@ export function RouteList({
               </button>
             ))}
           </div>
-          {/* 경로 최적화 실행 버튼 */}
+          <span className="text-brand-muted">정렬</span>
           <button
             type="button"
             disabled={isOptimizing}

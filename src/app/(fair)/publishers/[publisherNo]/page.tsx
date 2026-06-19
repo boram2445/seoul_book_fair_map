@@ -1,10 +1,11 @@
 import { notFound } from "next/navigation";
-import { CalendarDays, Heart } from "lucide-react";
+import { CalendarDays } from "lucide-react";
 
 import { GetPublisherByExhibitorNo, GetPublisherEvents } from "@/api/fair-map/fair-map";
 import { ReviewComposeForm } from "@/app/(fair)/_components/review-compose-form";
 import { ReviewFeed } from "@/app/(fair)/_components/review-feed";
 import { BackButton } from "./_components/back-button";
+import { PublisherFavoriteCount } from "./_components/publisher-favorite-count";
 import { PublisherReviewHeader } from "./_components/publisher-review-header";
 import { ExternalLinkButton } from "@/components/fair-app/external-link-button";
 import { BoothEventDetailList } from "@/components/fair-map/booth-event-detail-list";
@@ -33,7 +34,6 @@ export default async function PublisherDetailPage({
 
   const booth = boothForMap(publisher);
   const displayName = getDisplayName(publisher);
-  const heartCount = publisher.favoriteCount;
   const events = eventsByBooth[String(publisher.no)] ?? [];
   const categories = publisher.categories ?? [];
   return (
@@ -50,10 +50,10 @@ export default async function PublisherDetailPage({
                   <span className="border border-border bg-brand-yellow px-2 py-1 text-xs font-black text-brand-rust">
                     {booth}
                   </span>
-                  <span className="inline-flex items-center gap-1 border border-border bg-white px-2 py-1 text-xs font-black text-brand-coral-deep">
-                    <Heart className="h-3.5 w-3.5 fill-brand-coral text-brand-coral" />
-                    {heartCount}
-                  </span>
+                  <PublisherFavoriteCount
+                    baseCount={publisher.favoriteCount}
+                    favoriteKey={String(publisher.no)}
+                  />
                 </div>
                 <h1 className="mt-3 text-xl font-black">{displayName}</h1>
                 {publisher.nameEn ? <p className="text-sm font-bold text-brand-muted">{publisher.nameEn}</p> : null}

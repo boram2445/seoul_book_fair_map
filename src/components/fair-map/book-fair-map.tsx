@@ -44,7 +44,13 @@ import { useIsMobile } from '@/hooks/use-mobile';
 
 import { BoothEventDetailList } from './booth-event-detail-list';
 import { type BoothEvent, getEventScheduleLabel } from './booth-events';
-import { boothForMap, getFavoriteKey, getDisplayName, getSearchText, normalizeSearch } from './map-helpers';
+import {
+  boothForMap,
+  getFavoriteKey,
+  getDisplayName,
+  getSearchText,
+  normalizeSearch,
+} from './map-helpers';
 import { MapBoothLayer } from './map-booth-layer';
 import { MapLabelLayer } from './map-label-layer';
 import { ExportFavoritesButton } from './favorites-pdf/index';
@@ -80,7 +86,11 @@ function clamp(value: number, min: number, max: number) {
 
 function computeFitTransform(viewportWidth: number, viewportHeight: number, mobile: boolean) {
   const visibleH = mobile ? viewportHeight - TOP_PANEL_COLLAPSED_PX : viewportHeight;
-  const scale = clamp(Math.min(viewportWidth / MAP_WIDTH, visibleH / MAP_HEIGHT), MIN_SCALE, MAX_SCALE);
+  const scale = clamp(
+    Math.min(viewportWidth / MAP_WIDTH, visibleH / MAP_HEIGHT),
+    MIN_SCALE,
+    MAX_SCALE,
+  );
   const x = (viewportWidth - MAP_WIDTH * scale) / 2;
   const y = mobile
     ? TOP_PANEL_COLLAPSED_PX + (visibleH - MAP_HEIGHT * scale) / 2
@@ -88,17 +98,11 @@ function computeFitTransform(viewportWidth: number, viewportHeight: number, mobi
   return { scale, x, y };
 }
 
-function distanceBetween(
-  first: { x: number; y: number },
-  second: { x: number; y: number },
-) {
+function distanceBetween(first: { x: number; y: number }, second: { x: number; y: number }) {
   return Math.hypot(first.x - second.x, first.y - second.y);
 }
 
-function centerBetween(
-  first: { x: number; y: number },
-  second: { x: number; y: number },
-) {
+function centerBetween(first: { x: number; y: number }, second: { x: number; y: number }) {
   return {
     x: (first.x + second.x) / 2,
     y: (first.y + second.y) / 2,
@@ -265,10 +269,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
     if (!isTooltipOpen) return;
     function handleOutside(e: PointerEvent) {
       const target = e.target as Node;
-      if (
-        !routeDesktopRef.current?.contains(target) &&
-        !routeMobileRef.current?.contains(target)
-      ) {
+      if (!routeDesktopRef.current?.contains(target) && !routeMobileRef.current?.contains(target)) {
         setIsTooltipOpen(false);
       }
     }
@@ -346,7 +347,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
   }, [exhibitorByFavoriteKey, favorites]);
 
   /** 선택 입구(명시) 또는 찜 분포 자동 입구 */
-  const effectiveEntrance = useMemo<"A" | "B">(() => {
+  const effectiveEntrance = useMemo<'A' | 'B'>(() => {
     return selectedEntrance ?? getAutoEntrance(favoriteBooths);
   }, [selectedEntrance, favoriteBooths]);
 
@@ -441,7 +442,9 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
   const filteredExhibitors = useMemo(() => {
     const normalized = normalizeSearch(debouncedQuery);
     return exhibitors.filter((exhibitor) => {
-      const matchesQuery = normalized ? normalizeSearch(getSearchText(exhibitor)).includes(normalized) : true;
+      const matchesQuery = normalized
+        ? normalizeSearch(getSearchText(exhibitor)).includes(normalized)
+        : true;
       const matchesCategory =
         selectedCategory === '전체'
           ? true
@@ -508,64 +511,76 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
     };
   }, [applyTransformImperative]);
 
-  const centerBooth = useCallback(function centerBooth(booth: string, nextScale?: number) {
-    const shape = shapesByBooth.get(booth);
-    const viewport = viewportRef.current;
-    if (!shape || !viewport) return;
+  const centerBooth = useCallback(
+    function centerBooth(booth: string, nextScale?: number) {
+      const shape = shapesByBooth.get(booth);
+      const viewport = viewportRef.current;
+      if (!shape || !viewport) return;
 
-    const rect = viewport.getBoundingClientRect();
-    // transformRef 사용 → transform state 의존성 제거 (useCallback 안정화)
-    const scale = nextScale ?? transformRef.current.scale;
-    const centerX = shape.x + shape.width / 2;
-    const centerY = shape.y + shape.height / 2;
+      const rect = viewport.getBoundingClientRect();
+      // transformRef 사용 → transform state 의존성 제거 (useCallback 안정화)
+      const scale = nextScale ?? transformRef.current.scale;
+      const centerX = shape.x + shape.width / 2;
+      const centerY = shape.y + shape.height / 2;
 
-    // 모바일: 상단 패널이 가린 영역 아래쪽의 가시 영역 중앙에 부스를 맞춘다.
-    // 데스크톱: 뷰포트 정중앙 그대로 (기존 동작 불변).
-    let targetY: number;
-    if (isMobile) {
-      const panelHeight = getViewportHeight() * TOP_PANEL_HEIGHT_RATIO;
-      // sheetOffsetRef 사용 → sheetOffset state 의존성 제거
-      const coveredHeight = Math.max(TOP_PANEL_COLLAPSED_PX, panelHeight + sheetOffsetRef.current);
-      const visibleAreaHeight = Math.max(1, rect.height - coveredHeight);
-      targetY = coveredHeight + visibleAreaHeight * (2 / 3);
-    } else {
-      targetY = rect.height / 2;
-    }
+      // 모바일: 상단 패널이 가린 영역 아래쪽의 가시 영역 중앙에 부스를 맞춘다.
+      // 데스크톱: 뷰포트 정중앙 그대로 (기존 동작 불변).
+      let targetY: number;
+      if (isMobile) {
+        const panelHeight = getViewportHeight() * TOP_PANEL_HEIGHT_RATIO;
+        // sheetOffsetRef 사용 → sheetOffset state 의존성 제거
+        const coveredHeight = Math.max(
+          TOP_PANEL_COLLAPSED_PX,
+          panelHeight + sheetOffsetRef.current,
+        );
+        const visibleAreaHeight = Math.max(1, rect.height - coveredHeight);
+        targetY = coveredHeight + visibleAreaHeight * (2 / 3);
+      } else {
+        targetY = rect.height / 2;
+      }
 
-    setTransform({
-      scale,
-      x: rect.width / 2 - centerX * scale,
-      y: targetY - centerY * scale,
-    });
-  }, [shapesByBooth, isMobile]);
+      setTransform({
+        scale,
+        x: rect.width / 2 - centerX * scale,
+        y: targetY - centerY * scale,
+      });
+    },
+    [shapesByBooth, isMobile],
+  );
 
-  const selectExhibitor = useCallback(function selectExhibitor(
-    exhibitor: MapExhibitor,
-    options: { shouldFocusMap?: boolean; focusMap?: boolean; keepView?: boolean } = {},
-  ) {
-    setSelectedNo(exhibitor.no);
-    setIsIntroductionExpanded(false);
-    if (!options.keepView && (!isMobile || options.shouldFocusMap || options.focusMap)) {
-      // transformRef 사용 → transform state 의존성 제거
-      const nextScale = options.focusMap
-        ? Math.max(transformRef.current.scale, FOCUS_SCALE)
-        : undefined;
-      centerBooth(boothForMap(exhibitor), nextScale);
-    }
-    if (isMobile) {
-      // topPanelRef DOM 직접 읽기 → topPanelHeight state 의존성 제거
-      const panelH =
-        topPanelRef.current?.getBoundingClientRect().height ??
-        getViewportHeight() * TOP_PANEL_HEIGHT_RATIO;
-      setSheetOffset(computeSnapOffsets(panelH).expanded);
-      setIsMobileDetailOpen(true);
-    }
-  }, [isMobile, centerBooth]);
+  const selectExhibitor = useCallback(
+    function selectExhibitor(
+      exhibitor: MapExhibitor,
+      options: { shouldFocusMap?: boolean; focusMap?: boolean; keepView?: boolean } = {},
+    ) {
+      setSelectedNo(exhibitor.no);
+      setIsIntroductionExpanded(false);
+      if (!options.keepView && (!isMobile || options.shouldFocusMap || options.focusMap)) {
+        // transformRef 사용 → transform state 의존성 제거
+        const nextScale = options.focusMap
+          ? Math.max(transformRef.current.scale, FOCUS_SCALE)
+          : undefined;
+        centerBooth(boothForMap(exhibitor), nextScale);
+      }
+      if (isMobile) {
+        // topPanelRef DOM 직접 읽기 → topPanelHeight state 의존성 제거
+        const panelH =
+          topPanelRef.current?.getBoundingClientRect().height ??
+          getViewportHeight() * TOP_PANEL_HEIGHT_RATIO;
+        setSheetOffset(computeSnapOffsets(panelH).expanded);
+        setIsMobileDetailOpen(true);
+      }
+    },
+    [isMobile, centerBooth],
+  );
 
   /** 지도 부스 버튼 전용 — keepView:true 고정, MapBoothLayer 에 안정 참조로 전달 */
-  const onSelectBoothExhibitor = useCallback((exhibitor: MapExhibitor) => {
-    selectExhibitor(exhibitor, { keepView: true });
-  }, [selectExhibitor]);
+  const onSelectBoothExhibitor = useCallback(
+    (exhibitor: MapExhibitor) => {
+      selectExhibitor(exhibitor, { keepView: true });
+    },
+    [selectExhibitor],
+  );
 
   function zoomBy(delta: number) {
     const viewport = viewportRef.current;
@@ -808,7 +823,9 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
   }, [isMobile]);
 
   useEffect(() => {
-    listItemRefsRef.current.get(selectedNo)?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
+    listItemRefsRef.current
+      .get(selectedNo)
+      ?.scrollIntoView({ block: 'nearest', behavior: 'instant' });
   }, [selectedNo]);
 
   useEffect(() => {
@@ -1062,10 +1079,20 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
 
       <div className="mt-2.5 flex w-full flex-nowrap items-center gap-1.5 overflow-hidden">
         {selected.instagramUrl ? (
-          <ExternalLinkButton href={selected.instagramUrl} kind="instagram" tone="white" mobileIconOnly />
+          <ExternalLinkButton
+            href={selected.instagramUrl}
+            kind="instagram"
+            tone="white"
+            mobileIconOnly
+          />
         ) : null}
         {selected.homepageUrl ? (
-          <ExternalLinkButton href={selected.homepageUrl} kind="homepage" tone="white" mobileIconOnly />
+          <ExternalLinkButton
+            href={selected.homepageUrl}
+            kind="homepage"
+            tone="white"
+            mobileIconOnly
+          />
         ) : null}
         <Button
           type="button"
@@ -1252,11 +1279,11 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                   <Route className="h-4 w-4" />
                   경로
                 </Button>
-                {(isTooltipOpen || isRoutePreview) ? (
+                {isTooltipOpen || isRoutePreview ? (
                   <div className="absolute top-full left-1/2 z-[60] mt-1 w-52 -translate-x-1/2 border border-border bg-white px-3 py-2 shadow-brutal-sm text-xs font-bold text-brand-muted">
                     {favoriteBooths.length < 2
                       ? '찜한 부스가 2개 이상이어야 경로를 볼 수 있어요.'
-                      : '찜 내역 탭에서 드래그해 순서를 바꿀 수 있어요.'}
+                      : '찜 내역 탭에서 순서를 바꿀 수 있어요.'}
                   </div>
                 ) : null}
               </div>
@@ -1324,26 +1351,27 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
             </div>
 
             {/* 입구 출발 뱃지 (0번) — 동선 활성 + 부스 2개 이상일 때만 */}
-            {routeBadges.length >= 2 && (() => {
-              const entrance = HALL_ENTRANCES[effectiveEntrance];
-              return (
-                <div
-                  key="entrance-badge"
-                  className="pointer-events-none absolute z-[46] flex items-center justify-center border-2 border-white bg-brand-yellow font-black text-foreground shadow-brutal-sm"
-                  style={{
-                    left: transform.x + entrance.x * transform.scale,
-                    top: transform.y + entrance.y * transform.scale,
-                    width: routeBadgeSize,
-                    height: routeBadgeSize,
-                    minWidth: routeBadgeSize,
-                    fontSize: clamp(routeBadgeSize * 0.48, 10, 14),
-                    transform: 'translate(-50%, -50%)',
-                  }}
-                >
-                  0
-                </div>
-              );
-            })()}
+            {routeBadges.length >= 2 &&
+              (() => {
+                const entrance = HALL_ENTRANCES[effectiveEntrance];
+                return (
+                  <div
+                    key="entrance-badge"
+                    className="pointer-events-none absolute z-[46] flex items-center justify-center border-2 border-white bg-brand-yellow font-black text-foreground shadow-brutal-sm"
+                    style={{
+                      left: transform.x + entrance.x * transform.scale,
+                      top: transform.y + entrance.y * transform.scale,
+                      width: routeBadgeSize,
+                      height: routeBadgeSize,
+                      minWidth: routeBadgeSize,
+                      fontSize: clamp(routeBadgeSize * 0.48, 10, 14),
+                      transform: 'translate(-50%, -50%)',
+                    }}
+                  >
+                    0
+                  </div>
+                );
+              })()}
 
             {routeBadges.map((badge) => (
               <div
@@ -1400,9 +1428,7 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                 }}
               >
                 <h2 className="sr-only">출판사 검색 및 목록</h2>
-                <div
-                  className="min-h-0 flex-1 overflow-hidden"
-                >
+                <div className="min-h-0 flex-1 overflow-hidden">
                   {isEventPanelOpen && selected ? (
                     <div className="h-full overflow-y-auto">{eventContent}</div>
                   ) : isMobileDetailOpen ? (
@@ -1421,22 +1447,24 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                 <div
                   role="button"
                   aria-label={isTopPanelExpanded ? '선택 패널 닫기' : '선택 패널 열기'}
-	                  aria-expanded={isTopPanelExpanded}
-	                  className="flex h-[50px] cursor-grab touch-none items-center justify-between gap-2 border-t border-border/60 bg-brand-yellow px-3 active:cursor-grabbing"
+                  aria-expanded={isTopPanelExpanded}
+                  className="flex h-[50px] cursor-grab touch-none items-center justify-between gap-2 border-t border-border/60 bg-brand-yellow px-3 active:cursor-grabbing"
                   onPointerDown={handleSheetPointerDown}
                   onPointerMove={handleSheetPointerMove}
                   onPointerUp={handleSheetPointerUp}
                   onPointerCancel={handleSheetPointerUp}
                 >
                   <div className="flex min-w-0 flex-wrap items-center gap-x-2.5 gap-y-1">
-                    {([
-                      ['bg-zone-general',  '일반'],
-                      ['bg-zone-special',  '특별전시'],
-                      ['bg-zone-hall',     '독자만남홀'],
-                      ['bg-zone-indie',    '책마을'],
-                      ['bg-zone-vip',      '특별구역'],
-                      ['bg-zone-facility', '전시·WC'],
-                    ] as const).map(([bg, label]) => (
+                    {(
+                      [
+                        ['bg-zone-general', '일반'],
+                        ['bg-zone-special', '특별전시'],
+                        ['bg-zone-hall', '독자만남홀'],
+                        ['bg-zone-indie', '책마을'],
+                        ['bg-zone-vip', '특별구역'],
+                        ['bg-zone-facility', '전시·WC'],
+                      ] as const
+                    ).map(([bg, label]) => (
                       <span key={label} className="inline-flex items-center gap-1">
                         <span className={cn('h-2.5 w-2.5 shrink-0 border border-border/40', bg)} />
                         <span className="text-[10px] font-bold text-brand-rust">{label}</span>
@@ -1494,14 +1522,16 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                 </Button>
                 {isTooltipOpen ? (
                   <div className="absolute top-full left-1/2 z-[60] mt-1 w-52 -translate-x-1/2 border border-border bg-white px-3 py-2 shadow-brutal-sm text-xs font-bold text-brand-muted">
-                    {favoriteBooths.length < 2
-                      ? '찜한 부스가 2개 이상이어야 경로를 볼 수 있어요.'
-                      : (
-                        <>
-                          <span className="block">찜 내역 탭에서 드래그해 순서를 바꿀 수 있어요.</span>
-                          <span className="mt-1 block">경로 버튼을 켜고 PDF를 저장하면 경로도 함께 저장돼요.</span>
-                        </>
-                      )}
+                    {favoriteBooths.length < 2 ? (
+                      '찜한 부스가 2개 이상이어야 경로를 볼 수 있어요.'
+                    ) : (
+                      <>
+                        <span className="block">*찜 내역 탭에서 입구와 순서를 바꿀 수 있어요.</span>
+                        <span className="mt-1 block">
+                          *경로 버튼을 켜고 PDF를 저장하면 경로도 함께 저장돼요.
+                        </span>
+                      </>
+                    )}
                   </div>
                 ) : null}
               </div>
@@ -1563,7 +1593,6 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
               </Button>
             </div>
 
-
             {/* 데스크톱 전용 플로팅 이벤트 패널 — 모바일은 바텀시트 안 뷰로 표시 */}
             {!isMobile && isEventPanelOpen && selected ? (
               <aside
@@ -1584,7 +1613,6 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
           ) : null}
         </section>
       </section>
-
     </div>
   );
 }
