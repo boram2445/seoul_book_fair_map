@@ -34,17 +34,24 @@ type WallSegment = {
 /**
  * 배경 SVG의 Hall A/B 외곽선(Subtract path) 중 통행을 막는 실제 벽 구간.
  * 부스 데이터에는 없는 선이라 경로 탐색용 장애물로 별도 반영한다.
+ *
+ * A/B 분리벽(y≈1893): SVG `Subtract` path 실측 기준.
+ *   - 좌측 솔리드: x 120 → 1601
+ *   - 중앙 단일 개구부: x 1601 → 2344 (~743px, 부스 장애물이 실제 복도를 자동 형성)
+ *   - 우측 솔리드: x 2344 → 2907
+ * (구 모델의 가짜 중앙벽 x1794–2201 및 좁은 통로 2개는 SVG에 존재하지 않음)
  */
 const wallSegments: WallSegment[] = [
-  { x1: 1228, y1: 470, x2: 1228, y2: 1394 },
+  { x1: 1228, y1: 470,  x2: 1228, y2: 1394 },
   { x1: 1228, y1: 1394, x2: 1602, y2: 1394 },
   { x1: 1602, y1: 1394, x2: 1602, y2: 1894 },
-  { x1: 120, y1: 1893, x2: 1602, y2: 1893 },
+  // A/B 분리벽 — SVG 실측 2구간, 중앙 개구부(x 1601~2344) 1곳
+  { x1: 120,  y1: 1893, x2: 1601, y2: 1893 }, // 좌측 솔리드 (실측)
+  { x1: 2344, y1: 1893, x2: 2907, y2: 1893 }, // 우측 솔리드 (실측)
   { x1: 2470, y1: 1393, x2: 2957, y2: 1393 },
   { x1: 2470, y1: 1393, x2: 2470, y2: 1750 },
   { x1: 2344, y1: 1750, x2: 2470, y2: 1750 },
   { x1: 2344, y1: 1750, x2: 2344, y2: 1894 },
-  { x1: 2344, y1: 1893, x2: 2907, y2: 1893 },
 ];
 
 /**
@@ -165,6 +172,42 @@ for (const segment of wallSegments) {
         blocked[r * COLS + c] = 1;
       }
     }
+  }
+}
+
+// ─── 보행 가능 영역 마스크 ────────────────────────────────────────────────────
+
+/**
+ * 보행 가능 영역(allowlist). 여기에 포함되지 않는 셀은 전부 blocked 처리한다.
+ * SVG에는 홀 외곽선이 없어 홀 바깥 흰 여백이 장애물 없는 통로로 취급되는 문제를 차단.
+ *
+ * 좌표 근거:
+ *   R1 Hall A  — 부스 bbox x[193,2823] y[1965,3204] 에 여유(~20px) 추가
+ *   R2 Hall B  — 부스 bbox x[1301,2718] y[542,1780]  에 여유 추가
+ *   R3 중앙 개구부 — SVG `Subtract` 실측 단일 개구부 x[1601,2344] 를 덮는 밴드;
+ *                   개구부 안 부스 장애물이 실제 복도(~73px 간격 복도열)를 자동 형성한다.
+ *                   (구 R3 우측 로비: SVG상 우측 횡단 없음, 벽이 x2907까지 솔리드 — 제거)
+ *                   (구 R4·R5: 가짜 통로 좌표, Hall A 부스에 잠식 — 단일 밴드로 대체)
+ */
+const WALKABLE: Rect[] = [
+  { x: 170,  y: 1945, width: 2675, height: 1280 }, // R1 Hall A  (x 170~2845, y 1945~3225)
+  { x: 1280, y: 520,  width: 1460, height: 1275 }, // R2 Hall B  (x 1280~2740, y 520~1795)
+  { x: 1601, y: 1780, width: 743,  height: 185  }, // R3 중앙 개구부 밴드 (x 1601~2344, y 1780~1965)
+];
+
+function inWalkable(cx: number, cy: number): boolean {
+  for (const r of WALKABLE) {
+    if (cx >= r.x && cx <= r.x + r.width && cy >= r.y && cy <= r.y + r.height) return true;
+  }
+  return false;
+}
+
+// 보행 불가 영역(홀 바깥 여백) 차단
+for (let r = 0; r < ROWS; r++) {
+  for (let c = 0; c < COLS; c++) {
+    const cx = c * CELL + CELL / 2;
+    const cy = r * CELL + CELL / 2;
+    if (!inWalkable(cx, cy)) blocked[r * COLS + c] = 1;
   }
 }
 
@@ -344,6 +387,11 @@ function hasLOS(aI: number, bI: number): boolean {
   const b = cellCenter(bI);
   for (const shape of shapes) {
     if (segmentIntersectsRect(a, b, getShapeObstacleRect(shape))) return false;
+  }
+  // 벽 세그먼트 정밀 교차 검사 — 격자 DDA 샘플링만으로 잡히지 않는
+  // corner-cut을 방지한다. 벽은 0폭 선분 그대로 검사해 개구부를 보존한다.
+  for (const seg of wallSegments) {
+    if (segmentsIntersect(a, b, { x: seg.x1, y: seg.y1 }, { x: seg.x2, y: seg.y2 })) return false;
   }
 
   return true;
@@ -530,12 +578,66 @@ export function optimizeRouteOrder(
   return result;
 }
 
+// ─── A/B 분리벽 통로 정보 ────────────────────────────────────────────────────
+
+/** A/B 분리벽 y좌표 (실측). */
+const DIVIDER_Y = 1893;
+
+/**
+ * 분리벽 중앙 개구부(x 1601~2344) 안에서 부스와 겹치지 않는 통로 x 중심.
+ * 격자 A* 폴백이 실패할 경우 최후 경유점으로 사용한다.
+ * (부스 복도 실측: x≈1616~1689, 1799~1875, 1990~2063 등 — 그 중심을 선택)
+ */
+const DIVIDER_PASSAGE_FALLBACK = { x: 1840, y: DIVIDER_Y }; // x1799~1875 복도 중심
+
+/**
+ * A* 실패 폴백용 — 직선을 그리지 않고 반드시 격자 위에서 경로를 찾는다.
+ *
+ * 같은 홀이면: to 로 다시 A* 1단계 (이미 실패했으므로 null 반환 → 구간 생략).
+ * 반대 홀이면: 분리벽 개구부 밴드 안의 통로 셀을 경유지로 삼아 A* 2단계 시도.
+ *             경유지 스냅이 성공하면 [from→경유→to] A* 경로 셀 목록을 반환.
+ *             그래도 실패하면 null 반환 → 구간 생략(직선 절대 미출력).
+ */
+function fallbackViaGrid(
+  fromSnap: number,
+  toSnap: number,
+  from: { x: number; y: number },
+  to: { x: number; y: number },
+): { x: number; y: number }[] | null {
+  const fromBelow = from.y > DIVIDER_Y;
+  const toBelow = to.y > DIVIDER_Y;
+
+  if (fromBelow === toBelow) {
+    // 같은 홀 — 이미 A* 실패한 구간이므로 null(생략)
+    return null;
+  }
+
+  // 반대 홀 — 개구부 밴드 안 경유 셀을 찾아 2단계 A* 시도
+  // from 측 x를 clamp해 개구부 범위(1601~2344) 안에 경유점 배치
+  const clampedX = Math.max(1620, Math.min(2324, from.x));
+  const viaY = fromBelow ? DIVIDER_Y - 60 : DIVIDER_Y + 60; // 벽 하중 쪽으로 살짝 오프셋
+  const viaSnap = snapToFree(clampedX, viaY);
+  // clamped 위치가 개구부 밖으로 스냅되면 고정 경유점 사용
+  const fallbackViaSnap = snapToFree(DIVIDER_PASSAGE_FALLBACK.x, viaY);
+  const via = viaSnap !== fromSnap && viaSnap !== toSnap ? viaSnap : fallbackViaSnap;
+
+  const seg1 = findPath(fromSnap, via);
+  if (!seg1 || seg1.length < 1) return null;
+  const seg2 = findPath(via, toSnap);
+  if (!seg2 || seg2.length < 1) return null;
+
+  // 두 구간 합치기 (중복 경유 셀 제거)
+  const combined = [...seg1, ...seg2.slice(1)];
+  const pulled = stringPull(combined);
+  return pulled.map(cellCenter);
+}
+
 // ─── 메인 익스포트 ────────────────────────────────────────────────────────────
 
 /**
  * 찜 부스 순서대로 통로를 따라 우회하는 경로를 반환한다.
  * SVG polyline의 points로 바로 쓸 수 있는 {x, y}[] 배열.
- * 경로를 찾지 못한 구간은 직선으로 폴백한다.
+ * 경로를 찾지 못한 구간은 격자 A* 우회(개구부 경유)를 시도하고, 그래도 실패하면 구간을 생략한다.
  *
  * @param start 출발 입구 좌표(`HALL_ENTRANCES[key]`). 지정 시 폴리라인이 입구에서 시작한다.
  */
@@ -565,8 +667,12 @@ export function buildRoute(
     const rawPath = findPath(fromSnap, toSnap);
 
     if (!rawPath || rawPath.length < 2) {
-      // 경로 없음 → 직선 폴백
-      all.push(centers[i + 1]);
+      // 경로 없음 → 격자 위에서만 우회(직선 절대 미출력). 그래도 실패하면 구간 생략.
+      const fallback = fallbackViaGrid(fromSnap, toSnap, centers[i], centers[i + 1]);
+      if (fallback) {
+        for (const wp of fallback) all.push(wp);
+        all.push(centers[i + 1]);
+      }
       continue;
     }
 
