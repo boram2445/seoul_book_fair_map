@@ -16,9 +16,9 @@ export function BoothEventDetailList({ events }: BoothEventDetailListProps) {
 
   return (
     <ul className="space-y-3">
-      {events.map((event) => (
+      {events.map((event, i) => (
         <li
-          key={`${getEventScheduleLabel(event)}-${event.title}`}
+          key={i}
           className="overflow-hidden border border-border bg-white"
         >
           {event.imageUrl ? (

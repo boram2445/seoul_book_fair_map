@@ -97,24 +97,6 @@ async function fetchPublishers(): Promise<GetPublishersResponse> {
   return data.map(mapPublisher);
 }
 
-async function fetchPublisherByExhibitorNo(
-  no: number,
-): Promise<GetPublisherByExhibitorNoResponse> {
-  const supabase = createPublicSupabaseClient();
-  const { data, error } = await supabase
-    .from("publishers")
-    .select(publisherColumns)
-    .eq("exhibitor_no", no)
-    .maybeSingle()
-    .returns<PublisherRow | null>();
-
-  if (error) {
-    throw new Error(error.message);
-  }
-
-  return data ? mapPublisher(data) : null;
-}
-
 export const GetPublishers = unstable_cache(
   fetchPublishers,
   ["fair-map", "publishers"],
@@ -124,19 +106,11 @@ export const GetPublishers = unstable_cache(
   },
 );
 
-const getCachedPublisherByExhibitorNo = unstable_cache(
-  fetchPublisherByExhibitorNo,
-  ["fair-map", "publisher-by-exhibitor-no"],
-  {
-    revalidate: FAIR_MAP_CACHE_REVALIDATE_SECONDS,
-    tags: ["fair-map", "publishers"],
-  },
-);
-
-export function GetPublisherByExhibitorNo({
+export async function GetPublisherByExhibitorNo({
   no,
-}: GetPublisherByExhibitorNoRequest) {
-  return getCachedPublisherByExhibitorNo(no);
+}: GetPublisherByExhibitorNoRequest): Promise<GetPublisherByExhibitorNoResponse> {
+  const publishers = await GetPublishers();
+  return publishers.find((p) => p.no === no) ?? null;
 }
 
 type PublisherEventRow = {
