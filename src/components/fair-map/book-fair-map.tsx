@@ -54,6 +54,7 @@ import {
 import { MapBoothLayer } from './map-booth-layer';
 import { MapLabelLayer } from './map-label-layer';
 import { ExportFavoritesButton } from './favorites-pdf/index';
+import { ExportImageButton } from './export-map-image';
 import { buildRoute, getAutoEntrance, HALL_ENTRANCES, MAP_HEIGHT, MAP_WIDTH } from './route-path';
 import type { BoothShape, MapExhibitor } from './types';
 import { useFavorites } from './use-favorites';
@@ -1281,9 +1282,16 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                 </Button>
                 {isTooltipOpen || isRoutePreview ? (
                   <div className="absolute top-full left-1/2 z-[60] mt-1 w-52 -translate-x-1/2 border border-border bg-white px-3 py-2 shadow-brutal-sm text-xs font-bold text-brand-muted">
-                    {favoriteBooths.length < 2
-                      ? '찜한 부스가 2개 이상이어야 경로를 볼 수 있어요.'
-                      : '찜 내역 탭에서 순서를 바꿀 수 있어요.'}
+                    {favoriteBooths.length < 2 ? (
+                      '찜한 부스가 2개 이상이어야 경로를 볼 수 있어요.'
+                    ) : (
+                      <>
+                        <span className="block">*찜 내역 탭에서 입구와 순서를 바꿀 수 있어요.</span>
+                        <span className="mt-1 block">
+                          *경로 버튼을 켜고 PDF를 저장하면 경로도 함께 저장돼요.
+                        </span>
+                      </>
+                    )}
                   </div>
                 ) : null}
               </div>
@@ -1292,6 +1300,14 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                 routePath={routePath}
                 routeBadges={routeBadges}
                 eventsByBooth={eventsByBooth}
+              />
+              <ExportImageButton
+                shapes={shapes}
+                labelExhibitorsByBooth={labelExhibitorsByBooth}
+                routePath={routePath}
+                routeBadges={routeBadges}
+                entranceKey={effectiveEntrance}
+                className="rounded-none border-border bg-white"
               />
             </div>
           </div>
@@ -1540,6 +1556,14 @@ export function BookFairMap({ exhibitors, shapes, eventsByBooth }: BookFairMapPr
                 routePath={routePath}
                 routeBadges={routeBadges}
                 eventsByBooth={eventsByBooth}
+              />
+              <ExportImageButton
+                shapes={shapes}
+                labelExhibitorsByBooth={labelExhibitorsByBooth}
+                routePath={routePath}
+                routeBadges={routeBadges}
+                entranceKey={effectiveEntrance}
+                className="rounded-none border-border bg-white shadow-brutal-sm"
               />
               <Button
                 type="button"
